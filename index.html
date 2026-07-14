@@ -7,46 +7,47 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
-  --bg:#0f1720; --panel:#17212c; --panel2:#1e2a37; --border:#2a3846;
-  --text:#e8edf2; --muted:#8ea1b3;
-  --safe:#1f9d55; --safe-bg:#123322;
-  --missing:#c23434; --missing-bg:#3a1414;
-  --accent:#f0a500; --accent-dark:#c98600;
-  --focus:#4fb3ff;
+  --bg:#ffffff; --panel:#ffffff; --panel2:#f4f6f8; --border:#dde3e9;
+  --text:#1c2b3a; --muted:#6b7c8c;
+  --safe:#1a8f4c; --safe-bg:#e8f7ee;
+  --missing:#c23434; --missing-bg:#fdeceb;
+  --accent:#c98600; --accent-dark:#a56e00;
+  --navy:#152a41;
+  --focus:#1b6fb8;
 }
 *{box-sizing:border-box;}
 body{margin:0;font-family:'Tahoma','Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:16px;}
 header{
-  background:linear-gradient(180deg,#1a2530,#0f1720);
+  background:var(--navy);
   border-bottom:3px solid var(--accent);
   padding:10px 14px;position:sticky;top:0;z-index:20;
 }
-header h1{margin:0 0 8px;font-size:19px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;}
-header h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+header h1{margin:0 0 8px;font-size:19px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;color:#ffffff;}
+header h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px rgba(201,134,0,.7);}
 .stats{display:flex;gap:8px;flex-wrap:wrap;}
-.stat{flex:1;min-width:90px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;text-align:center;}
+.stat{flex:1;min-width:90px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 10px;text-align:center;}
 .stat b{display:block;font-size:22px;line-height:1.2;}
-.stat span{font-size:11px;color:var(--muted);}
-.stat.total b{color:var(--focus);}
-.stat.safe b{color:var(--safe);}
-.stat.missing b{color:var(--missing);}
+.stat span{font-size:11px;color:#b7c3cf;}
+.stat.total b{color:#7fc4ff;}
+.stat.safe b{color:#5cd68a;}
+.stat.missing b{color:#ff8a8a;}
 
 main{padding:12px;max-width:900px;margin:0 auto;}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;}
-.card h2{margin:0 0 10px;font-size:15px;color:var(--accent);}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(21,42,65,.06);}
+.card h2{margin:0 0 10px;font-size:15px;color:var(--navy);border-right:3px solid var(--accent);padding-right:8px;}
 
 .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
 .tab-btn{
   flex:1;min-width:100px;padding:9px 6px;background:var(--panel2);border:1px solid var(--border);
   color:var(--muted);border-radius:8px;font-size:13px;cursor:pointer;
 }
-.tab-btn.active{background:var(--accent);color:#1a1200;border-color:var(--accent);font-weight:bold;}
+.tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent-dark);font-weight:bold;}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
 
 label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;}
 input[type=text], input[type=file], input[type=url], textarea, select{
-  width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  width:100%;background:#fff;border:1px solid var(--border);color:var(--text);
   padding:9px;border-radius:8px;font-size:14px;margin-bottom:8px;font-family:inherit;
 }
 textarea{min-height:100px;resize:vertical;}
@@ -54,7 +55,7 @@ input:focus, textarea:focus, select:focus, button:focus{outline:2px solid var(--
 
 button{
   cursor:pointer;border:none;border-radius:8px;padding:9px 14px;font-size:14px;font-weight:bold;
-  background:var(--accent);color:#1a1200;
+  background:var(--accent);color:#fff;
 }
 button:active{transform:scale(.97);}
 button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
@@ -62,8 +63,9 @@ button.secondary{background:var(--panel2);color:var(--text);border:1px solid var
 .row > *{flex:1;min-width:120px;}
 
 .status-msg{font-size:12px;padding:8px;border-radius:8px;margin-top:6px;display:none;}
-.status-msg.ok{display:block;background:var(--safe-bg);color:#8fe0ac;border:1px solid var(--safe);}
-.status-msg.err{display:block;background:var(--missing-bg);color:#f0a0a0;border:1px solid var(--missing);}
+.status-msg.ok{display:block;background:var(--safe-bg);color:#186b3a;border:1px solid var(--safe);}
+.status-msg.err{display:block;background:var(--missing-bg);color:#8f2626;border:1px solid var(--missing);}
+.status-msg.warn{display:block;background:#fff6e5;color:#7a5400;border:1px solid var(--accent);}
 
 .controls{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
 .controls input, .controls select{margin-bottom:0;}
@@ -71,6 +73,12 @@ button.secondary{background:var(--panel2);color:var(--text);border:1px solid var
 .controls .filter{flex:1;min-width:140px;}
 
 .list-info{font-size:12px;color:var(--muted);margin-bottom:6px;}
+
+.map-preview{font-size:12px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-top:6px;display:none;}
+.map-preview.show{display:block;}
+.map-preview b{color:var(--navy);}
+.map-preview .field{display:inline-block;margin-left:12px;margin-bottom:4px;}
+.map-preview .field.missing{color:var(--missing);}
 
 table{width:100%;border-collapse:collapse;font-size:13px;}
 thead th{
@@ -80,12 +88,12 @@ thead th{
 tbody td{padding:7px 4px;border-bottom:1px solid var(--border);vertical-align:middle;}
 tbody tr.safe-row{background:var(--safe-bg);}
 tbody tr.missing-row td:first-child{border-right:3px solid var(--missing);}
-.name-cell{font-weight:bold;}
+.name-cell{font-weight:bold;color:var(--navy);}
 .sub-cell{font-size:11px;color:var(--muted);}
 
 .badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:bold;}
 .badge.safe{background:var(--safe);color:#fff;}
-.badge.pending{background:#40505f;color:#cdd8e0;}
+.badge.pending{background:#e7ebef;color:#5b6b7a;}
 
 .att-btn{padding:6px 10px;font-size:12px;background:var(--safe);color:#fff;border-radius:6px;}
 .att-btn.undo{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
@@ -140,6 +148,7 @@ RFID,ID,الاسم,القسم,الموقع
     </div>
 
     <div id="importStatus" class="status-msg"></div>
+    <div id="mapPreview" class="map-preview"></div>
   </div>
 
   <div class="card">
@@ -205,10 +214,11 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   });
 });
 
-function showStatus(msg, ok){
+function showStatus(msg, type){
+  // type: 'ok' | 'err' | 'warn'
   const el = document.getElementById('importStatus');
   el.textContent = msg;
-  el.className = 'status-msg ' + (ok ? 'ok' : 'err');
+  el.className = 'status-msg ' + type;
 }
 
 // ---------- SMART CSV PARSER (handles quoted commas) ----------
@@ -234,55 +244,177 @@ function parseDelimitedText(text){
   return rows.filter(r => r.some(f => f.trim() !== ''));
 }
 
+// ---------- HEADER DETECTION ----------
+// Keyword groups used both to detect which row is the header row AND to map columns.
+// Order = priority (checked first to last); more specific phrases come before generic ones.
+const FIELD_PATTERNS = {
+  rfid: ['rfid','شريحة','بطاقة الدخول','بطاقة'],
+  id:   ['الرقم الوظيفي','رقم الموظف','رقم وظيفي','employee id','emp id','emp no','employee no',
+         'employee number','كود الموظف','الكود الوظيفي','كود','هوية','رقم الهوية','id','هويه'],
+  name: ['الاسم الكامل','اسم الموظف','اسم','name'],
+  dept: ['القسم','الإدارة','الادارة','قسم','dept','department','إدارة'],
+  loc:  ['الموقع','الموقع الحالي','برج','مبنى','location','site','موقع']
+};
+// Columns whose header text matches these should NEVER be used for id/rfid/name/dept/loc
+// even if they loosely match a pattern above (e.g. "رقم الجوال" contains "رقم").
+const EXCLUDE_PATTERNS = ['جوال','هاتف','موبايل','phone','mobile','فاكس','fax','بريد','email','ملاحظ','note','تاريخ','date'];
+
+function headerScore(rowVals){
+  const cells = rowVals.map(v => (v||'').toString().trim().toLowerCase());
+  let score = 0;
+  cells.forEach(c=>{
+    if(!c) return;
+    if(EXCLUDE_PATTERNS.some(p=>c.includes(p))) return;
+    for(const key in FIELD_PATTERNS){
+      if(FIELD_PATTERNS[key].some(p=>c.includes(p))){ score++; break; }
+    }
+  });
+  return score;
+}
+
+// Scans the first few rows to find the most likely header row (handles a report
+// title row sitting above the real column headers), instead of always assuming row 0.
+function findHeaderRowIndex(rows){
+  const scanLimit = Math.min(rows.length, 6);
+  let bestIdx = -1, bestScore = 0;
+  for(let i=0;i<scanLimit;i++){
+    const s = headerScore(rows[i]);
+    if(s > bestScore){ bestScore = s; bestIdx = i; }
+  }
+  return bestScore >= 2 ? bestIdx : (bestScore === 1 ? bestIdx : -1);
+}
+
 // ---------- COLUMN MAPPING ----------
 function mapColumns(rows){
-  if(!rows.length) return [];
-  const headerRow = rows[0].map(h => (h||'').toString().trim().toLowerCase());
-  const isHeader = headerRow.some(h =>
-    /rfid|شريحة|بطاقة|id|هوية|رقم|اسم|name|قسم|dept|موقع|location|برج/.test(h)
-  );
+  if(!rows.length) return { records: [], mapping: null };
 
-  const find = (patterns) => headerRow.findIndex(h => patterns.some(p => h.includes(p)));
+  const headerIdx = findHeaderRowIndex(rows);
+  const isHeader = headerIdx >= 0;
+  const headerRow = isHeader ? rows[headerIdx].map(h => (h||'').toString().trim().toLowerCase()) : [];
+  const dataRows = isHeader ? rows.slice(headerIdx + 1) : rows;
+  const colCount = Math.max(headerRow.length, ...dataRows.map(r=>r.length), 1);
 
-  let idxRfid, idxId, idxName, idxDept, idxLoc;
-  let dataRows;
+  // Columns that actually contain data in at least one row (skips blank spacer columns)
+  const hasData = new Array(colCount).fill(false);
+  dataRows.forEach(r=>{
+    for(let c=0;c<colCount;c++){
+      if((r[c]||'').toString().trim() !== '') hasData[c] = true;
+    }
+  });
 
-  if(isHeader){
-    idxRfid = find(['rfid','شريحة']);
-    idxId   = find(['id','هوية','رقم الموظف','الرقم الوظيفي']);
-    idxName = find(['اسم','name']);
-    idxDept = find(['قسم','dept','إدارة']);
-    idxLoc  = find(['موقع','location','برج','مبنى']);
-    dataRows = rows.slice(1);
-  } else {
-    dataRows = rows;
+  const used = new Set();
+  function isExcluded(headerText){
+    return EXCLUDE_PATTERNS.some(p => headerText.includes(p));
+  }
+  // pick the first column (in header order) matching any pattern, that (a) isn't used yet,
+  // (b) isn't an excluded field like phone/email/date, and (c) actually contains data —
+  // falls back to a data-agnostic pass if nothing has data.
+  function pickColumn(patterns){
+    let candidate = -1;
+    if(isHeader){
+      for(const pattern of patterns){
+        for(let c=0;c<headerRow.length;c++){
+          if(used.has(c)) continue;
+          if(isExcluded(headerRow[c])) continue;
+          if(headerRow[c].includes(pattern)){
+            if(hasData[c]) return (used.add(c), c);
+            if(candidate === -1) candidate = c;
+          }
+        }
+      }
+    }
+    if(candidate >= 0){ used.add(candidate); return candidate; }
+    return -1;
   }
 
-  // Fallback to fixed positional order: RFID(0), ID(1), Name(2), Dept(3), Location(4)
-  if(idxRfid === undefined || idxRfid < 0) idxRfid = 0;
-  if(idxId === undefined || idxId < 0) idxId = 1;
-  if(idxName === undefined || idxName < 0) idxName = 2;
-  if(idxDept === undefined || idxDept < 0) idxDept = 3;
-  if(idxLoc === undefined || idxLoc < 0) idxLoc = 4;
+  let idxRfid=-1, idxName=-1, idxId=-1, idxDept=-1, idxLoc=-1;
+  if(isHeader){
+    // Order matters: assign the most specific / most important fields first so that
+    // ambiguous headers don't get claimed twice.
+    idxRfid = pickColumn(FIELD_PATTERNS.rfid);
+    idxName = pickColumn(FIELD_PATTERNS.name);
+    idxDept = pickColumn(FIELD_PATTERNS.dept);
+    idxLoc  = pickColumn(FIELD_PATTERNS.loc);
+    idxId   = pickColumn(FIELD_PATTERNS.id);
+  }
 
-  return dataRows.map(r => ({
-    rfid: (r[idxRfid]||'').toString().trim(),
-    id: (r[idxId]||'').toString().trim(),
-    name: (r[idxName]||'').toString().trim(),
-    dept: (r[idxDept]||'').toString().trim(),
-    location: (r[idxLoc]||'').toString().trim(),
-    safe: false
-  })).filter(rec => rec.name || rec.id || rec.rfid);
+  // Positional fallback for anything still unresolved, using only columns that have data
+  // and haven't already been claimed, in left-to-right order.
+  const remaining = [];
+  for(let c=0;c<colCount;c++) if(hasData[c] && !used.has(c)) remaining.push(c);
+  const order = [
+    ['rfid', () => idxRfid], ['id', () => idxId], ['name', () => idxName],
+    ['dept', () => idxDept], ['loc', () => idxLoc]
+  ];
+  const setters = { rfid:v=>idxRfid=v, id:v=>idxId=v, name:v=>idxName=v, dept:v=>idxDept=v, loc:v=>idxLoc=v };
+  order.forEach(([key, getter])=>{
+    if(getter() < 0 && remaining.length){
+      const c = remaining.shift();
+      setters[key](c);
+      used.add(c);
+    }
+  });
+
+  // If RFID never resolved but ID did (or vice versa), mirror the value so the badge
+  // number still shows — common when a sheet only has a single identifier column.
+  const mirrorId = (idxRfid < 0 && idxId >= 0);
+  const mirrorRfid = (idxId < 0 && idxRfid >= 0);
+
+  const recs = dataRows.map(r => {
+    const rfidVal = idxRfid >= 0 ? (r[idxRfid]||'').toString().trim() : '';
+    const idVal   = idxId >= 0 ? (r[idxId]||'').toString().trim() : '';
+    return {
+      rfid: rfidVal || (mirrorRfid ? idVal : ''),
+      id: idVal || (mirrorId ? rfidVal : ''),
+      name: idxName >= 0 ? (r[idxName]||'').toString().trim() : '',
+      dept: idxDept >= 0 ? (r[idxDept]||'').toString().trim() : '',
+      location: idxLoc >= 0 ? (r[idxLoc]||'').toString().trim() : '',
+      safe: false
+    };
+  }).filter(rec => rec.name || rec.id || rec.rfid);
+
+  const mapping = {
+    isHeader,
+    fields: {
+      rfid: idxRfid>=0 ? (headerRow[idxRfid]||'عمود '+(idxRfid+1)) : null,
+      id:   idxId>=0   ? (headerRow[idxId]||'عمود '+(idxId+1))     : null,
+      name: idxName>=0 ? (headerRow[idxName]||'عمود '+(idxName+1)) : null,
+      dept: idxDept>=0 ? (headerRow[idxDept]||'عمود '+(idxDept+1)) : null,
+      loc:  idxLoc>=0  ? (headerRow[idxLoc]||'عمود '+(idxLoc+1))   : null
+    }
+  };
+
+  return { records: recs, mapping };
+}
+
+function showMapPreview(mapping){
+  const el = document.getElementById('mapPreview');
+  if(!mapping){ el.classList.remove('show'); return; }
+  const labels = { rfid:'RFID', id:'الرقم الوظيفي', name:'الاسم', dept:'القسم', loc:'الموقع' };
+  let html = '<b>تم التعرف على الأعمدة التالية:</b><br>';
+  Object.keys(labels).forEach(k=>{
+    const val = mapping.fields[k];
+    html += `<span class="field${val?'':' missing'}">${labels[k]}: ${val ? escapeHtml(val) : 'لم يُعثر عليه'}</span>`;
+  });
+  el.innerHTML = html;
+  el.classList.add('show');
 }
 
 function ingest(rows, sourceLabel){
-  const parsed = mapColumns(rows);
+  const { records: parsed, mapping } = mapColumns(rows);
   if(!parsed.length){
-    showStatus('لم يتم العثور على سجلات صالحة في ' + sourceLabel, false);
+    showStatus('لم يتم العثور على سجلات صالحة في ' + sourceLabel + '. تأكد أن أول صف يحتوي عناوين الأعمدة (مثل: الاسم، الرقم الوظيفي، القسم، الموقع).', 'err');
+    showMapPreview(null);
     return;
   }
   records = parsed;
-  showStatus('تم استيراد ' + records.length + ' سجل بنجاح من ' + sourceLabel, true);
+  const missingFields = Object.entries(mapping.fields).filter(([k,v])=>!v && k!=='rfid').map(([k])=>k);
+  if(missingFields.length){
+    showStatus('تم استيراد ' + records.length + ' سجل من ' + sourceLabel + '، لكن بعض الأعمدة لم يُتعرف عليها — راجع التفاصيل أدناه وعدّل عناوين الأعمدة في الملف إذا لزم.', 'warn');
+  } else {
+    showStatus('تم استيراد ' + records.length + ' سجل بنجاح من ' + sourceLabel, 'ok');
+  }
+  showMapPreview(mapping);
   buildLocationFilter();
   renderTable();
   updateStats();
@@ -291,7 +423,7 @@ function ingest(rows, sourceLabel){
 // ---------- PASTE ----------
 document.getElementById('btnParsePaste').addEventListener('click', ()=>{
   const text = document.getElementById('pasteArea').value.trim();
-  if(!text){ showStatus('الرجاء لصق البيانات أولاً.', false); return; }
+  if(!text){ showStatus('الرجاء لصق البيانات أولاً.', 'err'); return; }
   const rows = parseDelimitedText(text);
   ingest(rows, 'النص الملصق');
 });
@@ -301,7 +433,7 @@ document.getElementById('excelFile').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
   if(typeof XLSX === 'undefined'){
-    showStatus('تعذر تحميل مكتبة قراءة الإكسل (يلزم اتصال إنترنت مرة واحدة).', false);
+    showStatus('تعذر تحميل مكتبة قراءة الإكسل (يلزم اتصال إنترنت مرة واحدة).', 'err');
     return;
   }
   const reader = new FileReader();
@@ -312,7 +444,7 @@ document.getElementById('excelFile').addEventListener('change', (e)=>{
       const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
       ingest(rows, 'ملف ' + file.name);
     }catch(err){
-      showStatus('خطأ في قراءة ملف الإكسل: ' + err.message, false);
+      showStatus('خطأ في قراءة ملف الإكسل: ' + err.message, 'err');
     }
   };
   reader.readAsArrayBuffer(file);
@@ -321,8 +453,8 @@ document.getElementById('excelFile').addEventListener('change', (e)=>{
 // ---------- GOOGLE SHEET ----------
 document.getElementById('btnLoadGsheet').addEventListener('click', async ()=>{
   const url = document.getElementById('gsheetUrl').value.trim();
-  if(!url){ showStatus('الرجاء إدخال رابط CSV من قوقل شيت.', false); return; }
-  showStatus('جارِ سحب البيانات...', true);
+  if(!url){ showStatus('الرجاء إدخال رابط CSV من قوقل شيت.', 'err'); return; }
+  showStatus('جارِ سحب البيانات...', 'warn');
   try{
     const res = await fetch(url);
     if(!res.ok) throw new Error('HTTP ' + res.status);
@@ -330,7 +462,7 @@ document.getElementById('btnLoadGsheet').addEventListener('click', async ()=>{
     const rows = parseDelimitedText(text);
     ingest(rows, 'قوقل شيت');
   }catch(err){
-    showStatus('تعذر سحب البيانات (تحقق من الرابط والاتصال بالإنترنت): ' + err.message, false);
+    showStatus('تعذر سحب البيانات (تحقق من الرابط والاتصال بالإنترنت): ' + err.message, 'err');
   }
 });
 
