@@ -2,1162 +2,473 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام التذكير التلقائي - واتساب</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>نظام إدارة طوارئ الإخلاء</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root {
-  --bg: #f0f4f0;
-  --surface: #ffffff;
-  --surface2: #f7faf7;
-  --border: #d4e8d4;
-  --wa: #25d366;
-  --wa-dark: #128c7e;
-  --wa-light: #dcf8c6;
-  --accent: #075e54;
-  --accent2: #34b7f1;
-  --gold: #ffa000;
-  --red: #e53935;
-  --text: #1a1a2e;
-  --text2: #4a5568;
-  --muted: #90a4ae;
-  --shadow: 0 4px 20px rgba(0,0,0,0.08);
-  --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+:root{
+  --bg:#0f1720; --panel:#17212c; --panel2:#1e2a37; --border:#2a3846;
+  --text:#e8edf2; --muted:#8ea1b3;
+  --safe:#1f9d55; --safe-bg:#123322;
+  --missing:#c23434; --missing-bg:#3a1414;
+  --accent:#f0a500; --accent-dark:#c98600;
+  --focus:#4fb3ff;
 }
-
-* { margin:0; padding:0; box-sizing:border-box; }
-
-body {
-  background: var(--bg);
-  font-family: 'IBM Plex Sans Arabic', sans-serif;
-  color: var(--text);
-  min-height: 100vh;
-  background-image:
-    radial-gradient(circle at 0% 0%, rgba(37,211,102,0.08) 0%, transparent 40%),
-    radial-gradient(circle at 100% 100%, rgba(7,94,84,0.06) 0%, transparent 40%);
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Tahoma','Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:16px;}
+header{
+  background:linear-gradient(180deg,#1a2530,#0f1720);
+  border-bottom:3px solid var(--accent);
+  padding:10px 14px;position:sticky;top:0;z-index:20;
 }
+header h1{margin:0 0 8px;font-size:19px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;}
+header h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.stats{display:flex;gap:8px;flex-wrap:wrap;}
+.stat{flex:1;min-width:90px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;text-align:center;}
+.stat b{display:block;font-size:22px;line-height:1.2;}
+.stat span{font-size:11px;color:var(--muted);}
+.stat.total b{color:var(--focus);}
+.stat.safe b{color:var(--safe);}
+.stat.missing b{color:var(--missing);}
 
-/* ============ HEADER ============ */
-.header {
-  background: linear-gradient(135deg, var(--accent) 0%, #0a8075 100%);
-  color: white;
-  padding: 0 40px;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 2px 20px rgba(7,94,84,0.3);
-  position: sticky;
-  top: 0;
-  z-index: 200;
+main{padding:12px;max-width:900px;margin:0 auto;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;}
+.card h2{margin:0 0 10px;font-size:15px;color:var(--accent);}
+
+.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.tab-btn{
+  flex:1;min-width:100px;padding:9px 6px;background:var(--panel2);border:1px solid var(--border);
+  color:var(--muted);border-radius:8px;font-size:13px;cursor:pointer;
 }
+.tab-btn.active{background:var(--accent);color:#1a1200;border-color:var(--accent);font-weight:bold;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
 
-.header-brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;}
+input[type=text], input[type=file], input[type=url], textarea, select{
+  width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  padding:9px;border-radius:8px;font-size:14px;margin-bottom:8px;font-family:inherit;
 }
+textarea{min-height:100px;resize:vertical;}
+input:focus, textarea:focus, select:focus, button:focus{outline:2px solid var(--focus);outline-offset:1px;}
 
-.header-icon {
-  width: 42px;
-  height: 42px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
+button{
+  cursor:pointer;border:none;border-radius:8px;padding:9px 14px;font-size:14px;font-weight:bold;
+  background:var(--accent);color:#1a1200;
 }
+button:active{transform:scale(.97);}
+button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
+.row{display:flex;gap:8px;flex-wrap:wrap;}
+.row > *{flex:1;min-width:120px;}
 
-.header-brand h1 { font-size: 17px; font-weight: 700; }
-.header-brand p { font-size: 11px; opacity: 0.75; margin-top: 1px; }
+.status-msg{font-size:12px;padding:8px;border-radius:8px;margin-top:6px;display:none;}
+.status-msg.ok{display:block;background:var(--safe-bg);color:#8fe0ac;border:1px solid var(--safe);}
+.status-msg.err{display:block;background:var(--missing-bg);color:#f0a0a0;border:1px solid var(--missing);}
 
-.header-free {
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 20px;
-  padding: 5px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.controls{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.controls input, .controls select{margin-bottom:0;}
+.controls .search{flex:2;min-width:160px;}
+.controls .filter{flex:1;min-width:140px;}
+
+.list-info{font-size:12px;color:var(--muted);margin-bottom:6px;}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{
+  position:sticky;top:0;background:var(--panel2);color:var(--muted);font-size:11px;
+  padding:6px 4px;text-align:right;border-bottom:1px solid var(--border);
 }
+tbody td{padding:7px 4px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tbody tr.safe-row{background:var(--safe-bg);}
+tbody tr.missing-row td:first-child{border-right:3px solid var(--missing);}
+.name-cell{font-weight:bold;}
+.sub-cell{font-size:11px;color:var(--muted);}
 
-/* ============ TABS ============ */
-.tabs {
-  background: var(--surface);
-  border-bottom: 2px solid var(--border);
-  display: flex;
-  padding: 0 40px;
-  box-shadow: var(--shadow);
-}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:bold;}
+.badge.safe{background:var(--safe);color:#fff;}
+.badge.pending{background:#40505f;color:#cdd8e0;}
 
-.tab {
-  padding: 16px 24px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--muted);
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
-  transition: all 0.25s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-}
-.tab:hover { color: var(--accent); }
-.tab.active { color: var(--accent); border-color: var(--wa); }
+.att-btn{padding:6px 10px;font-size:12px;background:var(--safe);color:#fff;border-radius:6px;}
+.att-btn.undo{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
 
-.tab-badge {
-  background: var(--wa);
-  color: white;
-  border-radius: 10px;
-  padding: 2px 8px;
-  font-size: 11px;
-}
+.table-wrap{max-height:55vh;overflow:auto;border:1px solid var(--border);border-radius:8px;}
 
-/* ============ CONTAINER ============ */
-.container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 36px 20px;
-}
-
-/* ============ SECTION ============ */
-.section { display: none; }
-.section.active { display: block; animation: fadeUp 0.35s ease; }
-
-@keyframes fadeUp {
-  from { opacity:0; transform: translateY(12px); }
-  to   { opacity:1; transform: translateY(0); }
-}
-
-/* ============ CARDS ============ */
-.card {
-  background: var(--surface);
-  border-radius: 18px;
-  padding: 28px 32px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.card-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.icon-green  { background: rgba(37,211,102,0.12); }
-.icon-blue   { background: rgba(52,183,241,0.12); }
-.icon-orange { background: rgba(255,160,0,0.12); }
-.icon-teal   { background: rgba(7,94,84,0.08); }
-
-.card-title { font-size: 16px; font-weight: 700; color: var(--accent); }
-.card-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-/* ============ SETUP STEPS ============ */
-.steps { display: flex; flex-direction: column; gap: 14px; }
-
-.step {
-  display: flex;
-  gap: 16px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 18px 20px;
-  transition: border-color 0.2s;
-}
-.step:hover { border-color: var(--wa); }
-
-.step-num {
-  width: 30px;
-  height: 30px;
-  background: var(--wa);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.step-content h4 { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
-.step-content p  { font-size: 13px; color: var(--text2); line-height: 1.7; }
-
-.step-content a { color: var(--wa-dark); font-weight: 600; text-decoration: none; }
-.step-content a:hover { text-decoration: underline; }
-
-.code-box {
-  background: #1e2a1e;
-  color: #a8d8a8;
-  border-radius: 10px;
-  padding: 14px 16px;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-  margin-top: 10px;
-  position: relative;
-  overflow-x: auto;
-  line-height: 1.6;
-  white-space: pre;
-}
-
-.copy-btn {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: #a8d8a8;
-  border-radius: 6px;
-  padding: 3px 10px;
-  font-size: 11px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.2s;
-}
-.copy-btn:hover { background: rgba(255,255,255,0.2); }
-
-/* ============ INPUT FIELD ============ */
-.field { display: flex; flex-direction: column; gap: 7px; }
-
-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text2);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-label .req { color: var(--wa); }
-
-input, select, textarea {
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
-  padding: 11px 14px;
-  font-family: 'IBM Plex Sans Arabic', sans-serif;
-  font-size: 14px;
-  color: var(--text);
-  transition: all 0.2s;
-  direction: rtl;
-}
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--wa);
-  background: white;
-  box-shadow: 0 0 0 3px rgba(37,211,102,0.12);
-}
-textarea { resize: vertical; min-height: 75px; }
-
-.form-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
-.span2 { grid-column: span 2; }
-
-/* ============ REMINDERS ============ */
-.rem-area {
-  background: var(--surface2);
-  border: 1.5px dashed var(--border);
-  border-radius: 14px;
-  padding: 20px;
-}
-
-.rem-item {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-  display: grid;
-  grid-template-columns: 1fr 130px 2fr auto;
-  gap: 12px;
-  align-items: end;
-  animation: popIn 0.25s ease;
-}
-@keyframes popIn {
-  from { opacity:0; transform:scale(0.97); }
-  to   { opacity:1; transform:scale(1); }
-}
-
-.rem-del {
-  width: 34px; height: 34px;
-  background: rgba(229,57,53,0.08);
-  border: 1px solid rgba(229,57,53,0.2);
-  color: var(--red);
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.2s;
-}
-.rem-del:hover { background: rgba(229,57,53,0.15); }
-
-.btn-add-rem {
-  width: 100%;
-  padding: 10px;
-  background: rgba(37,211,102,0.08);
-  border: 1.5px dashed var(--wa);
-  color: var(--wa-dark);
-  border-radius: 10px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  margin-top: 4px;
-  transition: background 0.2s;
-}
-.btn-add-rem:hover { background: rgba(37,211,102,0.15); }
-
-/* ============ BUTTONS ============ */
-.btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 13px 28px;
-  border-radius: 12px;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.25s;
-  border: none;
-}
-
-.btn-wa {
-  background: linear-gradient(135deg, var(--wa), var(--wa-dark));
-  color: white;
-  box-shadow: 0 4px 15px rgba(37,211,102,0.35);
-}
-.btn-wa:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(37,211,102,0.45); }
-.btn-wa:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-.btn-outline {
-  background: white;
-  color: var(--text2);
-  border: 1.5px solid var(--border);
-}
-.btn-outline:hover { border-color: var(--wa); color: var(--wa-dark); }
-
-.btn-danger {
-  background: rgba(229,57,53,0.08);
-  color: var(--red);
-  border: 1px solid rgba(229,57,53,0.2);
-  padding: 8px 14px;
-  font-size: 12px;
-}
-.btn-danger:hover { background: rgba(229,57,53,0.15); }
-
-.actions { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; margin-top: 28px; }
-
-/* ============ INFO BOX ============ */
-.info-box {
-  border-radius: 12px;
-  padding: 14px 18px;
-  font-size: 13px;
-  line-height: 1.7;
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin-top: 16px;
-}
-.info-warn  { background: rgba(255,160,0,0.08);  border: 1px solid rgba(255,160,0,0.25);  color: #7a5200; }
-.info-green { background: rgba(37,211,102,0.07); border: 1px solid rgba(37,211,102,0.25); color: #1a5c30; }
-.info-blue  { background: rgba(52,183,241,0.08); border: 1px solid rgba(52,183,241,0.25); color: #0d4f6b; }
-
-/* ============ RECORDS ============ */
-.records-list { display: flex; flex-direction: column; gap: 16px; }
-
-.rec-card {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px 24px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  transition: box-shadow 0.2s;
-}
-.rec-card:hover { box-shadow: var(--shadow); }
-
-.rec-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.rec-name { font-size: 16px; font-weight: 700; }
-.rec-course { font-size: 13px; color: var(--wa-dark); font-weight: 600; margin-top: 2px; }
-.rec-phone  { font-size: 12px; color: var(--muted); margin-top: 3px; }
-
-.rec-meta {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  padding: 12px 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 12px;
-}
-.rec-meta-item { font-size: 12px; color: var(--text2); }
-.rec-meta-item span { font-weight: 700; color: var(--text); }
-
-.rec-reminders {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.rem-tag {
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.rem-tag-soon { background: rgba(255,160,0,0.1);  color: #7a5200; border: 1px solid rgba(255,160,0,0.3); }
-.rem-tag-past { background: rgba(16,185,129,0.1); color: #065f46; border: 1px solid rgba(16,185,129,0.3); }
-.rem-tag-future { background: rgba(52,183,241,0.1); color: #0d4f6b; border: 1px solid rgba(52,183,241,0.3); }
-
-.rec-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-
-.tag-status {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-}
-.tag-active  { background: rgba(37,211,102,0.12); color: #1a5c30; border: 1px solid rgba(37,211,102,0.3); }
-.tag-ended   { background: rgba(144,164,174,0.12); color: #546e7a; border: 1px solid rgba(144,164,174,0.3); }
-
-/* ============ EMPTY ============ */
-.empty {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--muted);
-}
-.empty-icon { font-size: 52px; margin-bottom: 16px; }
-.empty h3 { font-size: 18px; color: var(--text2); margin-bottom: 8px; }
-
-/* ============ TOAST ============ */
-.toast {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: var(--accent);
-  color: white;
-  padding: 12px 26px;
-  border-radius: 30px;
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  transition: transform 0.4s cubic-bezier(.34,1.56,.64,1);
-  z-index: 999;
-  white-space: nowrap;
-}
-.toast.show { transform: translateX(-50%) translateY(0); }
-
-/* ============ PROGRESS ============ */
-.setup-progress {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-.prog-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: var(--border);
-  transition: background 0.3s;
-}
-.prog-dot.done { background: var(--wa); }
-
-/* ============ API CONFIG BOX ============ */
-.api-config-box {
-  background: linear-gradient(135deg, rgba(37,211,102,0.05), rgba(7,94,84,0.05));
-  border: 1.5px solid rgba(37,211,102,0.25);
-  border-radius: 14px;
-  padding: 20px 24px;
-  margin-bottom: 20px;
-}
-.api-config-box h3 { font-size: 15px; font-weight: 700; color: var(--accent); margin-bottom: 14px; }
-
-.config-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 14px;
-}
-
-.status-dot {
-  display: inline-block;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  margin-left: 6px;
-}
-.dot-green { background: var(--wa); box-shadow: 0 0 6px var(--wa); }
-.dot-red   { background: var(--red); }
-.dot-gray  { background: var(--muted); }
-
-/* ============ APPS SCRIPT BOX ============ */
-.script-highlight {
-  background: #0d1f0d;
-  border-radius: 14px;
-  padding: 20px;
-  margin-top: 14px;
-}
-.script-highlight .lang-tag {
-  display: inline-block;
-  background: rgba(37,211,102,0.2);
-  color: var(--wa);
-  border-radius: 6px;
-  padding: 2px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-
-@media (max-width: 700px) {
-  .tabs { padding: 0 16px; overflow-x: auto; }
-  .header { padding: 0 20px; }
-  .container { padding: 20px 12px; }
-  .card { padding: 20px 18px; }
-  .form-grid, .form-grid-3, .config-row { grid-template-columns: 1fr; }
-  .span2 { grid-column: span 1; }
-  .rem-item { grid-template-columns: 1fr 1fr; }
-}
+footer{padding:20px 12px 40px;text-align:center;color:var(--muted);font-size:11px;}
+.hint{font-size:11px;color:var(--muted);margin-top:2px;}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-brand">
-    <div class="header-icon">🎓</div>
-    <div>
-      <h1>نظام التذكير التلقائي للدورات</h1>
-      <p>Google Sheets + CallMeBot WhatsApp API</p>
-    </div>
+<header>
+  <h1><span class="dot"></span> نظام إدارة طوارئ الإخلاء</h1>
+  <div class="stats">
+    <div class="stat total"><b id="statTotal">0</b><span>إجمالي القوى</span></div>
+    <div class="stat safe"><b id="statSafe">0</b><span>آمنون</span></div>
+    <div class="stat missing"><b id="statMissing">0</b><span>مفقودون</span></div>
   </div>
-  <div class="header-free">✅ مجاني 100%</div>
-</div>
+</header>
 
-<div class="tabs">
-  <div class="tab active" onclick="showTab('setup')" id="tab-setup">⚙️ الإعداد</div>
-  <div class="tab" onclick="showTab('form')" id="tab-form">➕ إضافة دورة</div>
-  <div class="tab" onclick="showTab('records')" id="tab-records">
-    📋 السجلات <span class="tab-badge" id="tab-count">0</span>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════ SETUP ══════════════════════════════════════ -->
-<div class="container">
-<div class="section active" id="section-setup">
-
-  <!-- API Config -->
-  <div class="api-config-box">
-    <h3>⚡ إعدادات الاتصال</h3>
-    <div class="config-row">
-      <div class="field">
-        <label>رابط Google Apps Script <span class="req">*</span></label>
-        <input type="text" id="cfg-sheet-url" placeholder="https://script.google.com/macros/s/..." oninput="saveConfig()" dir="ltr">
-      </div>
-      <div class="field">
-        <label>CallMeBot API Key <span class="req">*</span></label>
-        <input type="text" id="cfg-api-key" placeholder="أدخل الـ API Key" oninput="saveConfig()" dir="ltr">
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <button class="btn btn-wa" onclick="testAll()" style="padding:10px 20px;font-size:13px;">🔗 اختبر الاتصال</button>
-      <div id="conn-result" style="font-size:13px;color:var(--text2)"></div>
-    </div>
-  </div>
-
-  <!-- Step 1: CallMeBot -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-icon icon-green">📱</div>
-      <div>
-        <div class="card-title">الخطوة 1 — تفعيل CallMeBot (دقيقة واحدة)</div>
-        <div class="card-sub">خدمة مجانية لإرسال واتساب تلقائي</div>
-      </div>
-    </div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <h4>أرسل رسالة تفعيل لـ CallMeBot</h4>
-          <p>افتح واتساب وأرسل الرسالة التالية لرقم: <strong>+34 644 61 87 49</strong></p>
-          <div class="code-box" id="activation-msg">I allow callmebot to send me messages<button class="copy-btn" onclick="copyText('activation-msg')">نسخ</button></div>
-          <p style="margin-top:8px">أو اضغط هنا مباشرة:
-            <a href="https://wa.me/34644618749?text=I%20allow%20callmebot%20to%20send%20me%20messages" target="_blank">
-              🔗 افتح واتساب وأرسل
-            </a>
-          </p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <h4>استلم الـ API Key</h4>
-          <p>سيردّ عليك CallMeBot برسالة تحتوي على API Key الخاص بك. انسخه والصقه في حقل "CallMeBot API Key" أعلاه.</p>
-        </div>
-      </div>
-    </div>
-    <div class="info-box info-green" style="margin-top:16px">
-      <span>✅</span>
-      <span>CallMeBot مجاني تماماً ولا يحتاج بطاقة ائتمان. يمكنه إرسال رسائل واتساب تلقائية لأي رقم. الحد اليومي: 50 رسالة (كافي جداً).</span>
-    </div>
-  </div>
-
-  <!-- Step 2: Google Apps Script -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-icon icon-blue">📊</div>
-      <div>
-        <div class="card-title">الخطوة 2 — إعداد Google Sheets & Apps Script</div>
-        <div class="card-sub">لحفظ البيانات وإطلاق التذكيرات تلقائياً</div>
-      </div>
-    </div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <h4>أنشئ Google Sheet جديد</h4>
-          <p>اذهب لـ <a href="https://sheets.new" target="_blank">sheets.new</a> وسمّه "دورات الموظفين"</p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <h4>افتح Apps Script</h4>
-          <p>من القائمة: <strong>Extensions → Apps Script</strong> ← احذف الكود الموجود ← الصق الكود التالي:</p>
-          <div class="script-highlight">
-            <div class="lang-tag">Google Apps Script</div>
-            <div class="code-box" id="apps-script-code" style="background:transparent;padding:0;margin:0">// ===== إعداد رقمك وAPI Key هنا =====
-var ADMIN_PHONE = "966XXXXXXXXX"; // رقمك مع كود الدولة بدون +
-var CALLMEBOT_APIKEY = "XXXXXXX"; // API Key من CallMeBot
-
-// ===== استقبال بيانات الدورة =====
-function doPost(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("دورات") || ss.insertSheet("دورات");
-  var data = JSON.parse(e.postData.contents);
-
-  if (sheet.getLastRow() === 0) {
-    var headers = ['#','الوقت','الموظف','الهاتف','الدورة','المزود',
-                   'البداية','النهاية','الساعات','النوع','ملاحظات','التذكيرات'];
-    sheet.appendRow(headers);
-    sheet.getRange(1,1,1,12).setBackground('#075e54').setFontColor('#fff').setFontWeight('bold');
-    sheet.setFrozenRows(1);
-  }
-
-  var rowNum = sheet.getLastRow();
-  sheet.appendRow([
-    rowNum, new Date().toLocaleString('ar-SA'),
-    data.empName, data.phone, data.courseName, data.provider,
-    data.startDate, data.endDate, data.hours, data.courseType,
-    data.notes, data.reminders
-  ]);
-
-  // إرسال إشعار للمسؤول
-  sendWhatsApp(ADMIN_PHONE, CALLMEBOT_APIKEY,
-    "✅ *دورة جديدة أُضيفت*\n👤 " + data.empName +
-    "\n📚 " + data.courseName + "\n📅 " + data.startDate + " ← " + data.endDate);
-
-  return ContentService
-    .createTextOutput(JSON.stringify({status:"ok", row: rowNum+1}))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-// ===== فحص التذكيرات كل ساعة =====
-function checkReminders() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("دورات");
-  if (!sheet || sheet.getLastRow() < 2) return;
-
-  var now = new Date();
-  var data = sheet.getDataRange().getValues();
-
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    var empPhone = String(row[3]).replace(/\D/g,'');
-    var empName  = row[2];
-    var course   = row[4];
-    var remsStr  = row[11];
-
-    if (!remsStr) continue;
-    var reminders;
-    try { reminders = JSON.parse(remsStr); } catch(e) { continue; }
-
-    reminders.forEach(function(rem) {
-      if (!rem.date) return;
-      var remDt = new Date(rem.date + "T" + (rem.time || "08:00") + ":00");
-      var diff  = Math.abs(now - remDt) / 60000; // minutes
-
-      if (diff <= 30 && !rem.sent) {
-        var msg = "🔔 *تذكير دورة تدريبية*\n\n" +
-                  "👤 الموظف: " + empName + "\n" +
-                  "📚 الدورة: " + course + "\n" +
-                  "📅 الموعد: " + rem.date + " " + (rem.time||"") + "\n\n" +
-                  (rem.msg || "تذكير بالدورة التدريبية");
-
-        // إرسال للموظف
-        if (empPhone.length >= 10) sendWhatsApp(empPhone, CALLMEBOT_APIKEY, msg);
-        // إرسال للمسؤول
-        sendWhatsApp(ADMIN_PHONE, CALLMEBOT_APIKEY, msg);
-
-        rem.sent = true;
-      }
-    });
-
-    // تحديث السطر
-    sheet.getRange(i+1, 12).setValue(JSON.stringify(reminders));
-  }
-}
-
-// ===== إرسال واتساب عبر CallMeBot =====
-function sendWhatsApp(phone, apiKey, message) {
-  var url = "https://api.callmebot.com/whatsapp.php" +
-    "?phone=" + phone +
-    "&apikey=" + apiKey +
-    "&text=" + encodeURIComponent(message);
-  try {
-    UrlFetchApp.fetch(url);
-  } catch(ex) {
-    Logger.log("WhatsApp Error: " + ex);
-  }
-}
-
-// ===== للتجربة =====
-function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({status:"ready", time: new Date().toString()}))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-<button class="copy-btn" onclick="copyText('apps-script-code')">نسخ الكود</button></div>
-          </div>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-content">
-          <h4>عدّل رقمك وAPI Key في الكود</h4>
-          <p>في أول سطرين من الكود، ضع رقم هاتفك (مع كود الدولة مثل 966XXXXXXXXX) والـ API Key من CallMeBot.</p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-content">
-          <h4>انشر كـ Web App</h4>
-          <p><strong>Deploy → New Deployment → Web App</strong> ← اختر <strong>Anyone</strong> في "Who has access" ← اضغط Deploy ← انسخ الرابط والصقه في "رابط Google Apps Script" أعلاه.</p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">5</div>
-        <div class="step-content">
-          <h4>فعّل التشغيل التلقائي كل ساعة</h4>
-          <p>في Apps Script: اضغط على أيقونة <strong>⏱ Triggers (الساعة)</strong> ← اضغط <strong>Add Trigger</strong> ← اختر:</p>
-          <div class="code-box" style="margin-top:10px;white-space:normal">Function: <strong>checkReminders</strong> | Event source: <strong>Time-driven</strong> | Type: <strong>Hour timer</strong> | Every: <strong>1 hour</strong></div>
-        </div>
-      </div>
-    </div>
-    <div class="info-box info-blue" style="margin-top:16px">
-      <span>ℹ️</span>
-      <span>بعد إعداد الـ Trigger، سيفحص Google Apps Script تلقائياً كل ساعة ويرسل واتساب عند اقتراب موعد التذكير (30 دقيقة قبل الموعد).</span>
-    </div>
-  </div>
-
-  <div style="text-align:center;margin-top:8px">
-    <button class="btn btn-wa" onclick="showTab('form')">التالي: إضافة دورة ←</button>
-  </div>
-
-</div>
-
-<!-- ══════════════════════════════════════ FORM ══════════════════════════════════════ -->
-<div class="section" id="section-form">
+<main>
 
   <div class="card">
-    <div class="card-header">
-      <div class="card-icon icon-green">👤</div>
-      <div><div class="card-title">بيانات الموظف</div></div>
+    <h2>1) استيراد بيانات الموظفين</h2>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="paste">لصق مباشر</button>
+      <button class="tab-btn" data-tab="excel">ملف إكسل</button>
+      <button class="tab-btn" data-tab="gsheet">قوقل شيت</button>
     </div>
-    <div class="form-grid">
-      <div class="field">
-        <label>اسم الموظف <span class="req">*</span></label>
-        <input type="text" id="f-name" placeholder="الاسم الكامل">
-      </div>
-      <div class="field">
-        <label>رقم الواتساب <span class="req">*</span></label>
-        <input type="tel" id="f-phone" placeholder="966501234567 (بدون +)" dir="ltr">
-      </div>
-      <div class="field">
-        <label>القسم</label>
-        <input type="text" id="f-dept" placeholder="القسم">
-      </div>
-      <div class="field">
-        <label>المسمى الوظيفي</label>
-        <input type="text" id="f-job" placeholder="المسمى">
-      </div>
+
+    <div class="tab-content active" id="tab-paste">
+      <label>الصق بيانات الموظفين (RFID, ID, الاسم, القسم, الموقع) — يدعم أسماء تحتوي فواصل بين علامتي تنصيص</label>
+      <textarea id="pasteArea" placeholder='مثال:
+RFID,ID,الاسم,القسم,الموقع
+1234567,90011,"السويلم, أمل",أمن صناعي,برج A
+2233445,90012,محمد العتيبي,عمليات,برج B'></textarea>
+      <button id="btnParsePaste">استيراد من النص الملصق</button>
+    </div>
+
+    <div class="tab-content" id="tab-excel">
+      <label>اختر ملف Excel (.xlsx / .xls)</label>
+      <input type="file" id="excelFile" accept=".xlsx,.xls">
+      <div class="hint">يتطلب اتصال إنترنت عند أول تحميل للصفحة لتفعيل مكتبة قراءة الإكسل، ثم يعمل التحليل محلياً.</div>
+    </div>
+
+    <div class="tab-content" id="tab-gsheet">
+      <label>رابط النشر على الويب (CSV) من قوقل شيت</label>
+      <input type="url" id="gsheetUrl" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
+      <button id="btnLoadGsheet">سحب البيانات الآن</button>
+      <div class="hint">ملف &gt; مشاركة &gt; نشر على الويب &gt; اختر CSV. يتطلب اتصال إنترنت وقت السحب.</div>
+    </div>
+
+    <div id="importStatus" class="status-msg"></div>
+  </div>
+
+  <div class="card">
+    <h2>2) قائمة الموظفين</h2>
+    <div class="controls">
+      <input type="text" id="searchBox" class="search" placeholder="بحث بالاسم / الرقم / RFID...">
+      <select id="locationFilter" class="filter">
+        <option value="">كل المواقع</option>
+      </select>
+      <select id="statusFilter" class="filter">
+        <option value="">كل الحالات</option>
+        <option value="safe">آمن فقط</option>
+        <option value="pending">مفقود / لم يُؤكد</option>
+      </select>
+    </div>
+    <div class="list-info" id="listInfo">لا توجد بيانات مستوردة بعد.</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>الحالة</th>
+            <th>الاسم</th>
+            <th>الرقم / RFID</th>
+            <th>القسم</th>
+            <th>الموقع</th>
+            <th>إجراء</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-header">
-      <div class="card-icon icon-blue">📚</div>
-      <div><div class="card-title">بيانات الدورة</div></div>
-    </div>
-    <div class="form-grid">
-      <div class="field">
-        <label>اسم الدورة <span class="req">*</span></label>
-        <input type="text" id="f-course" placeholder="اسم الدورة التدريبية">
-      </div>
-      <div class="field">
-        <label>مزود الدورة</label>
-        <input type="text" id="f-provider" placeholder="الجهة المنظمة">
-      </div>
-      <div class="field">
-        <label>تاريخ البداية <span class="req">*</span></label>
-        <input type="date" id="f-start">
-      </div>
-      <div class="field">
-        <label>تاريخ النهاية <span class="req">*</span></label>
-        <input type="date" id="f-end">
-      </div>
-      <div class="field">
-        <label>عدد الساعات</label>
-        <input type="number" id="f-hours" placeholder="0" min="0">
-      </div>
-      <div class="field">
-        <label>نوع الدورة</label>
-        <select id="f-type">
-          <option value="">اختر</option>
-          <option>حضوري</option>
-          <option>أونلاين</option>
-          <option>مزيج</option>
-        </select>
-      </div>
-      <div class="field span2">
-        <label>ملاحظات</label>
-        <textarea id="f-notes" placeholder="ملاحظات..."></textarea>
-      </div>
+    <h2>3) التصدير</h2>
+    <div class="row">
+      <button id="btnExportSafe">تصدير كشف الآمنين (CSV)</button>
+      <button class="secondary" id="btnResetAll">تصفير حالة الحضور للجميع</button>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <div class="card-icon icon-orange">🔔</div>
-      <div>
-        <div class="card-title">مواعيد الإرسال التلقائي (واتساب)</div>
-        <div class="card-sub">ستُرسل تلقائياً عبر CallMeBot في الوقت المحدد</div>
-      </div>
-    </div>
-    <div class="rem-area">
-      <div id="rem-container"></div>
-      <button class="btn-add-rem" onclick="addReminder()">＋ أضف موعد إرسال</button>
-    </div>
-    <div class="info-box info-warn" style="margin-top:16px">
-      <span>⚡</span>
-      <span>Google Apps Script يفحص التذكيرات <strong>كل ساعة</strong> ويرسل الواتساب تلقائياً عند اقتراب الموعد بـ 30 دقيقة.</span>
-    </div>
-  </div>
+</main>
 
-  <div class="actions">
-    <button class="btn btn-outline" onclick="clearForm()">🗑 مسح</button>
-    <button class="btn btn-wa" onclick="submitForm()" id="submit-btn">
-      💾 حفظ وتفعيل التذكيرات التلقائية
-    </button>
-  </div>
-
-</div>
-
-<!-- ══════════════════════════════════════ RECORDS ══════════════════════════════════════ -->
-<div class="section" id="section-records">
-
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
-    <div>
-      <h2 style="font-size:18px;font-weight:700">📋 سجلات الدورات</h2>
-      <p style="font-size:13px;color:var(--muted);margin-top:2px" id="records-summary"></p>
-    </div>
-    <button class="btn btn-wa" onclick="showTab('form')" style="font-size:13px;padding:10px 18px;">＋ دورة جديدة</button>
-  </div>
-
-  <div id="records-container"></div>
-
-</div>
-</div><!-- /container -->
-
-<!-- TOAST -->
-<div class="toast" id="toast">✅</div>
+<footer>نظام مستقل يعمل بدون إنترنت (باستثناء تحميل ملفات Excel أو سحب قوقل شيت) — إعداد داخلي</footer>
 
 <script>
-// ═══════════ STATE ═══════════
-let records = [];
-let remIdCounter = 0;
+'use strict';
 
-// ═══════════ INIT ═══════════
-document.addEventListener('DOMContentLoaded', () => {
-  records = JSON.parse(localStorage.getItem('training_v2') || '[]');
-  const cfg = JSON.parse(localStorage.getItem('training_cfg') || '{}');
-  if (cfg.sheetUrl) document.getElementById('cfg-sheet-url').value = cfg.sheetUrl;
-  if (cfg.apiKey)   document.getElementById('cfg-api-key').value   = cfg.apiKey;
-  updateTabCount();
-  addReminder();
+// ---------- STATE ----------
+let records = [];        // { rfid, id, name, dept, location, safe:bool }
+let renderLimit = 100;
+let searchTerm = '';
+let locFilter = '';
+let statusFilterVal = '';
+
+// ---------- TAB SWITCHING ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
 });
 
-// ═══════════ TABS ═══════════
-function showTab(name) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('section-' + name).classList.add('active');
-  document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'records') renderRecords();
+function showStatus(msg, ok){
+  const el = document.getElementById('importStatus');
+  el.textContent = msg;
+  el.className = 'status-msg ' + (ok ? 'ok' : 'err');
 }
 
-// ═══════════ CONFIG ═══════════
-function saveConfig() {
-  const cfg = {
-    sheetUrl: document.getElementById('cfg-sheet-url').value.trim(),
-    apiKey:   document.getElementById('cfg-api-key').value.trim()
-  };
-  localStorage.setItem('training_cfg', JSON.stringify(cfg));
-}
-
-function testAll() {
-  const url    = document.getElementById('cfg-sheet-url').value.trim();
-  const apiKey = document.getElementById('cfg-api-key').value.trim();
-  const el = document.getElementById('conn-result');
-
-  if (!url) { el.innerHTML = '⚠️ أدخل رابط Google Apps Script'; return; }
-
-  el.textContent = '⏳ جاري الاختبار...';
-
-  // Remove old test script if any
-  const old = document.getElementById('_gs_test');
-  if (old) old.remove();
-
-  const timer = setTimeout(() => {
-    el.innerHTML = '⚠️ استغرق وقتاً طويلاً — لكن الإرسال قد يعمل، جرب حفظ دورة';
-  }, 6000);
-
-  // Apps Script doesn't support JSONP, so we use an image ping trick
-  // If the URL is reachable at all, onerror fires (not a real image) = server is up
-  const img = new Image();
-  img.onload = img.onerror = function() {
-    clearTimeout(timer);
-    el.innerHTML = '✅ Google Sheets متصل بنجاح!' + (apiKey ? ' | ✅ API Key محفوظ' : ' | ⚠️ أدخل API Key');
-  };
-  img.src = url + '?_ping=' + Date.now();
-}
-
-// ═══════════ REMINDERS ═══════════
-function addReminder() {
-  remIdCounter++;
-  const id = 'r' + remIdCounter;
-  const div = document.createElement('div');
-  div.className = 'rem-item';
-  div.id = id;
-  div.innerHTML = `
-    <div class="field">
-      <label>تاريخ الإرسال</label>
-      <input type="date" id="${id}_d">
-    </div>
-    <div class="field">
-      <label>الوقت</label>
-      <input type="time" id="${id}_t" value="08:00">
-    </div>
-    <div class="field">
-      <label>نص الرسالة (اختياري)</label>
-      <input type="text" id="${id}_m" placeholder="تذكير ببداية الدورة...">
-    </div>
-    <button class="rem-del" onclick="document.getElementById('${id}').remove()">✕</button>
-  `;
-  document.getElementById('rem-container').appendChild(div);
-}
-
-function getReminders() {
-  return [...document.querySelectorAll('.rem-item')].map(el => {
-    const id = el.id;
-    return {
-      date: document.getElementById(id+'_d')?.value || '',
-      time: document.getElementById(id+'_t')?.value || '08:00',
-      msg:  document.getElementById(id+'_m')?.value || '',
-      sent: false
-    };
-  }).filter(r => r.date);
-}
-
-// ═══════════ FORM ═══════════
-async function submitForm() {
-  const name   = document.getElementById('f-name').value.trim();
-  const phone  = document.getElementById('f-phone').value.replace(/\D/g,'');
-  const course = document.getElementById('f-course').value.trim();
-  const start  = document.getElementById('f-start').value;
-  const end    = document.getElementById('f-end').value;
-  if (!name || !phone || !course || !start || !end) {
-    showToast('⚠️ ملء الحقول المطلوبة', '#f59e0b'); return;
-  }
-
-  const cfg = JSON.parse(localStorage.getItem('training_cfg') || '{}');
-
-  const rec = {
-    id: Date.now(),
-    empName: name, phone,
-    dept: document.getElementById('f-dept').value,
-    jobTitle: document.getElementById('f-job').value,
-    courseName: course,
-    provider: document.getElementById('f-provider').value,
-    startDate: start, endDate: end,
-    hours: document.getElementById('f-hours').value,
-    courseType: document.getElementById('f-type').value,
-    notes: document.getElementById('f-notes').value,
-    reminders: JSON.stringify(getReminders()),
-    savedAt: new Date().toISOString()
-  };
-
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...';
-
-  // Save locally
-  records.push(rec);
-  localStorage.setItem('training_v2', JSON.stringify(records));
-  updateTabCount();
-
-  // Send to Google Sheets
-  if (cfg.sheetUrl) {
-    try {
-      await fetch(cfg.sheetUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify(rec),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      showToast('✅ تم الحفظ وتفعيل التذكيرات التلقائية!');
-    } catch {
-      showToast('💾 تم الحفظ محلياً (تحقق من رابط Sheets)', '#f59e0b');
+// ---------- SMART CSV PARSER (handles quoted commas) ----------
+function parseDelimitedText(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else {
+      if(c === '"') inQuotes = true;
+      else if(c === ',' || c === '\t'){ row.push(field); field=''; }
+      else if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else if(c === '\r'){ /* skip */ }
+      else field += c;
     }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(f => f.trim() !== ''));
+}
+
+// ---------- COLUMN MAPPING ----------
+function mapColumns(rows){
+  if(!rows.length) return [];
+  const headerRow = rows[0].map(h => (h||'').toString().trim().toLowerCase());
+  const isHeader = headerRow.some(h =>
+    /rfid|شريحة|بطاقة|id|هوية|رقم|اسم|name|قسم|dept|موقع|location|برج/.test(h)
+  );
+
+  const find = (patterns) => headerRow.findIndex(h => patterns.some(p => h.includes(p)));
+
+  let idxRfid, idxId, idxName, idxDept, idxLoc;
+  let dataRows;
+
+  if(isHeader){
+    idxRfid = find(['rfid','شريحة']);
+    idxId   = find(['id','هوية','رقم الموظف','الرقم الوظيفي']);
+    idxName = find(['اسم','name']);
+    idxDept = find(['قسم','dept','إدارة']);
+    idxLoc  = find(['موقع','location','برج','مبنى']);
+    dataRows = rows.slice(1);
   } else {
-    showToast('💾 تم الحفظ محلياً (لم يُضبط الرابط)', '#f59e0b');
+    dataRows = rows;
   }
 
-  btn.disabled = false;
-  btn.textContent = '💾 حفظ وتفعيل التذكيرات التلقائية';
-  clearForm();
-  showTab('records');
+  // Fallback to fixed positional order: RFID(0), ID(1), Name(2), Dept(3), Location(4)
+  if(idxRfid === undefined || idxRfid < 0) idxRfid = 0;
+  if(idxId === undefined || idxId < 0) idxId = 1;
+  if(idxName === undefined || idxName < 0) idxName = 2;
+  if(idxDept === undefined || idxDept < 0) idxDept = 3;
+  if(idxLoc === undefined || idxLoc < 0) idxLoc = 4;
+
+  return dataRows.map(r => ({
+    rfid: (r[idxRfid]||'').toString().trim(),
+    id: (r[idxId]||'').toString().trim(),
+    name: (r[idxName]||'').toString().trim(),
+    dept: (r[idxDept]||'').toString().trim(),
+    location: (r[idxLoc]||'').toString().trim(),
+    safe: false
+  })).filter(rec => rec.name || rec.id || rec.rfid);
 }
 
-function clearForm() {
-  ['f-name','f-phone','f-dept','f-job','f-course','f-provider','f-start','f-end','f-hours','f-notes']
-    .forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-type').value = '';
-  document.getElementById('rem-container').innerHTML = '';
-  remIdCounter = 0;
-  addReminder();
-}
-
-// ═══════════ RECORDS ═══════════
-function updateTabCount() {
-  document.getElementById('tab-count').textContent = records.length;
-}
-
-function renderRecords() {
-  const container = document.getElementById('records-container');
-  updateTabCount();
-
-  if (!records.length) {
-    container.innerHTML = `<div class="empty"><div class="empty-icon">📂</div><h3>لا توجد سجلات بعد</h3><p>أضف دورة جديدة للبدء</p></div>`;
-    document.getElementById('records-summary').textContent = '';
+function ingest(rows, sourceLabel){
+  const parsed = mapColumns(rows);
+  if(!parsed.length){
+    showStatus('لم يتم العثور على سجلات صالحة في ' + sourceLabel, false);
     return;
   }
-
-  const now = new Date();
-  let activeCount = records.filter(r => new Date(r.endDate) >= now).length;
-  document.getElementById('records-summary').textContent = `${records.length} دورة إجمالاً • ${activeCount} نشطة`;
-
-  container.innerHTML = '<div class="records-list">' +
-    records.slice().reverse().map((r, ri) => {
-      const idx = records.length - 1 - ri;
-      const rems = (() => { try { return JSON.parse(r.reminders || '[]'); } catch { return []; } })();
-      const isActive = new Date(r.endDate) >= now;
-
-      const remTags = rems.slice(0, 4).map(rem => {
-        const dt = new Date(rem.date + 'T' + (rem.time || '08:00'));
-        const diffH = (dt - now) / 3600000;
-        const cls = rem.sent ? 'rem-tag-past' : diffH < 24 ? 'rem-tag-soon' : 'rem-tag-future';
-        const icon = rem.sent ? '✓' : diffH < 24 ? '⚡' : '🔔';
-        return `<span class="rem-tag ${cls}">${icon} ${rem.date} ${rem.time||''}</span>`;
-      }).join('');
-
-      const cfg = JSON.parse(localStorage.getItem('training_cfg') || '{}');
-      const waMsg = encodeURIComponent(`🔔 *تذكير يدوي*\n👤 ${r.empName}\n📚 ${r.courseName}\n📅 ${r.startDate} ← ${r.endDate}`);
-      const waUrl = `https://wa.me/${r.phone}?text=${waMsg}`;
-
-      return `
-        <div class="rec-card">
-          <div class="rec-top">
-            <div>
-              <div class="rec-name">👤 ${r.empName}</div>
-              <div class="rec-course">📚 ${r.courseName}</div>
-              <div class="rec-phone">📞 ${r.phone}${r.dept ? ' • ' + r.dept : ''}</div>
-            </div>
-            <span class="tag-status ${isActive ? 'tag-active' : 'tag-ended'}">${isActive ? '⏳ نشطة' : '✓ منتهية'}</span>
-          </div>
-          <div class="rec-meta">
-            <div class="rec-meta-item">البداية: <span>${r.startDate}</span></div>
-            <div class="rec-meta-item">النهاية: <span>${r.endDate}</span></div>
-            ${r.hours ? `<div class="rec-meta-item">الساعات: <span>${r.hours}</span></div>` : ''}
-            ${r.courseType ? `<div class="rec-meta-item">النوع: <span>${r.courseType}</span></div>` : ''}
-            <div class="rec-meta-item">تذكيرات: <span>${rems.length}</span></div>
-          </div>
-          ${rems.length ? `<div class="rec-reminders">${remTags}</div>` : ''}
-          <div class="rec-actions">
-            <a href="${waUrl}" target="_blank" class="btn btn-wa" style="font-size:12px;padding:8px 14px;text-decoration:none">📤 إرسال يدوي</a>
-            <button class="btn btn-danger" onclick="deleteRecord(${idx})">🗑 حذف</button>
-          </div>
-        </div>`;
-    }).join('') + '</div>';
+  records = parsed;
+  showStatus('تم استيراد ' + records.length + ' سجل بنجاح من ' + sourceLabel, true);
+  buildLocationFilter();
+  renderTable();
+  updateStats();
 }
 
-function deleteRecord(idx) {
-  if (!confirm('حذف هذا السجل؟')) return;
-  records.splice(idx, 1);
-  localStorage.setItem('training_v2', JSON.stringify(records));
-  updateTabCount();
-  renderRecords();
-  showToast('🗑 تم الحذف');
+// ---------- PASTE ----------
+document.getElementById('btnParsePaste').addEventListener('click', ()=>{
+  const text = document.getElementById('pasteArea').value.trim();
+  if(!text){ showStatus('الرجاء لصق البيانات أولاً.', false); return; }
+  const rows = parseDelimitedText(text);
+  ingest(rows, 'النص الملصق');
+});
+
+// ---------- EXCEL ----------
+document.getElementById('excelFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(typeof XLSX === 'undefined'){
+    showStatus('تعذر تحميل مكتبة قراءة الإكسل (يلزم اتصال إنترنت مرة واحدة).', false);
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const wb = XLSX.read(evt.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      ingest(rows, 'ملف ' + file.name);
+    }catch(err){
+      showStatus('خطأ في قراءة ملف الإكسل: ' + err.message, false);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+// ---------- GOOGLE SHEET ----------
+document.getElementById('btnLoadGsheet').addEventListener('click', async ()=>{
+  const url = document.getElementById('gsheetUrl').value.trim();
+  if(!url){ showStatus('الرجاء إدخال رابط CSV من قوقل شيت.', false); return; }
+  showStatus('جارِ سحب البيانات...', true);
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const rows = parseDelimitedText(text);
+    ingest(rows, 'قوقل شيت');
+  }catch(err){
+    showStatus('تعذر سحب البيانات (تحقق من الرابط والاتصال بالإنترنت): ' + err.message, false);
+  }
+});
+
+// ---------- FILTERS ----------
+function buildLocationFilter(){
+  const sel = document.getElementById('locationFilter');
+  const current = sel.value;
+  const locs = [...new Set(records.map(r=>r.location).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">كل المواقع</option>' +
+    locs.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+  sel.value = locs.includes(current) ? current : '';
 }
 
-// ═══════════ TOAST ═══════════
-function showToast(msg, bg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.background = bg || 'var(--accent)';
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
+document.getElementById('searchBox').addEventListener('input', (e)=>{
+  searchTerm = e.target.value.trim().toLowerCase();
+  renderTable();
+});
+document.getElementById('locationFilter').addEventListener('change', (e)=>{
+  locFilter = e.target.value;
+  renderTable();
+});
+document.getElementById('statusFilter').addEventListener('change', (e)=>{
+  statusFilterVal = e.target.value;
+  renderTable();
+});
+
+function escapeHtml(s){
+  return (s||'').toString()
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ═══════════ COPY ═══════════
-function copyText(elId) {
-  const el = document.getElementById(elId);
-  const text = el.innerText.replace('نسخ\nنسخ الكود','').replace('نسخ','').trim();
-  navigator.clipboard.writeText(text).then(() => showToast('✅ تم النسخ!'));
+// ---------- RENDER (DocumentFragment + virtual limit) ----------
+function getFiltered(){
+  return records.filter(r=>{
+    if(locFilter && r.location !== locFilter) return false;
+    if(statusFilterVal === 'safe' && !r.safe) return false;
+    if(statusFilterVal === 'pending' && r.safe) return false;
+    if(searchTerm){
+      const hay = (r.name+' '+r.id+' '+r.rfid+' '+r.dept).toLowerCase();
+      if(!hay.includes(searchTerm)) return false;
+    }
+    return true;
+  });
 }
+
+function renderTable(){
+  const tbody = document.getElementById('tableBody');
+  const filtered = getFiltered();
+  const shown = filtered.slice(0, renderLimit);
+
+  const frag = document.createDocumentFragment();
+  shown.forEach(rec=>{
+    const tr = document.createElement('tr');
+    tr.className = rec.safe ? 'safe-row' : 'missing-row';
+
+    const tdStatus = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = 'badge ' + (rec.safe ? 'safe' : 'pending');
+    badge.textContent = rec.safe ? 'آمن' : 'غير مؤكد';
+    tdStatus.appendChild(badge);
+
+    const tdName = document.createElement('td');
+    tdName.innerHTML = `<div class="name-cell">${escapeHtml(rec.name)}</div><div class="sub-cell">${escapeHtml(rec.rfid)}</div>`;
+
+    const tdId = document.createElement('td');
+    tdId.textContent = rec.id;
+
+    const tdDept = document.createElement('td');
+    tdDept.textContent = rec.dept;
+
+    const tdLoc = document.createElement('td');
+    tdLoc.textContent = rec.location;
+
+    const tdAction = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.className = 'att-btn' + (rec.safe ? ' undo' : '');
+    btn.textContent = rec.safe ? 'تراجع' : 'حضور';
+    btn.addEventListener('click', ()=>{
+      rec.safe = !rec.safe;
+      renderTable();
+      updateStats();
+    });
+    tdAction.appendChild(btn);
+
+    tr.append(tdStatus, tdName, tdId, tdDept, tdLoc, tdAction);
+    frag.appendChild(tr);
+  });
+
+  tbody.innerHTML = '';
+  tbody.appendChild(frag);
+
+  const info = document.getElementById('listInfo');
+  if(!records.length){
+    info.textContent = 'لا توجد بيانات مستوردة بعد.';
+  } else if(filtered.length > renderLimit){
+    info.textContent = `عرض ${renderLimit} من أصل ${filtered.length} نتيجة مطابقة (استخدم البحث للوصول لسجل محدد) — الإجمالي الكلي: ${records.length}`;
+  } else {
+    info.textContent = `عرض ${filtered.length} من أصل ${records.length} سجل`;
+  }
+}
+
+function updateStats(){
+  document.getElementById('statTotal').textContent = records.length;
+  const safeCount = records.filter(r=>r.safe).length;
+  document.getElementById('statSafe').textContent = safeCount;
+  document.getElementById('statMissing').textContent = records.length - safeCount;
+}
+
+// ---------- EXPORT ----------
+document.getElementById('btnExportSafe').addEventListener('click', ()=>{
+  const safeList = records.filter(r=>r.safe);
+  if(!safeList.length){ alert('لا يوجد موظفون مسجلون كآمنين بعد.'); return; }
+  const header = 'RFID,ID,الاسم,القسم,الموقع\n';
+  const rows = safeList.map(r =>
+    [r.rfid, r.id, `"${(r.name||'').replace(/"/g,'""')}"`, r.dept, r.location].join(',')
+  ).join('\n');
+  const csv = '\uFEFF' + header + rows;
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  a.download = 'كشف_الآمنين_' + ts + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+});
+
+document.getElementById('btnResetAll').addEventListener('click', ()=>{
+  if(!records.length) return;
+  if(!confirm('هل تريد تصفير حالة الحضور لجميع الموظفين؟')) return;
+  records.forEach(r=> r.safe = false);
+  renderTable();
+  updateStats();
+});
+
+// ---------- INIT ----------
+updateStats();
+renderTable();
 </script>
 </body>
 </html>
