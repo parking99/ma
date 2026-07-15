@@ -17,7 +17,7 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; font-family: 'Tajawal', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; }
-header { background: var(--navy); border-bottom: 4px solid var(--accent); padding: 15px 20px; position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+header { background: var(--navy); border-bottom: 4px solid var(--accent); padding: 15px 20px; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
 header h1 { margin: 0 0 12px; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #ffffff; }
 header h1 .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px rgba(245, 158, 11, .8); }
 .stats { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -197,10 +197,14 @@ let searchTerm = '';
 let locFilter = '';
 let statusFilterVal = '';
 
-// Storage Bug Fixed: Using Standard localStorage
 let syncUrl = '';
 let pollTimer = null;
 let syncInFlight = false;
+
+// دالة توحيد النصوص لتفادي الأصفار والفراغات أثناء المطابقة
+function normalizeStr(s){ 
+  return String(s||'').trim().toLowerCase().replace(/^0+/, ''); 
+}
 
 function setSyncDot(connected){
   const dot = document.getElementById('syncDot');
@@ -261,7 +265,6 @@ async function pullFromSync(replaceIfEmpty){
     syncInFlight = false;
     if(!data || !data.ok || !Array.isArray(data.records)) return false;
 
-    // Boolean Fix: Ensure strict interpretation of safe status
     const parseSafe = (val) => val === true || String(val).toLowerCase() === 'true' || val === 1;
 
     if(!records.length && replaceIfEmpty){
@@ -275,11 +278,19 @@ async function pullFromSync(replaceIfEmpty){
     let changed = false;
     data.records.forEach(remote=>{
       const isRemoteSafe = parseSafe(remote.safe);
+      
       const match = records.find(r => 
-        (remote.rfid && r.rfid === remote.rfid) || (remote.id && r.id === remote.id)
+        (remote.rfid && normalizeStr(r.rfid) === normalizeStr(remote.rfid)) || 
+        (remote.id && normalizeStr(r.id) === normalizeStr(remote.id))
       );
+      
       if(match){
-        if(match.safe !== isRemoteSafe){ match.safe = isRemoteSafe; changed = true; }
+        // هنا تم إضافة (القفل المؤقت 15 ثانية) لمنع الاسترجاع المزعج أثناء الحفظ
+        const isRecentlyModified = match.lastModified && (Date.now() - match.lastModified < 15000);
+        if(match.safe !== isRemoteSafe && !isRecentlyModified){ 
+          match.safe = isRemoteSafe; 
+          changed = true; 
+        }
       } else if(remote.rfid || remote.id || remote.name){
         records.push({
           rfid: remote.rfid||'', id: remote.id||'', name: remote.name||'',
@@ -299,7 +310,7 @@ async function pullFromSync(replaceIfEmpty){
 
 function startPolling(){
   if(pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(()=> pullFromSync(false), 5000); // Poll every 5 seconds
+  pollTimer = setInterval(()=> pullFromSync(false), 5000);
 }
 
 function showStatus(msg, type){
@@ -372,10 +383,10 @@ function mapColumns(rows){
     name: idxName >= 0 ? (r[idxName]||'').toString().trim() : '',
     dept: idxDept >= 0 ? (r[idxDept]||'').toString().trim() : '',
     location: idxLoc >= 0 ? (r[idxLoc]||'').toString().trim() : '',
-    safe: false
+    safe: false,
+    lastModified: 0
   })).filter(rec => rec.name || rec.id || rec.rfid);
   
-  // Fix empty ID/RFID fallback
   recs.forEach(r => { if(!r.rfid) r.rfid = r.id; if(!r.id) r.id = r.rfid; });
 
   const mapping = {
@@ -480,6 +491,7 @@ function renderTable(){
     btn.textContent = rec.safe ? 'تراجع' : 'تحضير';
     btn.onclick = () => {
       rec.safe = !rec.safe;
+      rec.lastModified = Date.now(); // إرسال قفل تحديث
       renderTable(); updateStats();
       if(syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: rec.safe });
     };
@@ -514,7 +526,7 @@ document.getElementById('btnExportSafe').addEventListener('click', ()=>{
 
 document.getElementById('btnResetAll').addEventListener('click', ()=>{
   if(!records.length || !confirm('هل أنت متأكد من تصفير الحضور للجميع لتجربة إخلاء جديدة؟')) return;
-  records.forEach(r=> r.safe = false);
+  records.forEach(r=> { r.safe = false; r.lastModified = Date.now(); });
   renderTable(); updateStats();
   if(syncUrl) postToSync('reset', {});
 });
@@ -533,17 +545,15 @@ function showScanFeedback(hit, title, sub){
 }
 
 function processScanCode(rawCode){
-  const code = (rawCode||'').trim().toLowerCase().replace(/^0+/, ''); // Normalize (remove leading zeros)
+  const code = normalizeStr(rawCode);
   if(!code) return;
   
-  const rec = records.find(r => 
-    (r.rfid||'').toLowerCase().replace(/^0+/,'') === code || 
-    (r.id||'').toLowerCase().replace(/^0+/,'') === code
-  );
+  const rec = records.find(r => normalizeStr(r.rfid) === code || normalizeStr(r.id) === code);
 
   if(!rec){ showScanFeedback(false, 'غير معروف: ' + rawCode, 'لم يتم العثور على الموظف في القائمة المرفوعة'); return; }
   
   rec.safe = true;
+  rec.lastModified = Date.now(); // إرسال قفل التحديث
   renderTable(); updateStats();
   showScanFeedback(true, rec.name || rawCode, '✅ تم تسجيله كـ (آمن)');
   if(syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: true });
