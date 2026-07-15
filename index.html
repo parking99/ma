@@ -201,10 +201,20 @@ let syncUrl = '';
 let pollTimer = null;
 let syncInFlight = false;
 
-// دالة توحيد النصوص لتفادي الأصفار والفراغات أثناء المطابقة
+// دالة توحيد النصوص لتفادي الأصفار والفراغات أثناء المطابقة// دالة توحيد النصوص (النسخة المطورة لدعم أجهزة أبل والرموز المخفية)
 function normalizeStr(s){ 
-  return String(s||'').trim().toLowerCase().replace(/^0+/, ''); 
+  if(!s) return '';
+  let clean = String(s);
+  // 1. تحويل الأرقام العربية (إن وجدت) إلى إنجليزية
+  clean = clean.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+  // 2. إزالة أي مسافات أو فراغات بالكامل (حتى التي بداخل النص)
+  clean = clean.replace(/\s+/g, '');
+  // 3. إزالة رموز أبل المخفية (مثل علامات اتجاه النص LTR/RTL)
+  clean = clean.replace(/[\u200B-\u200D\uFEFF\u200E\u200F]/g, '');
+  // 4. توحيد الحروف وإزالة الأصفار التي على اليسار
+  return clean.toLowerCase().replace(/^0+/, '');
 }
+
 
 function setSyncDot(connected){
   const dot = document.getElementById('syncDot');
