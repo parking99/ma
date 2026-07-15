@@ -608,7 +608,7 @@ document.getElementById('excelFile').addEventListener('change', (e)=>{
     try{
       const wb = XLSX.read(evt.target.result, {type:'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
       ingest(rows, 'ملف ' + file.name);
     }catch(err){
       showStatus('خطأ في قراءة ملف الإكسل: ' + err.message, 'err');
@@ -669,7 +669,8 @@ function getFiltered(){
     if(statusFilterVal === 'pending' && r.safe) return false;
     if(searchTerm){
       const hay = (r.name+' '+r.id+' '+r.rfid+' '+r.dept).toLowerCase();
-      if(!hay.includes(searchTerm)) return false;
+      const normHay = normalizeCode(r.id) + ' ' + normalizeCode(r.rfid);
+      if(!hay.includes(searchTerm) && !normHay.includes(normalizeCode(searchTerm))) return false;
     }
     return true;
   });
@@ -777,6 +778,13 @@ const scanInputEl = document.getElementById('scanInput');
 let scanFeedbackTimer = null;
 
 function focusScanInput(){
+  const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+  // Don't steal focus while the person is deliberately typing somewhere else
+  // (search box, paste area, sync URL field, etc).
+  if(tag === 'input' || tag === 'textarea' || tag === 'select'){
+    if(document.activeElement === scanInputEl) return;
+    if(document.activeElement.id !== 'scanInput') return;
+  }
   scanInputEl.focus();
 }
 
@@ -788,17 +796,28 @@ function showScanFeedback(hit, mainText, subText){
   scanFeedbackTimer = setTimeout(()=>{ el.classList.remove('show'); }, 3000);
 }
 
-scanInputEl.addEventListener('keydown', (e)=>{
-  if(e.key !== 'Enter') return;
-  e.preventDefault();
-  const code = scanInputEl.value.trim();
-  scanInputEl.value = '';
-  if(!code) return;
+// Normalizes a code for comparison: trims whitespace, lowercases, and strips
+// leading zeros. This is what fixes "موجود لكن يقول غير موجود" — Excel often
+// drops leading zeros from numeric-looking ID/RFID columns (٠٠١٢٣ → ١٢٣),
+// so a strict string match against the scanner's raw padded value fails even
+// though it's the same person. Comparing normalized forms on both sides
+// makes the match succeed regardless of padding, spacing, or letter case.
+function normalizeCode(s){
+  return (s==null ? '' : s).toString().trim().toLowerCase().replace(/^0+(?=.)/, '');
+}
 
-  const rec = records.find(r => r.rfid === code || r.id === code);
+function findByCode(rawCode){
+  const norm = normalizeCode(rawCode);
+  if(!norm) return null;
+  return records.find(r => normalizeCode(r.rfid) === norm || normalizeCode(r.id) === norm);
+}
+
+function processScanCode(rawCode){
+  const code = rawCode.trim();
+  if(!code) return;
+  const rec = findByCode(code);
   if(!rec){
-    showScanFeedback(false, 'غير معروف: ' + code, 'تأكد من استيراد قائمة الموظفين أولاً.');
-    focusScanInput();
+    showScanFeedback(false, 'غير معروف: ' + code, 'تأكد من استيراد قائمة الموظفين، أو أن الرقم مطابق لعمود RFID/الرقم الوظيفي.');
     return;
   }
   rec.safe = true;
@@ -806,17 +825,52 @@ scanInputEl.addEventListener('keydown', (e)=>{
   updateStats();
   showScanFeedback(true, rec.name || code, (rec.dept||'') + (rec.location ? ' · ' + rec.location : '') + ' — تم التسجيل آمن');
   if(syncUrl){ postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: true }); }
+}
+
+scanInputEl.addEventListener('keydown', (e)=>{
+  if(e.key !== 'Enter' && e.key !== 'Tab') return;
+  e.preventDefault();
+  const code = scanInputEl.value;
+  scanInputEl.value = '';
+  processScanCode(code);
   focusScanInput();
 });
 
-// Re-focus the scan box whenever the user clicks elsewhere on the page that
-// isn't another input, so the scanner keeps working without extra taps.
-document.addEventListener('click', (e)=>{
+// Fallback for when focus somehow lands elsewhere (e.g. the page scrolled or
+// a button was tapped): scanners type fast — much faster than a human — so
+// any burst of keystrokes ending in Enter/Tab that ISN'T happening inside a
+// real text field is treated as a scan too. This is what lets scanning work
+// continuously without ever needing to tap the page.
+let globalBuffer = '';
+let globalLastTime = 0;
+document.addEventListener('keydown', (e)=>{
+  if(e.target === scanInputEl) return; // already handled above
   const tag = (e.target.tagName || '').toLowerCase();
-  if(tag !== 'input' && tag !== 'textarea' && tag !== 'select' && tag !== 'button'){
-    focusScanInput();
+  if(tag === 'input' || tag === 'textarea' || tag === 'select') return; // real typing elsewhere
+
+  const now = Date.now();
+  if(now - globalLastTime > 300) globalBuffer = '';
+  globalLastTime = now;
+
+  if(e.key === 'Enter' || e.key === 'Tab'){
+    if(globalBuffer.trim().length >= 3){
+      e.preventDefault();
+      processScanCode(globalBuffer);
+    }
+    globalBuffer = '';
+    return;
   }
+  if(e.key.length === 1) globalBuffer += e.key;
 });
+
+// Belt-and-suspenders auto-refocus: runs continuously so the scan field
+// regains focus on its own (no click required) whenever it isn't needed
+// elsewhere — covers cases like the on-screen keyboard closing, a table
+// button being tapped, or the page scrolling.
+setInterval(focusScanInput, 1000);
+document.addEventListener('click', focusScanInput);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) focusScanInput(); });
+window.addEventListener('focus', focusScanInput);
 
 // ---------- INIT ----------
 updateStats();
