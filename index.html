@@ -80,6 +80,28 @@ button.secondary{background:var(--panel2);color:var(--text);border:1px solid var
 .map-preview .field{display:inline-block;margin-left:12px;margin-bottom:4px;}
 .map-preview .field.missing{color:var(--missing);}
 
+.sync-box{border-top:1px dashed var(--border);margin-top:12px;padding-top:12px;}
+.sync-row{display:flex;gap:8px;align-items:center;}
+.sync-row input{margin-bottom:0;}
+.sync-dot{width:10px;height:10px;border-radius:50%;background:#c7ced4;flex:0 0 auto;}
+.sync-dot.on{background:var(--safe);box-shadow:0 0 6px rgba(26,143,76,.6);}
+.sync-dot.off{background:var(--missing);}
+.sync-label{font-size:12px;color:var(--muted);white-space:nowrap;}
+
+.scan-card{border:2px solid var(--accent);}
+.scan-input{
+  width:100%;font-size:24px;text-align:center;padding:16px;border:2px solid var(--accent);
+  border-radius:10px;letter-spacing:1px;background:#fffaf0;
+}
+.scan-feedback{
+  margin-top:10px;padding:14px;border-radius:10px;text-align:center;font-size:18px;font-weight:bold;
+  display:none;
+}
+.scan-feedback.show{display:block;}
+.scan-feedback.hit{background:var(--safe-bg);color:#186b3a;border:1px solid var(--safe);}
+.scan-feedback.miss{background:var(--missing-bg);color:#8f2626;border:1px solid var(--missing);}
+.scan-sub{font-size:13px;font-weight:normal;color:var(--muted);margin-top:4px;}
+
 table{width:100%;border-collapse:collapse;font-size:13px;}
 thead th{
   position:sticky;top:0;background:var(--panel2);color:var(--muted);font-size:11px;
@@ -117,6 +139,13 @@ footer{padding:20px 12px 40px;text-align:center;color:var(--muted);font-size:11p
 
 <main>
 
+  <div class="card scan-card">
+    <h2>مسح سريع بـ RFID</h2>
+    <input type="text" id="scanInput" class="scan-input" placeholder="امسح البطاقة الآن..." autocomplete="off" autofocus>
+    <div id="scanFeedback" class="scan-feedback"></div>
+    <div class="hint">وجّه المؤشر هنا واترك الجهاز يمسح — يُسجَّل الموظف "آمن" تلقائياً فور المسح بدون أي ضغط زر.</div>
+  </div>
+
   <div class="card">
     <h2>1) استيراد بيانات الموظفين</h2>
     <div class="tabs">
@@ -149,6 +178,16 @@ RFID,ID,الاسم,القسم,الموقع
 
     <div id="importStatus" class="status-msg"></div>
     <div id="mapPreview" class="map-preview"></div>
+
+    <div class="sync-box">
+      <label>المزامنة الحية عبر قوقل شيت (اختياري — لمشاركة التحديثات بين عدة مستخدمين)</label>
+      <div class="sync-row">
+        <span id="syncDot" class="sync-dot off"></span>
+        <input type="url" id="syncUrlInput" placeholder="الصق رابط تطبيق الويب (Web app URL) من Apps Script">
+        <button id="btnConnectSync" class="secondary">ربط ومزامنة</button>
+      </div>
+      <div class="sync-label" id="syncStatusLabel">غير متصل — التحديثات تبقى محلية على هذا الجهاز فقط.</div>
+    </div>
   </div>
 
   <div class="card">
@@ -203,6 +242,130 @@ let renderLimit = 100;
 let searchTerm = '';
 let locFilter = '';
 let statusFilterVal = '';
+
+// ---------- GOOGLE SHEET LIVE SYNC ----------
+// The sheet URL is a personal setting (not shared) saved via the artifact's
+// built-in storage, so each user only has to paste it once on their device.
+let syncUrl = '';
+let pollTimer = null;
+let syncInFlight = false;
+
+function setSyncDot(connected){
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncStatusLabel');
+  dot.className = 'sync-dot ' + (connected ? 'on' : 'off');
+  label.textContent = connected
+    ? 'متصل — التحديثات تُشارك تلقائياً مع بقية المستخدمين بالخلفية.'
+    : 'غير متصل — التحديثات تبقى محلية على هذا الجهاز فقط.';
+}
+
+async function loadSyncConfig(){
+  try{
+    const res = await window.storage.get('gsheet-sync-url', false);
+    if(res && res.value){
+      syncUrl = res.value;
+      document.getElementById('syncUrlInput').value = syncUrl;
+      setSyncDot(true);
+      startPolling();
+    }
+  }catch(err){ /* no saved config yet — fine */ }
+}
+
+async function connectSync(){
+  const url = document.getElementById('syncUrlInput').value.trim();
+  if(!url){ showStatus('الصق رابط تطبيق الويب أولاً.', 'err'); return; }
+  syncUrl = url;
+  try{
+    await window.storage.set('gsheet-sync-url', url, false);
+  }catch(err){ /* saving the preference failing shouldn't block syncing this session */ }
+  setSyncDot(true);
+  showStatus('جارِ الاتصال بقوقل شيت...', 'warn');
+  if(records.length){
+    // Push whatever we already have locally so the sheet is initialized.
+    const ok = await postToSync('import', { records });
+    showStatus(ok ? 'تم الربط ومزامنة ' + records.length + ' سجل مع قوقل شيت.' : 'تم حفظ الرابط، لكن تعذر الوصول للشيت الآن — تحقق من رابط النشر.', ok ? 'ok' : 'err');
+  } else {
+    // Nothing local yet — try pulling whatever is already on the sheet.
+    const pulled = await pullFromSync(true);
+    showStatus(pulled ? 'تم الربط وجلب البيانات من قوقل شيت.' : 'تم حفظ الرابط، لكن تعذر الوصول للشيت الآن — تحقق من رابط النشر.', pulled ? 'ok' : 'err');
+  }
+  startPolling();
+}
+
+// Fire-and-forget write. Never shows a spinner or blocks the UI — this is what
+// keeps check-ins feeling instant for the person scanning while everyone else's
+// view updates quietly in the background on the next poll.
+async function postToSync(action, payload){
+  if(!syncUrl) return false;
+  try{
+    const res = await fetch(syncUrl, {
+      method: 'POST',
+      headers: {'Content-Type':'text/plain;charset=utf-8'}, // avoids CORS preflight on Apps Script
+      body: JSON.stringify(Object.assign({action}, payload))
+    });
+    const data = await res.json().catch(()=>null);
+    return !data || data.ok !== false;
+  }catch(err){
+    console.warn('sync post failed', err);
+    return false;
+  }
+}
+
+async function pullFromSync(replaceIfEmpty){
+  if(!syncUrl || syncInFlight) return false;
+  syncInFlight = true;
+  try{
+    const res = await fetch(syncUrl + '?t=' + Date.now());
+    const data = await res.json();
+    syncInFlight = false;
+    if(!data || !data.ok || !Array.isArray(data.records)) return false;
+
+    if(!records.length && replaceIfEmpty){
+      records = data.records.map(r => ({
+        rfid: r.rfid||'', id: r.id||'', name: r.name||'', dept: r.dept||'', location: r.location||'', safe: !!r.safe
+      }));
+      buildLocationFilter();
+      renderTable();
+      updateStats();
+      return true;
+    }
+
+    // Merge: update safe-status (and fill in any blank fields) for existing
+    // records by matching rfid/id, and quietly add any brand-new ones. This
+    // is what makes another user's check-in show up here without anyone
+    // having to refresh or being shown a loading state.
+    let changed = false;
+    data.records.forEach(remote=>{
+      const match = records.find(r =>
+        (remote.rfid && r.rfid === remote.rfid) || (remote.id && r.id === remote.id)
+      );
+      if(match){
+        if(match.safe !== !!remote.safe){ match.safe = !!remote.safe; changed = true; }
+      } else if(remote.rfid || remote.id || remote.name){
+        records.push({
+          rfid: remote.rfid||'', id: remote.id||'', name: remote.name||'',
+          dept: remote.dept||'', location: remote.location||'', safe: !!remote.safe
+        });
+        changed = true;
+      }
+    });
+    if(changed){
+      buildLocationFilter();
+      renderTable();
+      updateStats();
+    }
+    return true;
+  }catch(err){
+    syncInFlight = false;
+    console.warn('sync pull failed', err);
+    return false;
+  }
+}
+
+function startPolling(){
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(()=> pullFromSync(false), 6000);
+}
 
 // ---------- TAB SWITCHING ----------
 document.querySelectorAll('.tab-btn').forEach(btn=>{
@@ -418,6 +581,10 @@ function ingest(rows, sourceLabel){
   buildLocationFilter();
   renderTable();
   updateStats();
+
+  // Push the freshly-imported roster to the shared sheet in the background,
+  // silently — the person importing already saw the success message above.
+  if(syncUrl){ postToSync('import', { records }); }
 }
 
 // ---------- PASTE ----------
@@ -544,6 +711,7 @@ function renderTable(){
       rec.safe = !rec.safe;
       renderTable();
       updateStats();
+      if(syncUrl){ postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: rec.safe }); }
     });
     tdAction.appendChild(btn);
 
@@ -596,11 +764,65 @@ document.getElementById('btnResetAll').addEventListener('click', ()=>{
   records.forEach(r=> r.safe = false);
   renderTable();
   updateStats();
+  if(syncUrl){ postToSync('reset', {}); }
+});
+
+document.getElementById('btnConnectSync').addEventListener('click', connectSync);
+
+// ---------- RFID QUICK SCAN ----------
+// Dedicated always-focused field: RFID/badge readers behave like keyboards
+// typing the code followed by Enter, so a normal keydown/Enter handler here
+// is enough — no special driver or hardware API needed.
+const scanInputEl = document.getElementById('scanInput');
+let scanFeedbackTimer = null;
+
+function focusScanInput(){
+  scanInputEl.focus();
+}
+
+function showScanFeedback(hit, mainText, subText){
+  const el = document.getElementById('scanFeedback');
+  el.className = 'scan-feedback show ' + (hit ? 'hit' : 'miss');
+  el.innerHTML = escapeHtml(mainText) + (subText ? '<div class="scan-sub">'+escapeHtml(subText)+'</div>' : '');
+  clearTimeout(scanFeedbackTimer);
+  scanFeedbackTimer = setTimeout(()=>{ el.classList.remove('show'); }, 3000);
+}
+
+scanInputEl.addEventListener('keydown', (e)=>{
+  if(e.key !== 'Enter') return;
+  e.preventDefault();
+  const code = scanInputEl.value.trim();
+  scanInputEl.value = '';
+  if(!code) return;
+
+  const rec = records.find(r => r.rfid === code || r.id === code);
+  if(!rec){
+    showScanFeedback(false, 'غير معروف: ' + code, 'تأكد من استيراد قائمة الموظفين أولاً.');
+    focusScanInput();
+    return;
+  }
+  rec.safe = true;
+  renderTable();
+  updateStats();
+  showScanFeedback(true, rec.name || code, (rec.dept||'') + (rec.location ? ' · ' + rec.location : '') + ' — تم التسجيل آمن');
+  if(syncUrl){ postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: true }); }
+  focusScanInput();
+});
+
+// Re-focus the scan box whenever the user clicks elsewhere on the page that
+// isn't another input, so the scanner keeps working without extra taps.
+document.addEventListener('click', (e)=>{
+  const tag = (e.target.tagName || '').toLowerCase();
+  if(tag !== 'input' && tag !== 'textarea' && tag !== 'select' && tag !== 'button'){
+    focusScanInput();
+  }
 });
 
 // ---------- INIT ----------
 updateStats();
 renderTable();
+loadSyncConfig();
+focusScanInput();
 </script>
 </body>
 </html>
