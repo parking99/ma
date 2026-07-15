@@ -4,126 +4,108 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>نظام إدارة طوارئ الإخلاء</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{
-  --bg:#ffffff; --panel:#ffffff; --panel2:#f4f6f8; --border:#dde3e9;
-  --text:#1c2b3a; --muted:#6b7c8c;
-  --safe:#1a8f4c; --safe-bg:#e8f7ee;
-  --missing:#c23434; --missing-bg:#fdeceb;
-  --accent:#c98600; --accent-dark:#a56e00;
-  --navy:#152a41;
-  --focus:#1b6fb8;
+:root {
+  --bg: #f8fafd; --panel: #ffffff; --panel2: #f4f6f8; --border: #e2e8f0;
+  --text: #1e293b; --muted: #64748b;
+  --safe: #10b981; --safe-bg: #ecfdf5;
+  --missing: #ef4444; --missing-bg: #fef2f2;
+  --accent: #f59e0b; --accent-dark: #d97706;
+  --navy: #0f172a; --focus: #3b82f6;
 }
-*{box-sizing:border-box;}
-body{margin:0;font-family:'Tahoma','Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:16px;}
-header{
-  background:var(--navy);
-  border-bottom:3px solid var(--accent);
-  padding:10px 14px;position:sticky;top:0;z-index:20;
+* { box-sizing: border-box; }
+body { margin: 0; font-family: 'Tajawal', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; }
+header { background: var(--navy); border-bottom: 4px solid var(--accent); padding: 15px 20px; position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+header h1 { margin: 0 0 12px; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #ffffff; }
+header h1 .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px rgba(245, 158, 11, .8); }
+.stats { display: flex; gap: 10px; flex-wrap: wrap; }
+.stat { flex: 1; min-width: 100px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 12px; text-align: center; backdrop-filter: blur(5px); }
+.stat b { display: block; font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+.stat span { font-size: 13px; font-weight: 500; color: #cbd5e1; }
+.stat.total b { color: #38bdf8; }
+.stat.safe b { color: #34d399; }
+.stat.missing b { color: #f87171; }
+
+main { padding: 20px 15px; max-width: 1000px; margin: 0 auto; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+.card h2 { margin: 0 0 15px; font-size: 18px; font-weight: 700; color: var(--navy); border-right: 4px solid var(--accent); padding-right: 10px; }
+
+label { display: block; font-size: 14px; font-weight: 500; color: var(--muted); margin-bottom: 8px; }
+input[type=text], input[type=file], input[type=url], select {
+  width: 100%; background: #fff; border: 2px solid var(--border); color: var(--text);
+  padding: 12px; border-radius: 10px; font-size: 14px; margin-bottom: 12px; font-family: inherit; transition: all 0.2s;
 }
-header h1{margin:0 0 8px;font-size:19px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;color:#ffffff;}
-header h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px rgba(201,134,0,.7);}
-.stats{display:flex;gap:8px;flex-wrap:wrap;}
-.stat{flex:1;min-width:90px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 10px;text-align:center;}
-.stat b{display:block;font-size:22px;line-height:1.2;}
-.stat span{font-size:11px;color:#b7c3cf;}
-.stat.total b{color:#7fc4ff;}
-.stat.safe b{color:#5cd68a;}
-.stat.missing b{color:#ff8a8a;}
+input:focus, select:focus, button:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
 
-main{padding:12px;max-width:900px;margin:0 auto;}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(21,42,65,.06);}
-.card h2{margin:0 0 10px;font-size:15px;color:var(--navy);border-right:3px solid var(--accent);padding-right:8px;}
-
-.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
-.tab-btn{
-  flex:1;min-width:100px;padding:9px 6px;background:var(--panel2);border:1px solid var(--border);
-  color:var(--muted);border-radius:8px;font-size:13px;cursor:pointer;
+button {
+  cursor: pointer; border: none; border-radius: 10px; padding: 12px 20px; font-size: 15px; font-weight: 700;
+  background: var(--accent); color: #fff; font-family: inherit; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;
 }
-.tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent-dark);font-weight:bold;}
-.tab-content{display:none;}
-.tab-content.active{display:block;}
+button:hover { background: var(--accent-dark); transform: translateY(-1px); }
+button:active { transform: scale(.97); }
+button.secondary { background: var(--panel2); color: var(--navy); border: 2px solid var(--border); }
+button.secondary:hover { background: #e2e8f0; }
 
-label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;}
-input[type=text], input[type=file], input[type=url], textarea, select{
-  width:100%;background:#fff;border:1px solid var(--border);color:var(--text);
-  padding:9px;border-radius:8px;font-size:14px;margin-bottom:8px;font-family:inherit;
-}
-textarea{min-height:100px;resize:vertical;}
-input:focus, textarea:focus, select:focus, button:focus{outline:2px solid var(--focus);outline-offset:1px;}
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.row > * { flex: 1; min-width: 140px; }
 
-button{
-  cursor:pointer;border:none;border-radius:8px;padding:9px 14px;font-size:14px;font-weight:bold;
-  background:var(--accent);color:#fff;
-}
-button:active{transform:scale(.97);}
-button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
-.row{display:flex;gap:8px;flex-wrap:wrap;}
-.row > *{flex:1;min-width:120px;}
+.status-msg { font-size: 14px; padding: 12px; border-radius: 10px; font-weight: 500; margin-top: 10px; display: none; }
+.status-msg.ok { display: block; background: var(--safe-bg); color: #047857; border: 1px solid #34d399; }
+.status-msg.err { display: block; background: var(--missing-bg); color: #b91c1c; border: 1px solid #f87171; }
+.status-msg.warn { display: block; background: #fef3c7; color: #b45309; border: 1px solid #fbbf24; }
 
-.status-msg{font-size:12px;padding:8px;border-radius:8px;margin-top:6px;display:none;}
-.status-msg.ok{display:block;background:var(--safe-bg);color:#186b3a;border:1px solid var(--safe);}
-.status-msg.err{display:block;background:var(--missing-bg);color:#8f2626;border:1px solid var(--missing);}
-.status-msg.warn{display:block;background:#fff6e5;color:#7a5400;border:1px solid var(--accent);}
+.controls { display: flex; gap: 12px; margin-bottom: 15px; flex-wrap: wrap; }
+.controls input, .controls select { margin-bottom: 0; }
+.controls .search { flex: 2; min-width: 200px; }
+.controls .filter { flex: 1; min-width: 140px; }
 
-.controls{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
-.controls input, .controls select{margin-bottom:0;}
-.controls .search{flex:2;min-width:160px;}
-.controls .filter{flex:1;min-width:140px;}
+.map-preview { font-size: 13px; background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-top: 10px; display: none; }
+.map-preview.show { display: block; }
+.map-preview b { color: var(--navy); font-size: 14px; }
+.map-preview .field { display: inline-block; margin-left: 15px; margin-bottom: 6px; margin-top: 8px; padding: 4px 8px; background: #fff; border-radius: 6px; border: 1px solid var(--border);}
+.map-preview .field.missing { color: var(--missing); border-color: var(--missing); background: var(--missing-bg); }
 
-.list-info{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.sync-box { border-top: 2px dashed var(--border); margin-top: 20px; padding-top: 20px; }
+.sync-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.sync-row input { margin-bottom: 0; flex: 1; min-width: 200px; }
+.sync-dot { width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; flex: 0 0 auto; transition: 0.3s; }
+.sync-dot.on { background: var(--safe); box-shadow: 0 0 10px rgba(16, 185, 129, .6); }
+.sync-dot.off { background: var(--missing); }
+.sync-label { font-size: 13px; font-weight: 500; color: var(--muted); margin-top: 10px; display: block; }
 
-.map-preview{font-size:12px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-top:6px;display:none;}
-.map-preview.show{display:block;}
-.map-preview b{color:var(--navy);}
-.map-preview .field{display:inline-block;margin-left:12px;margin-bottom:4px;}
-.map-preview .field.missing{color:var(--missing);}
+.scan-card { border: 2px solid var(--focus); background: #f0f9ff; }
+.scan-input { width: 100%; font-size: 24px; text-align: center; padding: 20px; border: 2px dashed var(--focus); border-radius: 12px; letter-spacing: 2px; background: #fff; font-weight: 700; }
+.scan-feedback { margin-top: 15px; padding: 15px; border-radius: 12px; text-align: center; font-size: 18px; font-weight: 800; display: none; }
+.scan-feedback.show { display: block; animation: popIn 0.3s ease; }
+@keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.scan-feedback.hit { background: var(--safe); color: #fff; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+.scan-feedback.miss { background: var(--missing); color: #fff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+.scan-sub { font-size: 14px; font-weight: 500; opacity: 0.9; margin-top: 6px; }
 
-.sync-box{border-top:1px dashed var(--border);margin-top:12px;padding-top:12px;}
-.sync-row{display:flex;gap:8px;align-items:center;}
-.sync-row input{margin-bottom:0;}
-.sync-dot{width:10px;height:10px;border-radius:50%;background:#c7ced4;flex:0 0 auto;}
-.sync-dot.on{background:var(--safe);box-shadow:0 0 6px rgba(26,143,76,.6);}
-.sync-dot.off{background:var(--missing);}
-.sync-label{font-size:12px;color:var(--muted);white-space:nowrap;}
+.table-wrap { max-height: 60vh; overflow: auto; border: 1px solid var(--border); border-radius: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+thead th { position: sticky; top: 0; background: var(--panel2); color: var(--navy); font-size: 13px; font-weight: 700; padding: 12px 10px; text-align: right; border-bottom: 2px solid var(--border); z-index: 1; }
+tbody td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; background: #fff; transition: background 0.2s; }
+tbody tr:hover td { background: #f8fafc; }
+tbody tr.safe-row td { background: var(--safe-bg); }
+tbody tr.safe-row:hover td { background: #d1fae5; }
+tbody tr.missing-row td:first-child { border-right: 4px solid var(--missing); }
+.name-cell { font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+.sub-cell { font-size: 12px; color: var(--muted); font-family: monospace; }
 
-.scan-card{border:2px solid var(--accent);}
-.scan-input{
-  width:100%;font-size:24px;text-align:center;padding:16px;border:2px solid var(--accent);
-  border-radius:10px;letter-spacing:1px;background:#fffaf0;
-}
-.scan-feedback{
-  margin-top:10px;padding:14px;border-radius:10px;text-align:center;font-size:18px;font-weight:bold;
-  display:none;
-}
-.scan-feedback.show{display:block;}
-.scan-feedback.hit{background:var(--safe-bg);color:#186b3a;border:1px solid var(--safe);}
-.scan-feedback.miss{background:var(--missing-bg);color:#8f2626;border:1px solid var(--missing);}
-.scan-sub{font-size:13px;font-weight:normal;color:var(--muted);margin-top:4px;}
+.badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.badge.safe { background: var(--safe); color: #fff; }
+.badge.pending { background: #e2e8f0; color: #475569; }
 
-table{width:100%;border-collapse:collapse;font-size:13px;}
-thead th{
-  position:sticky;top:0;background:var(--panel2);color:var(--muted);font-size:11px;
-  padding:6px 4px;text-align:right;border-bottom:1px solid var(--border);
-}
-tbody td{padding:7px 4px;border-bottom:1px solid var(--border);vertical-align:middle;}
-tbody tr.safe-row{background:var(--safe-bg);}
-tbody tr.missing-row td:first-child{border-right:3px solid var(--missing);}
-.name-cell{font-weight:bold;color:var(--navy);}
-.sub-cell{font-size:11px;color:var(--muted);}
+.att-btn { padding: 6px 12px; font-size: 12px; background: var(--safe); color: #fff; border-radius: 8px; }
+.att-btn.undo { background: transparent; color: var(--missing); border: 1px solid var(--missing); }
+.att-btn.undo:hover { background: var(--missing-bg); }
 
-.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:bold;}
-.badge.safe{background:var(--safe);color:#fff;}
-.badge.pending{background:#e7ebef;color:#5b6b7a;}
-
-.att-btn{padding:6px 10px;font-size:12px;background:var(--safe);color:#fff;border-radius:6px;}
-.att-btn.undo{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
-
-.table-wrap{max-height:55vh;overflow:auto;border:1px solid var(--border);border-radius:8px;}
-
-footer{padding:20px 12px 40px;text-align:center;color:var(--muted);font-size:11px;}
-.hint{font-size:11px;color:var(--muted);margin-top:2px;}
+footer { padding: 20px 15px 40px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 500; }
+.hint { font-size: 12px; color: var(--muted); margin-top: 6px; display: block; }
+.list-info { font-size: 13px; color: var(--muted); margin-bottom: 10px; font-weight: 500; }
 </style>
 </head>
 <body>
@@ -138,62 +120,36 @@ footer{padding:20px 12px 40px;text-align:center;color:var(--muted);font-size:11p
 </header>
 
 <main>
-
   <div class="card scan-card">
     <h2>مسح سريع بـ RFID</h2>
     <input type="text" id="scanInput" class="scan-input" placeholder="امسح البطاقة الآن..." autocomplete="off" autofocus>
     <div id="scanFeedback" class="scan-feedback"></div>
-    <div class="hint">وجّه المؤشر هنا واترك الجهاز يمسح — يُسجَّل الموظف "آمن" تلقائياً فور المسح بدون أي ضغط زر.</div>
+    <span class="hint">وجّه المؤشر هنا واترك الجهاز يمسح — يُسجَّل الموظف "آمن" تلقائياً فور المسح بدون أي ضغط زر.</span>
   </div>
 
   <div class="card">
-    <h2>1) استيراد بيانات الموظفين</h2>
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="paste">لصق مباشر</button>
-      <button class="tab-btn" data-tab="excel">ملف إكسل</button>
-      <button class="tab-btn" data-tab="gsheet">قوقل شيت</button>
-    </div>
-
-    <div class="tab-content active" id="tab-paste">
-      <label>الصق بيانات الموظفين (RFID, ID, الاسم, القسم, الموقع) — يدعم أسماء تحتوي فواصل بين علامتي تنصيص</label>
-      <textarea id="pasteArea" placeholder='مثال:
-RFID,ID,الاسم,القسم,الموقع
-1234567,90011,"السويلم, أمل",أمن صناعي,برج A
-2233445,90012,محمد العتيبي,عمليات,برج B'></textarea>
-      <button id="btnParsePaste">استيراد من النص الملصق</button>
-    </div>
-
-    <div class="tab-content" id="tab-excel">
-      <label>اختر ملف Excel (.xlsx / .xls)</label>
-      <input type="file" id="excelFile" accept=".xlsx,.xls">
-      <div class="hint">يتطلب اتصال إنترنت عند أول تحميل للصفحة لتفعيل مكتبة قراءة الإكسل، ثم يعمل التحليل محلياً.</div>
-    </div>
-
-    <div class="tab-content" id="tab-gsheet">
-      <label>رابط النشر على الويب (CSV) من قوقل شيت</label>
-      <input type="url" id="gsheetUrl" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
-      <button id="btnLoadGsheet">سحب البيانات الآن</button>
-      <div class="hint">ملف &gt; مشاركة &gt; نشر على الويب &gt; اختر CSV. يتطلب اتصال إنترنت وقت السحب.</div>
-    </div>
-
+    <h2>1) استيراد وتحديث البيانات</h2>
+    <label>اختر ملف Excel (.xlsx / .xls) لقائمة الموظفين</label>
+    <input type="file" id="excelFile" accept=".xlsx,.xls">
+    
     <div id="importStatus" class="status-msg"></div>
     <div id="mapPreview" class="map-preview"></div>
 
     <div class="sync-box">
-      <label>المزامنة الحية عبر قوقل شيت (اختياري — لمشاركة التحديثات بين عدة مستخدمين)</label>
+      <label>المزامنة الحية عبر قوقل شيت (تحديث لحظي بين الأجهزة)</label>
       <div class="sync-row">
         <span id="syncDot" class="sync-dot off"></span>
-        <input type="url" id="syncUrlInput" placeholder="الصق رابط تطبيق الويب (Web app URL) من Apps Script">
-        <button id="btnConnectSync" class="secondary">ربط ومزامنة</button>
+        <input type="url" id="syncUrlInput" placeholder="الصق رابط تطبيق الويب (Web app URL) هنا">
+        <button id="btnConnectSync" class="secondary">تفعيل المزامنة</button>
       </div>
-      <div class="sync-label" id="syncStatusLabel">غير متصل — التحديثات تبقى محلية على هذا الجهاز فقط.</div>
+      <span class="sync-label" id="syncStatusLabel">غير متصل — التحديثات تبقى محلية على هذا الجهاز فقط.</span>
     </div>
   </div>
 
   <div class="card">
-    <h2>2) قائمة الموظفين</h2>
+    <h2>2) قائمة الحضور والإخلاء</h2>
     <div class="controls">
-      <input type="text" id="searchBox" class="search" placeholder="بحث بالاسم / الرقم / RFID...">
+      <input type="text" id="searchBox" class="search" placeholder="بحث بالاسم / الرقم الوظيفي / بطاقة الدخول...">
       <select id="locationFilter" class="filter">
         <option value="">كل المواقع</option>
       </select>
@@ -209,11 +165,11 @@ RFID,ID,الاسم,القسم,الموقع
         <thead>
           <tr>
             <th>الحالة</th>
-            <th>الاسم</th>
-            <th>الرقم / RFID</th>
+            <th>الاسم / RFID</th>
+            <th>الرقم الوظيفي</th>
             <th>القسم</th>
             <th>الموقع</th>
-            <th>إجراء</th>
+            <th>إجراء يدوي</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -222,30 +178,26 @@ RFID,ID,الاسم,القسم,الموقع
   </div>
 
   <div class="card">
-    <h2>3) التصدير</h2>
+    <h2>3) إدارة الكشوفات</h2>
     <div class="row">
-      <button id="btnExportSafe">تصدير كشف الآمنين (CSV)</button>
-      <button class="secondary" id="btnResetAll">تصفير حالة الحضور للجميع</button>
+      <button id="btnExportSafe">تنزيل كشف الآمنين (CSV)</button>
+      <button class="secondary" id="btnResetAll" style="color:var(--missing); border-color:var(--missing);">تصفير حالة الحضور للجميع</button>
     </div>
   </div>
-
 </main>
 
-<footer>نظام مستقل يعمل بدون إنترنت (باستثناء تحميل ملفات Excel أو سحب قوقل شيت) — إعداد داخلي</footer>
+<footer>نظام إدارة الإخلاء — الإصدار المحدث</footer>
 
 <script>
 'use strict';
 
-// ---------- STATE ----------
-let records = [];        // { rfid, id, name, dept, location, safe:bool }
-let renderLimit = 100;
+let records = []; 
+let renderLimit = 150;
 let searchTerm = '';
 let locFilter = '';
 let statusFilterVal = '';
 
-// ---------- GOOGLE SHEET LIVE SYNC ----------
-// The sheet URL is a personal setting (not shared) saved via the artifact's
-// built-in storage, so each user only has to paste it once on their device.
+// Storage Bug Fixed: Using Standard localStorage
 let syncUrl = '';
 let pollTimer = null;
 let syncInFlight = false;
@@ -255,60 +207,49 @@ function setSyncDot(connected){
   const label = document.getElementById('syncStatusLabel');
   dot.className = 'sync-dot ' + (connected ? 'on' : 'off');
   label.textContent = connected
-    ? 'متصل — التحديثات تُشارك تلقائياً مع بقية المستخدمين بالخلفية.'
-    : 'غير متصل — التحديثات تبقى محلية على هذا الجهاز فقط.';
+    ? 'متصل بالنظام السحابي — الأجهزة متزامنة بنجاح 🟢'
+    : 'غير متصل — التحديثات تبقى محلية على هذا الجهاز فقط 🔴';
 }
 
-async function loadSyncConfig(){
-  try{
-    const res = await window.storage.get('gsheet-sync-url', false);
-    if(res && res.value){
-      syncUrl = res.value;
-      document.getElementById('syncUrlInput').value = syncUrl;
-      setSyncDot(true);
-      startPolling();
-    }
-  }catch(err){ /* no saved config yet — fine */ }
+function loadSyncConfig(){
+  const savedUrl = localStorage.getItem('evac-sync-url');
+  if(savedUrl){
+    syncUrl = savedUrl;
+    document.getElementById('syncUrlInput').value = syncUrl;
+    setSyncDot(true);
+    startPolling();
+  }
 }
 
 async function connectSync(){
   const url = document.getElementById('syncUrlInput').value.trim();
-  if(!url){ showStatus('الصق رابط تطبيق الويب أولاً.', 'err'); return; }
+  if(!url){ showStatus('الرجاء لصق الرابط أولاً.', 'err'); return; }
   syncUrl = url;
-  try{
-    await window.storage.set('gsheet-sync-url', url, false);
-  }catch(err){ /* saving the preference failing shouldn't block syncing this session */ }
+  localStorage.setItem('evac-sync-url', url);
   setSyncDot(true);
-  showStatus('جارِ الاتصال بقوقل شيت...', 'warn');
+  showStatus('جارِ الاتصال بقاعدة البيانات...', 'warn');
+  
   if(records.length){
-    // Push whatever we already have locally so the sheet is initialized.
     const ok = await postToSync('import', { records });
-    showStatus(ok ? 'تم الربط ومزامنة ' + records.length + ' سجل مع قوقل شيت.' : 'تم حفظ الرابط، لكن تعذر الوصول للشيت الآن — تحقق من رابط النشر.', ok ? 'ok' : 'err');
+    showStatus(ok ? 'تم الرفع والمزامنة بنجاح.' : 'تم الحفظ، لكن تعذر الوصول للرابط.', ok ? 'ok' : 'err');
   } else {
-    // Nothing local yet — try pulling whatever is already on the sheet.
     const pulled = await pullFromSync(true);
-    showStatus(pulled ? 'تم الربط وجلب البيانات من قوقل شيت.' : 'تم حفظ الرابط، لكن تعذر الوصول للشيت الآن — تحقق من رابط النشر.', pulled ? 'ok' : 'err');
+    showStatus(pulled ? 'تم الربط وجلب البيانات بنجاح.' : 'تم الحفظ، لكن لا توجد بيانات لجلبها أو تعذر الوصول.', pulled ? 'ok' : 'err');
   }
   startPolling();
 }
 
-// Fire-and-forget write. Never shows a spinner or blocks the UI — this is what
-// keeps check-ins feeling instant for the person scanning while everyone else's
-// view updates quietly in the background on the next poll.
 async function postToSync(action, payload){
   if(!syncUrl) return false;
   try{
     const res = await fetch(syncUrl, {
       method: 'POST',
-      headers: {'Content-Type':'text/plain;charset=utf-8'}, // avoids CORS preflight on Apps Script
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify(Object.assign({action}, payload))
     });
     const data = await res.json().catch(()=>null);
-    return !data || data.ok !== false;
-  }catch(err){
-    console.warn('sync post failed', err);
-    return false;
-  }
+    return data && data.ok !== false;
+  }catch(err){ return false; }
 }
 
 async function pullFromSync(replaceIfEmpty){
@@ -320,417 +261,238 @@ async function pullFromSync(replaceIfEmpty){
     syncInFlight = false;
     if(!data || !data.ok || !Array.isArray(data.records)) return false;
 
+    // Boolean Fix: Ensure strict interpretation of safe status
+    const parseSafe = (val) => val === true || String(val).toLowerCase() === 'true' || val === 1;
+
     if(!records.length && replaceIfEmpty){
       records = data.records.map(r => ({
-        rfid: r.rfid||'', id: r.id||'', name: r.name||'', dept: r.dept||'', location: r.location||'', safe: !!r.safe
+        rfid: r.rfid||'', id: r.id||'', name: r.name||'', dept: r.dept||'', location: r.location||'', safe: parseSafe(r.safe)
       }));
-      buildLocationFilter();
-      renderTable();
-      updateStats();
+      buildLocationFilter(); renderTable(); updateStats();
       return true;
     }
 
-    // Merge: update safe-status (and fill in any blank fields) for existing
-    // records by matching rfid/id, and quietly add any brand-new ones. This
-    // is what makes another user's check-in show up here without anyone
-    // having to refresh or being shown a loading state.
     let changed = false;
     data.records.forEach(remote=>{
-      const match = records.find(r =>
+      const isRemoteSafe = parseSafe(remote.safe);
+      const match = records.find(r => 
         (remote.rfid && r.rfid === remote.rfid) || (remote.id && r.id === remote.id)
       );
       if(match){
-        if(match.safe !== !!remote.safe){ match.safe = !!remote.safe; changed = true; }
+        if(match.safe !== isRemoteSafe){ match.safe = isRemoteSafe; changed = true; }
       } else if(remote.rfid || remote.id || remote.name){
         records.push({
           rfid: remote.rfid||'', id: remote.id||'', name: remote.name||'',
-          dept: remote.dept||'', location: remote.location||'', safe: !!remote.safe
+          dept: remote.dept||'', location: remote.location||'', safe: isRemoteSafe
         });
         changed = true;
       }
     });
-    if(changed){
-      buildLocationFilter();
-      renderTable();
-      updateStats();
-    }
+    
+    if(changed){ buildLocationFilter(); renderTable(); updateStats(); }
     return true;
   }catch(err){
     syncInFlight = false;
-    console.warn('sync pull failed', err);
     return false;
   }
 }
 
 function startPolling(){
   if(pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(()=> pullFromSync(false), 6000);
+  pollTimer = setInterval(()=> pullFromSync(false), 5000); // Poll every 5 seconds
 }
 
-// ---------- TAB SWITCHING ----------
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
-  });
-});
-
 function showStatus(msg, type){
-  // type: 'ok' | 'err' | 'warn'
   const el = document.getElementById('importStatus');
   el.textContent = msg;
   el.className = 'status-msg ' + type;
 }
 
-// ---------- SMART CSV PARSER (handles quoted commas) ----------
-function parseDelimitedText(text){
-  const rows = [];
-  let row = [], field = '', inQuotes = false;
-  for(let i=0;i<text.length;i++){
-    const c = text[i];
-    if(inQuotes){
-      if(c === '"'){
-        if(text[i+1] === '"'){ field += '"'; i++; }
-        else inQuotes = false;
-      } else field += c;
-    } else {
-      if(c === '"') inQuotes = true;
-      else if(c === ',' || c === '\t'){ row.push(field); field=''; }
-      else if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
-      else if(c === '\r'){ /* skip */ }
-      else field += c;
-    }
-  }
-  if(field.length || row.length){ row.push(field); rows.push(row); }
-  return rows.filter(r => r.some(f => f.trim() !== ''));
-}
-
-// ---------- HEADER DETECTION ----------
-// Keyword groups used both to detect which row is the header row AND to map columns.
-// Order = priority (checked first to last); more specific phrases come before generic ones.
 const FIELD_PATTERNS = {
   rfid: ['rfid','شريحة','بطاقة الدخول','بطاقة'],
-  id:   ['الرقم الوظيفي','رقم الموظف','رقم وظيفي','employee id','emp id','emp no','employee no',
-         'employee number','كود الموظف','الكود الوظيفي','كود','هوية','رقم الهوية','id','هويه'],
+  id:   ['الرقم الوظيفي','رقم الموظف','رقم وظيفي','employee id','emp id','emp no','كود','هوية','id'],
   name: ['الاسم الكامل','اسم الموظف','اسم','name'],
   dept: ['القسم','الإدارة','الادارة','قسم','dept','department','إدارة'],
   loc:  ['الموقع','الموقع الحالي','برج','مبنى','location','site','موقع']
 };
-// Columns whose header text matches these should NEVER be used for id/rfid/name/dept/loc
-// even if they loosely match a pattern above (e.g. "رقم الجوال" contains "رقم").
-const EXCLUDE_PATTERNS = ['جوال','هاتف','موبايل','phone','mobile','فاكس','fax','بريد','email','ملاحظ','note','تاريخ','date'];
+const EXCLUDE_PATTERNS = ['جوال','هاتف','موبايل','phone','mobile','فاكس','بريد','email','تاريخ','date'];
 
 function headerScore(rowVals){
   const cells = rowVals.map(v => (v||'').toString().trim().toLowerCase());
   let score = 0;
   cells.forEach(c=>{
-    if(!c) return;
-    if(EXCLUDE_PATTERNS.some(p=>c.includes(p))) return;
-    for(const key in FIELD_PATTERNS){
-      if(FIELD_PATTERNS[key].some(p=>c.includes(p))){ score++; break; }
-    }
+    if(!c || EXCLUDE_PATTERNS.some(p=>c.includes(p))) return;
+    for(const key in FIELD_PATTERNS){ if(FIELD_PATTERNS[key].some(p=>c.includes(p))){ score++; break; } }
   });
   return score;
 }
 
-// Scans the first few rows to find the most likely header row (handles a report
-// title row sitting above the real column headers), instead of always assuming row 0.
 function findHeaderRowIndex(rows){
-  const scanLimit = Math.min(rows.length, 6);
   let bestIdx = -1, bestScore = 0;
-  for(let i=0;i<scanLimit;i++){
+  for(let i=0; i<Math.min(rows.length, 6); i++){
     const s = headerScore(rows[i]);
     if(s > bestScore){ bestScore = s; bestIdx = i; }
   }
-  return bestScore >= 2 ? bestIdx : (bestScore === 1 ? bestIdx : -1);
+  return bestScore >= 2 ? bestIdx : -1;
 }
 
-// ---------- COLUMN MAPPING ----------
 function mapColumns(rows){
   if(!rows.length) return { records: [], mapping: null };
-
   const headerIdx = findHeaderRowIndex(rows);
   const isHeader = headerIdx >= 0;
   const headerRow = isHeader ? rows[headerIdx].map(h => (h||'').toString().trim().toLowerCase()) : [];
   const dataRows = isHeader ? rows.slice(headerIdx + 1) : rows;
   const colCount = Math.max(headerRow.length, ...dataRows.map(r=>r.length), 1);
 
-  // Columns that actually contain data in at least one row (skips blank spacer columns)
   const hasData = new Array(colCount).fill(false);
-  dataRows.forEach(r=>{
-    for(let c=0;c<colCount;c++){
-      if((r[c]||'').toString().trim() !== '') hasData[c] = true;
-    }
-  });
+  dataRows.forEach(r=>{ for(let c=0;c<colCount;c++) if((r[c]||'').toString().trim() !== '') hasData[c] = true; });
 
   const used = new Set();
-  function isExcluded(headerText){
-    return EXCLUDE_PATTERNS.some(p => headerText.includes(p));
-  }
-  // pick the first column (in header order) matching any pattern, that (a) isn't used yet,
-  // (b) isn't an excluded field like phone/email/date, and (c) actually contains data —
-  // falls back to a data-agnostic pass if nothing has data.
   function pickColumn(patterns){
-    let candidate = -1;
-    if(isHeader){
-      for(const pattern of patterns){
-        for(let c=0;c<headerRow.length;c++){
-          if(used.has(c)) continue;
-          if(isExcluded(headerRow[c])) continue;
-          if(headerRow[c].includes(pattern)){
-            if(hasData[c]) return (used.add(c), c);
-            if(candidate === -1) candidate = c;
-          }
+    if(!isHeader) return -1;
+    for(const pattern of patterns){
+      for(let c=0;c<headerRow.length;c++){
+        if(!used.has(c) && !EXCLUDE_PATTERNS.some(p=>headerRow[c].includes(p)) && headerRow[c].includes(pattern)){
+          if(hasData[c]) return (used.add(c), c);
         }
       }
     }
-    if(candidate >= 0){ used.add(candidate); return candidate; }
     return -1;
   }
 
-  let idxRfid=-1, idxName=-1, idxId=-1, idxDept=-1, idxLoc=-1;
-  if(isHeader){
-    // Order matters: assign the most specific / most important fields first so that
-    // ambiguous headers don't get claimed twice.
-    idxRfid = pickColumn(FIELD_PATTERNS.rfid);
-    idxName = pickColumn(FIELD_PATTERNS.name);
-    idxDept = pickColumn(FIELD_PATTERNS.dept);
-    idxLoc  = pickColumn(FIELD_PATTERNS.loc);
-    idxId   = pickColumn(FIELD_PATTERNS.id);
-  }
+  let idxRfid = pickColumn(FIELD_PATTERNS.rfid);
+  let idxName = pickColumn(FIELD_PATTERNS.name);
+  let idxDept = pickColumn(FIELD_PATTERNS.dept);
+  let idxLoc  = pickColumn(FIELD_PATTERNS.loc);
+  let idxId   = pickColumn(FIELD_PATTERNS.id);
 
-  // Positional fallback for anything still unresolved, using only columns that have data
-  // and haven't already been claimed, in left-to-right order.
-  const remaining = [];
-  for(let c=0;c<colCount;c++) if(hasData[c] && !used.has(c)) remaining.push(c);
-  const order = [
-    ['rfid', () => idxRfid], ['id', () => idxId], ['name', () => idxName],
-    ['dept', () => idxDept], ['loc', () => idxLoc]
-  ];
-  const setters = { rfid:v=>idxRfid=v, id:v=>idxId=v, name:v=>idxName=v, dept:v=>idxDept=v, loc:v=>idxLoc=v };
-  order.forEach(([key, getter])=>{
-    if(getter() < 0 && remaining.length){
-      const c = remaining.shift();
-      setters[key](c);
-      used.add(c);
-    }
-  });
-
-  // If RFID never resolved but ID did (or vice versa), mirror the value so the badge
-  // number still shows — common when a sheet only has a single identifier column.
-  const mirrorId = (idxRfid < 0 && idxId >= 0);
-  const mirrorRfid = (idxId < 0 && idxRfid >= 0);
-
-  const recs = dataRows.map(r => {
-    const rfidVal = idxRfid >= 0 ? (r[idxRfid]||'').toString().trim() : '';
-    const idVal   = idxId >= 0 ? (r[idxId]||'').toString().trim() : '';
-    return {
-      rfid: rfidVal || (mirrorRfid ? idVal : ''),
-      id: idVal || (mirrorId ? rfidVal : ''),
-      name: idxName >= 0 ? (r[idxName]||'').toString().trim() : '',
-      dept: idxDept >= 0 ? (r[idxDept]||'').toString().trim() : '',
-      location: idxLoc >= 0 ? (r[idxLoc]||'').toString().trim() : '',
-      safe: false
-    };
-  }).filter(rec => rec.name || rec.id || rec.rfid);
+  const recs = dataRows.map(r => ({
+    rfid: idxRfid >= 0 ? (r[idxRfid]||'').toString().trim() : '',
+    id:   idxId >= 0 ? (r[idxId]||'').toString().trim() : '',
+    name: idxName >= 0 ? (r[idxName]||'').toString().trim() : '',
+    dept: idxDept >= 0 ? (r[idxDept]||'').toString().trim() : '',
+    location: idxLoc >= 0 ? (r[idxLoc]||'').toString().trim() : '',
+    safe: false
+  })).filter(rec => rec.name || rec.id || rec.rfid);
+  
+  // Fix empty ID/RFID fallback
+  recs.forEach(r => { if(!r.rfid) r.rfid = r.id; if(!r.id) r.id = r.rfid; });
 
   const mapping = {
-    isHeader,
     fields: {
-      rfid: idxRfid>=0 ? (headerRow[idxRfid]||'عمود '+(idxRfid+1)) : null,
-      id:   idxId>=0   ? (headerRow[idxId]||'عمود '+(idxId+1))     : null,
-      name: idxName>=0 ? (headerRow[idxName]||'عمود '+(idxName+1)) : null,
-      dept: idxDept>=0 ? (headerRow[idxDept]||'عمود '+(idxDept+1)) : null,
-      loc:  idxLoc>=0  ? (headerRow[idxLoc]||'عمود '+(idxLoc+1))   : null
+      rfid: idxRfid>=0 ? headerRow[idxRfid] : null,
+      id:   idxId>=0   ? headerRow[idxId] : null,
+      name: idxName>=0 ? headerRow[idxName] : null,
+      dept: idxDept>=0 ? headerRow[idxDept] : null,
+      loc:  idxLoc>=0  ? headerRow[idxLoc] : null
     }
   };
-
   return { records: recs, mapping };
 }
 
 function showMapPreview(mapping){
   const el = document.getElementById('mapPreview');
   if(!mapping){ el.classList.remove('show'); return; }
-  const labels = { rfid:'RFID', id:'الرقم الوظيفي', name:'الاسم', dept:'القسم', loc:'الموقع' };
-  let html = '<b>تم التعرف على الأعمدة التالية:</b><br>';
+  const labels = { rfid:'البطاقة', id:'الرقم', name:'الاسم', dept:'القسم', loc:'الموقع' };
+  let html = '<b>الأعمدة المكتشفة:</b><br>';
   Object.keys(labels).forEach(k=>{
     const val = mapping.fields[k];
-    html += `<span class="field${val?'':' missing'}">${labels[k]}: ${val ? escapeHtml(val) : 'لم يُعثر عليه'}</span>`;
+    html += `<span class="field${val?'':' missing'}">${labels[k]}: ${val ? escapeHtml(val) : 'غير موجود'}</span>`;
   });
   el.innerHTML = html;
   el.classList.add('show');
 }
 
-function ingest(rows, sourceLabel){
-  const { records: parsed, mapping } = mapColumns(rows);
-  if(!parsed.length){
-    showStatus('لم يتم العثور على سجلات صالحة في ' + sourceLabel + '. تأكد أن أول صف يحتوي عناوين الأعمدة (مثل: الاسم، الرقم الوظيفي، القسم، الموقع).', 'err');
-    showMapPreview(null);
-    return;
-  }
-  records = parsed;
-  const missingFields = Object.entries(mapping.fields).filter(([k,v])=>!v && k!=='rfid').map(([k])=>k);
-  if(missingFields.length){
-    showStatus('تم استيراد ' + records.length + ' سجل من ' + sourceLabel + '، لكن بعض الأعمدة لم يُتعرف عليها — راجع التفاصيل أدناه وعدّل عناوين الأعمدة في الملف إذا لزم.', 'warn');
-  } else {
-    showStatus('تم استيراد ' + records.length + ' سجل بنجاح من ' + sourceLabel, 'ok');
-  }
-  showMapPreview(mapping);
-  buildLocationFilter();
-  renderTable();
-  updateStats();
-
-  // Push the freshly-imported roster to the shared sheet in the background,
-  // silently — the person importing already saw the success message above.
-  if(syncUrl){ postToSync('import', { records }); }
-}
-
-// ---------- PASTE ----------
-document.getElementById('btnParsePaste').addEventListener('click', ()=>{
-  const text = document.getElementById('pasteArea').value.trim();
-  if(!text){ showStatus('الرجاء لصق البيانات أولاً.', 'err'); return; }
-  const rows = parseDelimitedText(text);
-  ingest(rows, 'النص الملصق');
-});
-
-// ---------- EXCEL ----------
 document.getElementById('excelFile').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  if(typeof XLSX === 'undefined'){
-    showStatus('تعذر تحميل مكتبة قراءة الإكسل (يلزم اتصال إنترنت مرة واحدة).', 'err');
-    return;
-  }
   const reader = new FileReader();
   reader.onload = (evt)=>{
     try{
       const wb = XLSX.read(evt.target.result, {type:'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
-      ingest(rows, 'ملف ' + file.name);
-    }catch(err){
-      showStatus('خطأ في قراءة ملف الإكسل: ' + err.message, 'err');
-    }
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      const { records: parsed, mapping } = mapColumns(rows);
+      
+      if(!parsed.length){
+        showStatus('لم يتم العثور على سجلات. تأكد من وجود عناوين واضحة للأعمدة.', 'err'); return;
+      }
+      
+      records = parsed;
+      showStatus(`تم استيراد ${records.length} موظف بنجاح من ملف الإكسل.`, 'ok');
+      showMapPreview(mapping);
+      buildLocationFilter(); renderTable(); updateStats();
+      if(syncUrl) postToSync('import', { records });
+
+    }catch(err){ showStatus('خطأ في القراءة: ' + err.message, 'err'); }
   };
   reader.readAsArrayBuffer(file);
 });
 
-// ---------- GOOGLE SHEET ----------
-document.getElementById('btnLoadGsheet').addEventListener('click', async ()=>{
-  const url = document.getElementById('gsheetUrl').value.trim();
-  if(!url){ showStatus('الرجاء إدخال رابط CSV من قوقل شيت.', 'err'); return; }
-  showStatus('جارِ سحب البيانات...', 'warn');
-  try{
-    const res = await fetch(url);
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    const rows = parseDelimitedText(text);
-    ingest(rows, 'قوقل شيت');
-  }catch(err){
-    showStatus('تعذر سحب البيانات (تحقق من الرابط والاتصال بالإنترنت): ' + err.message, 'err');
-  }
-});
-
-// ---------- FILTERS ----------
 function buildLocationFilter(){
   const sel = document.getElementById('locationFilter');
   const current = sel.value;
   const locs = [...new Set(records.map(r=>r.location).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">كل المواقع</option>' +
-    locs.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+  sel.innerHTML = '<option value="">كل المواقع</option>' + locs.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
   sel.value = locs.includes(current) ? current : '';
 }
 
-document.getElementById('searchBox').addEventListener('input', (e)=>{
-  searchTerm = e.target.value.trim().toLowerCase();
-  renderTable();
-});
-document.getElementById('locationFilter').addEventListener('change', (e)=>{
-  locFilter = e.target.value;
-  renderTable();
-});
-document.getElementById('statusFilter').addEventListener('change', (e)=>{
-  statusFilterVal = e.target.value;
-  renderTable();
+['searchBox','locationFilter','statusFilter'].forEach(id => {
+  document.getElementById(id).addEventListener('input', (e)=>{
+    if(id==='searchBox') searchTerm = e.target.value.trim().toLowerCase();
+    if(id==='locationFilter') locFilter = e.target.value;
+    if(id==='statusFilter') statusFilterVal = e.target.value;
+    renderTable();
+  });
 });
 
-function escapeHtml(s){
-  return (s||'').toString()
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-// ---------- RENDER (DocumentFragment + virtual limit) ----------
-function getFiltered(){
-  return records.filter(r=>{
+function renderTable(){
+  const tbody = document.getElementById('tableBody');
+  const filtered = records.filter(r=>{
     if(locFilter && r.location !== locFilter) return false;
     if(statusFilterVal === 'safe' && !r.safe) return false;
     if(statusFilterVal === 'pending' && r.safe) return false;
     if(searchTerm){
-      const hay = (r.name+' '+r.id+' '+r.rfid+' '+r.dept).toLowerCase();
-      const normHay = normalizeCode(r.id) + ' ' + normalizeCode(r.rfid);
-      if(!hay.includes(searchTerm) && !normHay.includes(normalizeCode(searchTerm))) return false;
+      const hay = (r.name+' '+r.id+' '+r.rfid).toLowerCase();
+      if(!hay.includes(searchTerm)) return false;
     }
     return true;
   });
-}
-
-function renderTable(){
-  const tbody = document.getElementById('tableBody');
-  const filtered = getFiltered();
-  const shown = filtered.slice(0, renderLimit);
 
   const frag = document.createDocumentFragment();
-  shown.forEach(rec=>{
+  filtered.slice(0, renderLimit).forEach(rec=>{
     const tr = document.createElement('tr');
     tr.className = rec.safe ? 'safe-row' : 'missing-row';
-
-    const tdStatus = document.createElement('td');
-    const badge = document.createElement('span');
-    badge.className = 'badge ' + (rec.safe ? 'safe' : 'pending');
-    badge.textContent = rec.safe ? 'آمن' : 'غير مؤكد';
-    tdStatus.appendChild(badge);
-
-    const tdName = document.createElement('td');
-    tdName.innerHTML = `<div class="name-cell">${escapeHtml(rec.name)}</div><div class="sub-cell">${escapeHtml(rec.rfid)}</div>`;
-
-    const tdId = document.createElement('td');
-    tdId.textContent = rec.id;
-
-    const tdDept = document.createElement('td');
-    tdDept.textContent = rec.dept;
-
-    const tdLoc = document.createElement('td');
-    tdLoc.textContent = rec.location;
-
+    
+    tr.innerHTML = `
+      <td><span class="badge ${rec.safe ? 'safe' : 'pending'}">${rec.safe ? 'آمن' : 'مفقود'}</span></td>
+      <td><div class="name-cell">${escapeHtml(rec.name)}</div><div class="sub-cell">${escapeHtml(rec.rfid)}</div></td>
+      <td>${escapeHtml(rec.id)}</td>
+      <td>${escapeHtml(rec.dept)}</td>
+      <td>${escapeHtml(rec.location)}</td>
+    `;
+    
     const tdAction = document.createElement('td');
     const btn = document.createElement('button');
     btn.className = 'att-btn' + (rec.safe ? ' undo' : '');
-    btn.textContent = rec.safe ? 'تراجع' : 'حضور';
-    btn.addEventListener('click', ()=>{
+    btn.textContent = rec.safe ? 'تراجع' : 'تحضير';
+    btn.onclick = () => {
       rec.safe = !rec.safe;
-      renderTable();
-      updateStats();
-      if(syncUrl){ postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: rec.safe }); }
-    });
+      renderTable(); updateStats();
+      if(syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: rec.safe });
+    };
     tdAction.appendChild(btn);
-
-    tr.append(tdStatus, tdName, tdId, tdDept, tdLoc, tdAction);
+    tr.appendChild(tdAction);
     frag.appendChild(tr);
   });
 
   tbody.innerHTML = '';
   tbody.appendChild(frag);
-
+  
   const info = document.getElementById('listInfo');
-  if(!records.length){
-    info.textContent = 'لا توجد بيانات مستوردة بعد.';
-  } else if(filtered.length > renderLimit){
-    info.textContent = `عرض ${renderLimit} من أصل ${filtered.length} نتيجة مطابقة (استخدم البحث للوصول لسجل محدد) — الإجمالي الكلي: ${records.length}`;
-  } else {
-    info.textContent = `عرض ${filtered.length} من أصل ${records.length} سجل`;
-  }
+  info.textContent = !records.length ? 'لا توجد بيانات.' : `عرض ${Math.min(filtered.length, renderLimit)} من ${filtered.length} (الإجمالي: ${records.length})`;
 }
 
 function updateStats(){
@@ -740,143 +502,75 @@ function updateStats(){
   document.getElementById('statMissing').textContent = records.length - safeCount;
 }
 
-// ---------- EXPORT ----------
 document.getElementById('btnExportSafe').addEventListener('click', ()=>{
   const safeList = records.filter(r=>r.safe);
-  if(!safeList.length){ alert('لا يوجد موظفون مسجلون كآمنين بعد.'); return; }
-  const header = 'RFID,ID,الاسم,القسم,الموقع\n';
-  const rows = safeList.map(r =>
-    [r.rfid, r.id, `"${(r.name||'').replace(/"/g,'""')}"`, r.dept, r.location].join(',')
-  ).join('\n');
-  const csv = '\uFEFF' + header + rows;
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  if(!safeList.length){ alert('لا يوجد موظفون آمنون للتصدير.'); return; }
+  const csv = '\uFEFFRFID,ID,الاسم,القسم,الموقع\n' + safeList.map(r => `${r.rfid},${r.id},"${r.name}",${r.dept},${r.location}`).join('\n');
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-  a.download = 'كشف_الآمنين_' + ts + '.csv';
-  document.body.appendChild(a);
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+  a.download = `كشف_الآمنين_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
-  document.body.removeChild(a);
 });
 
 document.getElementById('btnResetAll').addEventListener('click', ()=>{
-  if(!records.length) return;
-  if(!confirm('هل تريد تصفير حالة الحضور لجميع الموظفين؟')) return;
+  if(!records.length || !confirm('هل أنت متأكد من تصفير الحضور للجميع لتجربة إخلاء جديدة؟')) return;
   records.forEach(r=> r.safe = false);
-  renderTable();
-  updateStats();
-  if(syncUrl){ postToSync('reset', {}); }
+  renderTable(); updateStats();
+  if(syncUrl) postToSync('reset', {});
 });
 
 document.getElementById('btnConnectSync').addEventListener('click', connectSync);
 
-// ---------- RFID QUICK SCAN ----------
-// Dedicated always-focused field: RFID/badge readers behave like keyboards
-// typing the code followed by Enter, so a normal keydown/Enter handler here
-// is enough — no special driver or hardware API needed.
+// RFID Scanner Handling
 const scanInputEl = document.getElementById('scanInput');
-let scanFeedbackTimer = null;
+function focusScanInput(){ if(!['input','select'].includes(document.activeElement?.tagName.toLowerCase())) scanInputEl.focus(); }
 
-function focusScanInput(){
-  const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
-  // Don't steal focus while the person is deliberately typing somewhere else
-  // (search box, paste area, sync URL field, etc).
-  if(tag === 'input' || tag === 'textarea' || tag === 'select'){
-    if(document.activeElement === scanInputEl) return;
-    if(document.activeElement.id !== 'scanInput') return;
-  }
-  scanInputEl.focus();
-}
-
-function showScanFeedback(hit, mainText, subText){
+function showScanFeedback(hit, title, sub){
   const el = document.getElementById('scanFeedback');
   el.className = 'scan-feedback show ' + (hit ? 'hit' : 'miss');
-  el.innerHTML = escapeHtml(mainText) + (subText ? '<div class="scan-sub">'+escapeHtml(subText)+'</div>' : '');
-  clearTimeout(scanFeedbackTimer);
-  scanFeedbackTimer = setTimeout(()=>{ el.classList.remove('show'); }, 3000);
-}
-
-// Normalizes a code for comparison: trims whitespace, lowercases, and strips
-// leading zeros. This is what fixes "موجود لكن يقول غير موجود" — Excel often
-// drops leading zeros from numeric-looking ID/RFID columns (٠٠١٢٣ → ١٢٣),
-// so a strict string match against the scanner's raw padded value fails even
-// though it's the same person. Comparing normalized forms on both sides
-// makes the match succeed regardless of padding, spacing, or letter case.
-function normalizeCode(s){
-  return (s==null ? '' : s).toString().trim().toLowerCase().replace(/^0+(?=.)/, '');
-}
-
-function findByCode(rawCode){
-  const norm = normalizeCode(rawCode);
-  if(!norm) return null;
-  return records.find(r => normalizeCode(r.rfid) === norm || normalizeCode(r.id) === norm);
+  el.innerHTML = `<div>${escapeHtml(title)}</div><div class="scan-sub">${escapeHtml(sub)}</div>`;
+  setTimeout(()=> el.classList.remove('show'), 2500);
 }
 
 function processScanCode(rawCode){
-  const code = rawCode.trim();
+  const code = (rawCode||'').trim().toLowerCase().replace(/^0+/, ''); // Normalize (remove leading zeros)
   if(!code) return;
-  const rec = findByCode(code);
-  if(!rec){
-    showScanFeedback(false, 'غير معروف: ' + code, 'تأكد من استيراد قائمة الموظفين، أو أن الرقم مطابق لعمود RFID/الرقم الوظيفي.');
-    return;
-  }
+  
+  const rec = records.find(r => 
+    (r.rfid||'').toLowerCase().replace(/^0+/,'') === code || 
+    (r.id||'').toLowerCase().replace(/^0+/,'') === code
+  );
+
+  if(!rec){ showScanFeedback(false, 'غير معروف: ' + rawCode, 'لم يتم العثور على الموظف في القائمة المرفوعة'); return; }
+  
   rec.safe = true;
-  renderTable();
-  updateStats();
-  showScanFeedback(true, rec.name || code, (rec.dept||'') + (rec.location ? ' · ' + rec.location : '') + ' — تم التسجيل آمن');
-  if(syncUrl){ postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: true }); }
+  renderTable(); updateStats();
+  showScanFeedback(true, rec.name || rawCode, '✅ تم تسجيله كـ (آمن)');
+  if(syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: true });
 }
 
 scanInputEl.addEventListener('keydown', (e)=>{
-  if(e.key !== 'Enter' && e.key !== 'Tab') return;
-  e.preventDefault();
-  const code = scanInputEl.value;
-  scanInputEl.value = '';
-  processScanCode(code);
-  focusScanInput();
-});
-
-// Fallback for when focus somehow lands elsewhere (e.g. the page scrolled or
-// a button was tapped): scanners type fast — much faster than a human — so
-// any burst of keystrokes ending in Enter/Tab that ISN'T happening inside a
-// real text field is treated as a scan too. This is what lets scanning work
-// continuously without ever needing to tap the page.
-let globalBuffer = '';
-let globalLastTime = 0;
-document.addEventListener('keydown', (e)=>{
-  if(e.target === scanInputEl) return; // already handled above
-  const tag = (e.target.tagName || '').toLowerCase();
-  if(tag === 'input' || tag === 'textarea' || tag === 'select') return; // real typing elsewhere
-
-  const now = Date.now();
-  if(now - globalLastTime > 300) globalBuffer = '';
-  globalLastTime = now;
-
-  if(e.key === 'Enter' || e.key === 'Tab'){
-    if(globalBuffer.trim().length >= 3){
-      e.preventDefault();
-      processScanCode(globalBuffer);
-    }
-    globalBuffer = '';
-    return;
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    processScanCode(scanInputEl.value);
+    scanInputEl.value = '';
   }
-  if(e.key.length === 1) globalBuffer += e.key;
 });
 
-// Belt-and-suspenders auto-refocus: runs continuously so the scan field
-// regains focus on its own (no click required) whenever it isn't needed
-// elsewhere — covers cases like the on-screen keyboard closing, a table
-// button being tapped, or the page scrolling.
-setInterval(focusScanInput, 1000);
-document.addEventListener('click', focusScanInput);
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) focusScanInput(); });
-window.addEventListener('focus', focusScanInput);
+let globalBuffer = '', globalLastTime = 0;
+document.addEventListener('keydown', (e)=>{
+  if(e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  const now = Date.now();
+  if(now - globalLastTime > 200) globalBuffer = '';
+  globalLastTime = now;
+  if(e.key === 'Enter'){ processScanCode(globalBuffer); globalBuffer = ''; } 
+  else if(e.key.length === 1) globalBuffer += e.key;
+});
 
-// ---------- INIT ----------
-updateStats();
-renderTable();
-loadSyncConfig();
-focusScanInput();
+setInterval(focusScanInput, 1500);
+document.addEventListener('click', focusScanInput);
+
+updateStats(); loadSyncConfig();
 </script>
 </body>
 </html>
