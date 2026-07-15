@@ -114,7 +114,7 @@ footer { padding: 20px 15px 40px; text-align: center; color: var(--muted); font-
   <h1><span class="dot"></span> نظام إدارة طوارئ الإخلاء</h1>
   <div class="stats">
     <div class="stat total"><b id="statTotal">0</b><span>إجمالي القوى</span></div>
-    <div class="stat safe"><b id="statSafe">0</b><span>آمنون</span></div>
+    <div class="stat safe"><b id="statSafe">0</b><span>المتواجدين في نقاط < /span></div>
     <div class="stat missing"><b id="statMissing">0</b><span>مفقودون</span></div>
   </div>
 </header>
@@ -526,7 +526,7 @@ function updateStats(){
 
 document.getElementById('btnExportSafe').addEventListener('click', ()=>{
   const safeList = records.filter(r=>r.safe);
-  if(!safeList.length){ alert('لا يوجد موظفون آمنون للتصدير.'); return; }
+  if(!safeList.length){ alert('لا يوجد موظفون في نقاط التجمع للتصدير.'); return; }
   const csv = '\uFEFFRFID,ID,الاسم,القسم,الموقع\n' + safeList.map(r => `${r.rfid},${r.id},"${r.name}",${r.dept},${r.location}`).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
