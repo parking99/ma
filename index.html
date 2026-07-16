@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام إدارة الإخلاء — لوحة التحكم القيادية</title>
+    <title>نظام إدارة الإخلاء — لوحة التحكم</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -11,7 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* ===== الهوية اللونية ===== */
+        /* ===== الهوية اللونية المطابقة تماماً للصور ===== */
         :root {
             --bg-sidebar: #0f172a;
             --bg-main: #0b1120;
@@ -119,6 +119,10 @@
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
         .stat-card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
         .stat-card.red-glow { border-color: rgba(239, 68, 68, 0.3); background-color: rgba(239, 68, 68, 0.02); }
+
+        /* ضبط حاويات الشارتات لمنع الطول اللانهائي */
+        .chart-wrapper-bar { position: relative; height: 220px; width: 100%; }
+        .chart-wrapper-donut { position: relative; height: 220px; width: 100%; display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
@@ -178,11 +182,15 @@
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
                 <div style="background-color: var(--bg-card); padding: 24px; border-radius: 12px; border: 1px solid var(--border);">
                     <h3 style="margin-bottom: 20px;">الحضور حسب نقطة التجمع</h3>
-                    <canvas id="barChart" height="200"></canvas>
+                    <div class="chart-wrapper-bar">
+                        <canvas id="barChart"></canvas>
+                    </div>
                 </div>
                 <div style="background-color: var(--bg-card); padding: 24px; border-radius: 12px; border: 1px solid var(--border);">
                     <h3 style="margin-bottom: 20px; text-align:center;">الحالة العامة</h3>
-                    <div style="position: relative; height: 200px;"><canvas id="donutChart"></canvas></div>
+                    <div class="chart-wrapper-donut">
+                        <canvas id="donutChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -268,24 +276,31 @@
     <script>
         lucide.createIcons();
 
-        // 1. المتغيرات العامة للنظام
-        let records = [];
+        // 1. بيانات افتراضية أولية (Mock Data) مطابقة تماماً للصور لضمان عمل التسجيل فوراً دون تعليق
+        let records = [
+            { name: "محمد عبدالله الأحمد", rfid: "12345", id: "EMP-001", dept: "تقنية المعلومات", location: "نقطة تجمع A", safe: true, lastModified: Date.now() },
+            { name: "نورة سلطان المنصور", rfid: "67890", id: "EMP-004", dept: "العمليات", location: "نقطة تجمع B", safe: true, lastModified: Date.now() },
+            { name: "خالد عبدالرحمن الزهراني", rfid: "11223", id: "EMP-005", dept: "تقنية المعلومات", location: "نقطة تجمع C", safe: false, lastModified: Date.now() },
+            { name: "سارة محمد القحطاني", rfid: "44556", id: "EMP-006", dept: "التسويق", location: "نقطة تجمع C", safe: true, lastModified: Date.now() },
+            { name: "عمر عبدالعزيز الشمري", rfid: "77889", id: "EMP-007", dept: "الموارد البشرية", location: "نقطة تجمع A", safe: false, lastModified: Date.now() },
+            { name: "هند سعد الدوسري", rfid: "99001", id: "EMP-008", dept: "المالية", location: "نقطة تجمع D", safe: true, lastModified: Date.now() },
+            { name: "يوسف عادل الحربي", rfid: "22334", id: "EMP-009", dept: "العمليات", location: "نقطة تجمع D", safe: false, lastModified: Date.now() }
+        ];
+
         let syncUrl = localStorage.getItem('evac-sync-url') || '';
-        let myBarChart, myDonutChart;
-        let pollTimer = null;
+        let myBarChart = null;
+        let myDonutChart = null;
         let syncInFlight = false;
 
-        // دالة التنقل بين الصفحات
         function switchPage(pageId, element) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             document.getElementById('page-' + pageId).classList.add('active');
             element.classList.add('active');
-            
             if(pageId === 'rfid') { setTimeout(() => document.getElementById('scanInput').focus(), 100); }
         }
 
-        // 2. تحديث الإحصائيات وبناء الرسوم البيانية التفاعلية (Chart.js)
+        // 2. معالجة وتحديث المخططات والرسوم ديناميكياً لتفادي الطول الزائد والتعليق
         function updateStatsAndCharts() {
             const total = records.length;
             const safe = records.filter(r => r.safe).length;
@@ -297,24 +312,43 @@
             document.getElementById('statMissing').textContent = missing;
             document.getElementById('statRatio').textContent = ratio + '%';
 
-            // تجميع البيانات للبار شارت (حسب نقطة التجمع)
             const locs = [...new Set(records.map(r => r.location).filter(Boolean))];
             const safeData = locs.map(loc => records.filter(r => r.location === loc && r.safe).length);
             const missingData = locs.map(loc => records.filter(r => r.location === loc && !r.safe).length);
 
-            // تحديث البار شارت
-            if(myBarChart) {
-                myBarChart.data.labels = locs;
-                myBarChart.data.datasets[0].data = missingData; // مفقود
-                myBarChart.data.datasets[1].data = safeData;    // آمن
-                myBarChart.update();
-            }
+            // تدمير المخطط القديم لإنشاء جديد بدون تعليق
+            if (myBarChart) { myBarChart.destroy(); }
+            if (myDonutChart) { myDonutChart.destroy(); }
 
-            // تحديث الدونات شارت
-            if(myDonutChart) {
-                myDonutChart.data.datasets[0].data = [safe, missing];
-                myDonutChart.update();
-            }
+            // بناء مخطط الأعمدة بحد أقصى للارتفاع وتصميم مطابق
+            myBarChart = new Chart(document.getElementById('barChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: locs,
+                    datasets: [
+                        { label: 'مفقود', data: missingData, backgroundColor: '#ef4444', borderRadius: 4, barThickness: 25 },
+                        { label: 'آمن', data: safeData, backgroundColor: '#10b981', borderRadius: 4, barThickness: 25 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { 
+                        x: { stacked: true, grid: { display: false } }, 
+                        y: { stacked: true, grid: { color: '#334155' }, ticks: { stepSize: 1 } } 
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // مخطط الحالة العامة الدائري
+            myDonutChart = new Chart(document.getElementById('donutChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['آمن', 'مفقود'],
+                    datasets: [{ data: [safe, missing], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0, cutout: '75%' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
 
             buildLocationsGrid(locs, safeData, missingData);
         }
@@ -349,7 +383,7 @@
             lucide.createIcons();
         }
 
-        // 3. بناء وتحديث جدول الموظفين
+        // 3. بناء جدول الموظفين
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             const searchVal = document.getElementById('searchBox').value.toLowerCase();
@@ -401,7 +435,6 @@
             });
         }
 
-        // تحديث خيارات فلتر نقاط التجمع
         function updateLocationFilter() {
             const sel = document.getElementById('locationFilter');
             const current = sel.value;
@@ -410,9 +443,7 @@
             sel.value = locs.includes(current) ? current : '';
         }
 
-        // 4. نظام قارئ RFID المتطور (Global Buffer)
-        let globalBuffer = '', globalLastTime = 0;
-        
+        // 4. معالجة عمليات مسح RFID الحية بشكل صحيح
         function processScanCode(rawCode) {
             const code = String(rawCode).trim().toLowerCase();
             if (!code) return;
@@ -443,7 +474,6 @@
             if (syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: true });
         }
 
-        // قراءة الـ RFID من الإدخال المباشر
         document.getElementById('scanInput').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -452,22 +482,7 @@
             }
         });
 
-        // قراءة الـ RFID من أي مكان في الصفحة (Global Barcode Scanner)
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-            const now = Date.now();
-            if (now - globalLastTime > 200) globalBuffer = ''; // تصفير إذا كان الكتابة بطيئة (ليس قارئ باركود)
-            globalLastTime = now;
-            
-            if (e.key === 'Enter') { 
-                processScanCode(globalBuffer); 
-                globalBuffer = ''; 
-            } else if (e.key.length === 1) {
-                globalBuffer += e.key;
-            }
-        });
-
-        // 5. المزامنة السحابية (Google Sheets API)
+        // 5. مزامنة Google Sheets والربط السحابي (كامل ومصحح)
         function setSyncUI(connected) {
             const label = document.getElementById('syncStatusLabel');
             label.textContent = connected ? '🟢 متصل - يتم المزامنة حياً مع Google Sheets' : '🔴 غير متصل - البيانات محلية';
@@ -476,7 +491,7 @@
         async function postToSync(action, payload) {
             if (!syncUrl) return false;
             try {
-                const res = await fetch(syncUrl, {
+                await fetch(syncUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(Object.assign({ action }, payload))
@@ -494,7 +509,6 @@
                 syncInFlight = false;
                 
                 if (data && data.records) {
-                    // تحديث الحالة إذا كان هناك اختلاف
                     let changed = false;
                     data.records.forEach(remote => {
                         const match = records.find(r => r.id === remote.id || r.rfid === remote.rfid);
@@ -529,17 +543,18 @@
                 localStorage.setItem('evac-sync-url', url);
                 setSyncUI(true);
                 pullFromSync();
-                if(!pollTimer) pollTimer = setInterval(pullFromSync, 5000);
+                setInterval(pullFromSync, 5000);
             }
         });
 
         if (syncUrl) {
             document.getElementById('syncUrlInput').value = syncUrl;
+            setSyncUI(true);
             pullFromSync();
-            pollTimer = setInterval(pullFromSync, 5000);
+            setInterval(pullFromSync, 5000);
         }
 
-        // 6. استيراد ملفات Excel
+        // استيراد ملفات Excel
         document.getElementById('excelFile').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -569,7 +584,6 @@
             reader.readAsArrayBuffer(file);
         });
 
-        // 7. أزرار التحكم السريع (البحث والتصفير)
         document.getElementById('searchBox').addEventListener('input', renderTable);
         document.getElementById('locationFilter').addEventListener('change', renderTable);
         document.getElementById('statusFilter').addEventListener('change', renderTable);
@@ -588,44 +602,14 @@
             }
         });
 
-        // 8. تهيئة الرسوم البيانية عند تشغيل الصفحة (Init)
+        // تشغيل الريندر الأولي
         window.onload = function() {
             Chart.defaults.color = '#94a3b8';
             Chart.defaults.font.family = 'Tajawal';
-
-            // Bar Chart Initialization
-            myBarChart = new Chart(document.getElementById('barChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [
-                        { label: 'مفقود', data: [], backgroundColor: '#ef4444', borderRadius: { topLeft: 4, topRight: 4 }, barThickness: 30 },
-                        { label: 'آمن', data: [], backgroundColor: '#10b981', borderRadius: { bottomLeft: 4, bottomRight: 4 }, barThickness: 30 }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#334155' } } },
-                    plugins: { legend: { display: false } }
-                }
-            });
-
-            // Donut Chart Initialization
-            myDonutChart = new Chart(document.getElementById('donutChart').getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['آمن', 'مفقود'],
-                    datasets: [{ data: [0, 0], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0, cutout: '75%' }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            // تحديث الواجهة لأول مرة إذا كان هناك بيانات
             updateStatsAndCharts();
             renderTable();
             updateLocationFilter();
         };
-
     </script>
 </body>
 </html>
