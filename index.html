@@ -3,254 +3,385 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>نظام إدارة نقاط التجمع</title>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<title>مركز متابعة الطوارئ والإخلاء</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #f8fafd; --panel: #ffffff; --panel2: #f4f6f8; --border: #e2e8f0;
-  --text: #1e293b; --muted: #64748b;
-  --safe: #10b981; --safe-bg: #ecfdf5;
-  --missing: #ef4444; --missing-bg: #fef2f2;
-  --accent: #f59e0b; --accent-dark: #d97706;
-  --navy: #0f172a; --focus: #3b82f6;
+:root{
+  --bg:#070b14; --panel:#0e1524; --panel2:#131b2e; --border:#1f2b45;
+  --text:#eaf1ff; --muted:#7c8bab;
+  --safe:#16d989; --safe-dim:#0b3d2a;
+  --missing:#ff4d5e; --missing-dim:#3d1015;
+  --warn:#ffb020;
+  --accent:#38bdf8;
+  --navy:#050810;
+  font-size:16px;
 }
-* { box-sizing: border-box; }
-body { margin: 0; font-family: 'Tajawal', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; }
-header { background: var(--navy); border-bottom: 4px solid var(--accent); padding: 15px 20px; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-header h1 { margin: 0 0 12px; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #ffffff; }
-header h1 .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px rgba(245, 158, 11, .8); }
-.stats { display: flex; gap: 10px; flex-wrap: wrap; }
-.stat { flex: 1; min-width: 100px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 12px; text-align: center; backdrop-filter: blur(5px); }
-.stat b { display: block; font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
-.stat span { font-size: 13px; font-weight: 500; color: #cbd5e1; }
-.stat.total b { color: #38bdf8; }
-.stat.safe b { color: #34d399; }
-.stat.missing b { color: #f87171; }
+*{box-sizing:border-box;}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Tajawal',sans-serif;}
+.mono{font-family:'JetBrains Mono',monospace;}
 
-main { padding: 20px 15px; max-width: 1000px; margin: 0 auto; }
-.card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-.card h2 { margin: 0 0 15px; font-size: 18px; font-weight: 700; color: var(--navy); border-right: 4px solid var(--accent); padding-right: 10px; }
-
-label { display: block; font-size: 14px; font-weight: 500; color: var(--muted); margin-bottom: 8px; }
-input[type=text], input[type=file], input[type=url], select {
-  width: 100%; background: #fff; border: 2px solid var(--border); color: var(--text);
-  padding: 12px; border-radius: 10px; font-size: 14px; margin-bottom: 12px; font-family: inherit; transition: all 0.2s;
+/* ===== top bar ===== */
+header{
+  position:sticky; top:0; z-index:30;
+  background:linear-gradient(180deg,var(--navy),#070b14 90%);
+  border-bottom:1px solid var(--border);
+  padding:14px 18px;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
 }
-input:focus, select:focus, button:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
-
-button {
-  cursor: pointer; border: none; border-radius: 10px; padding: 12px 20px; font-size: 15px; font-weight: 700;
-  background: var(--accent); color: #fff; font-family: inherit; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;
+.brand{display:flex; align-items:center; gap:10px;}
+.brand .pulse{width:11px; height:11px; border-radius:50%; background:var(--missing); box-shadow:0 0 0 0 rgba(255,77,94,.6); animation:pulseRing 1.6s infinite;}
+.brand .pulse.idle{background:var(--muted); animation:none; box-shadow:none;}
+.brand .pulse.ok{background:var(--safe); animation:pulseRingSafe 2.2s infinite;}
+@keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(255,77,94,.55);}70%{box-shadow:0 0 0 10px rgba(255,77,94,0);}100%{box-shadow:0 0 0 0 rgba(255,77,94,0);}}
+@keyframes pulseRingSafe{0%{box-shadow:0 0 0 0 rgba(22,217,137,.45);}70%{box-shadow:0 0 0 10px rgba(22,217,137,0);}100%{box-shadow:0 0 0 0 rgba(22,217,137,0);}}
+.brand h1{font-size:17px; font-weight:800; margin:0; letter-spacing:.2px;}
+.brand small{display:block; color:var(--muted); font-size:11px; font-weight:500; margin-top:2px;}
+.topctl{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.chip{
+  display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--muted);
+  background:var(--panel2); border:1px solid var(--border); padding:7px 12px; border-radius:20px; cursor:pointer; user-select:none;
 }
-button:hover { background: var(--accent-dark); transform: translateY(-1px); }
-button:active { transform: scale(.97); }
-button.secondary { background: var(--panel2); color: var(--navy); border: 2px solid var(--border); }
-button.secondary:hover { background: #e2e8f0; }
+.chip.active{color:var(--text); border-color:var(--accent);}
+.chip .dot{width:7px; height:7px; border-radius:50%; background:var(--muted);}
+.chip.active .dot{background:var(--accent);}
+button.iconbtn{
+  background:var(--panel2); border:1px solid var(--border); color:var(--text); border-radius:10px;
+  padding:8px 14px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:.15s;
+}
+button.iconbtn:hover{border-color:var(--accent); color:var(--accent);}
 
-.row { display: flex; gap: 10px; flex-wrap: wrap; }
-.row > * { flex: 1; min-width: 140px; }
+main{max-width:1400px; margin:0 auto; padding:18px;}
 
-.status-msg { font-size: 14px; padding: 12px; border-radius: 10px; font-weight: 500; margin-top: 10px; display: none; }
-.status-msg.ok { display: block; background: var(--safe-bg); color: #047857; border: 1px solid #34d399; }
-.status-msg.err { display: block; background: var(--missing-bg); color: #b91c1c; border: 1px solid #f87171; }
-.status-msg.warn { display: block; background: #fef3c7; color: #b45309; border: 1px solid #fbbf24; }
+/* ===== hero: gauge + timer + totals ===== */
+.hero{
+  display:grid; grid-template-columns:220px 1fr; gap:18px; margin-bottom:18px;
+}
+@media (max-width:760px){ .hero{grid-template-columns:1fr;} }
 
-.controls { display: flex; gap: 12px; margin-bottom: 15px; flex-wrap: wrap; }
-.controls input, .controls select { margin-bottom: 0; }
-.controls .search { flex: 2; min-width: 200px; }
-.controls .filter { flex: 1; min-width: 140px; }
+.gauge-card{
+  background:radial-gradient(circle at 30% 20%, #101b30, var(--panel) 70%);
+  border:1px solid var(--border); border-radius:20px; padding:18px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+}
+.gauge-wrap{position:relative; width:170px; height:170px;}
+.gauge-wrap svg{transform:rotate(-90deg);}
+.gauge-bg{fill:none; stroke:#1a2440; stroke-width:14;}
+.gauge-fg{fill:none; stroke:var(--safe); stroke-width:14; stroke-linecap:round; transition:stroke-dashoffset .6s ease, stroke .4s;}
+.gauge-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+.gauge-center b{font-size:34px; font-weight:900;}
+.gauge-center span{font-size:11px; color:var(--muted); font-weight:600; margin-top:2px;}
+.gauge-label{font-size:12px; color:var(--muted); font-weight:700; letter-spacing:.3px;}
 
-.map-preview { font-size: 13px; background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-top: 10px; display: none; }
-.map-preview.show { display: block; }
-.map-preview b { color: var(--navy); font-size: 14px; }
-.map-preview .field { display: inline-block; margin-left: 15px; margin-bottom: 6px; margin-top: 8px; padding: 4px 8px; background: #fff; border-radius: 6px; border: 1px solid var(--border);}
-.map-preview .field.missing { color: var(--missing); border-color: var(--missing); background: var(--missing-bg); }
+.totals-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+@media (max-width:760px){ .totals-grid{grid-template-columns:repeat(2,1fr);} }
+.tcard{
+  background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:16px;
+  display:flex; flex-direction:column; justify-content:space-between; min-height:100px;
+}
+.tcard b{font-size:32px; font-weight:900; line-height:1;}
+.tcard span{font-size:12.5px; color:var(--muted); font-weight:600; margin-top:8px;}
+.tcard.total b{color:var(--accent);}
+.tcard.safe b{color:var(--safe);}
+.tcard.missing b{color:var(--missing);}
+.tcard.timer b{color:var(--warn); letter-spacing:1px;}
+.tcard.timer{grid-column:span 1;}
 
-.sync-box { border-top: 2px dashed var(--border); margin-top: 20px; padding-top: 20px; }
-.sync-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.sync-row input { margin-bottom: 0; flex: 1; min-width: 200px; }
-.sync-dot { width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; flex: 0 0 auto; transition: 0.3s; }
-.sync-dot.on { background: var(--safe); box-shadow: 0 0 10px rgba(16, 185, 129, .6); }
-.sync-dot.off { background: var(--missing); }
-.sync-label { font-size: 13px; font-weight: 500; color: var(--muted); margin-top: 10px; display: block; }
+/* ===== section headers ===== */
+.section-head{display:flex; align-items:center; justify-content:space-between; margin:26px 0 12px;}
+.section-head h2{font-size:16px; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;}
+.section-head h2 .bar{width:4px; height:16px; background:var(--accent); border-radius:2px; display:inline-block;}
+.section-head .meta{font-size:12px; color:var(--muted); font-weight:600;}
 
-.scan-card { border: 2px solid var(--focus); background: #f0f9ff; }
-.scan-input { width: 100%; font-size: 24px; text-align: center; padding: 20px; border: 2px dashed var(--focus); border-radius: 12px; letter-spacing: 2px; background: #fff; font-weight: 700; }
-.scan-feedback { margin-top: 15px; padding: 15px; border-radius: 12px; text-align: center; font-size: 18px; font-weight: 800; display: none; }
-.scan-feedback.show { display: block; animation: popIn 0.3s ease; }
-@keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-.scan-feedback.hit { background: var(--safe); color: #fff; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
-.scan-feedback.miss { background: var(--missing); color: #fff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
-.scan-sub { font-size: 14px; font-weight: 500; opacity: 0.9; margin-top: 6px; }
+/* ===== assembly point cards ===== */
+.points-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px;}
+.point-card{
+  border-radius:16px; padding:16px; border:1px solid var(--border); background:var(--panel);
+  position:relative; overflow:hidden;
+}
+.point-card::before{content:''; position:absolute; inset-inline-start:0; top:0; bottom:0; width:5px;}
+.point-card.complete{background:linear-gradient(135deg,var(--panel),var(--safe-dim) 220%);}
+.point-card.complete::before{background:var(--safe);}
+.point-card.partial::before{background:var(--warn);}
+.point-card.empty::before{background:var(--missing);}
+.point-card .pname{font-weight:800; font-size:14.5px; margin-bottom:10px; padding-right:6px;}
+.point-card .pratio{display:flex; align-items:baseline; gap:6px; margin-bottom:8px;}
+.point-card .pratio b{font-size:26px; font-weight:900;}
+.point-card .pratio span{font-size:12px; color:var(--muted); font-weight:600;}
+.pbar{height:7px; border-radius:6px; background:#1a2440; overflow:hidden;}
+.pbar > i{display:block; height:100%; background:var(--safe); border-radius:6px; transition:width .5s ease;}
+.point-card.empty .pbar > i{background:var(--missing);}
+.point-card.partial .pbar > i{background:var(--warn);}
+.empty-state{grid-column:1/-1; text-align:center; color:var(--muted); padding:40px 10px; font-size:14px; border:1px dashed var(--border); border-radius:16px;}
 
-.table-wrap { max-height: 60vh; overflow: auto; border: 1px solid var(--border); border-radius: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
-thead th { position: sticky; top: 0; background: var(--panel2); color: var(--navy); font-size: 13px; font-weight: 700; padding: 12px 10px; text-align: right; border-bottom: 2px solid var(--border); z-index: 1; }
-tbody td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; background: #fff; transition: background 0.2s; }
-tbody tr:hover td { background: #f8fafc; }
-tbody tr.safe-row td { background: var(--safe-bg); }
-tbody tr.safe-row:hover td { background: #d1fae5; }
-tbody tr.missing-row td:first-child { border-right: 4px solid var(--missing); }
-.name-cell { font-weight: 700; color: var(--navy); margin-bottom: 2px; }
-.sub-cell { font-size: 12px; color: var(--muted); font-family: monospace; }
+/* ===== critical / missing list ===== */
+.controls-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;}
+.controls-row input, .controls-row select{
+  background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:10px;
+  padding:10px 12px; font-family:inherit; font-size:13.5px;
+}
+.controls-row input{flex:2; min-width:180px;}
+.controls-row select{flex:1; min-width:130px;}
 
-.badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-.badge.safe { background: var(--safe); color: #fff; }
-.badge.pending { background: #e2e8f0; color: #475569; }
+.miss-list{border:1px solid var(--border); border-radius:16px; overflow:hidden; background:var(--panel);}
+.miss-row{
+  display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:center;
+  padding:12px 16px; border-bottom:1px solid var(--border);
+}
+.miss-row:last-child{border-bottom:none;}
+.miss-row:hover{background:var(--panel2);}
+.miss-name{font-weight:700; font-size:14px;}
+.miss-sub{font-size:12px; color:var(--muted); margin-top:2px;}
+.miss-loc{font-size:12px; color:var(--warn); font-weight:700; background:#241a0a; border:1px solid #4a3510; padding:3px 9px; border-radius:20px; white-space:nowrap;}
+.miss-act{background:var(--safe); color:#04150e; border:none; border-radius:9px; padding:8px 14px; font-weight:800; font-size:12.5px; cursor:pointer;}
+.miss-act:hover{filter:brightness(1.08);}
+.all-clear{text-align:center; padding:50px 20px; color:var(--safe);}
+.all-clear b{display:block; font-size:20px; margin-bottom:6px;}
+.all-clear span{color:var(--muted); font-size:13px;}
 
-.att-btn { padding: 6px 12px; font-size: 12px; background: var(--safe); color: #fff; border-radius: 8px; }
-.att-btn.undo { background: transparent; color: var(--missing); border: 1px solid var(--missing); }
-.att-btn.undo:hover { background: var(--missing-bg); }
+/* ===== department breakdown ===== */
+.dept-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px;}
+.dept-row{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px 14px;}
+.dept-row .dtitle{display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-bottom:8px;}
+.dept-row .dtitle span{color:var(--muted); font-weight:600; font-size:12px;}
 
-footer { padding: 20px 15px 40px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 500; }
-.hint { font-size: 12px; color: var(--muted); margin-top: 6px; display: block; }
-.list-info { font-size: 13px; color: var(--muted); margin-bottom: 10px; font-weight: 500; }
+/* ===== connect box ===== */
+.connect-card{background:var(--panel); border:1px dashed var(--border); border-radius:16px; padding:16px; margin-bottom:18px; display:none;}
+.connect-card.show{display:block;}
+.connect-card label{display:block; font-size:13px; color:var(--muted); margin-bottom:8px; font-weight:600;}
+.connect-row{display:flex; gap:10px; flex-wrap:wrap;}
+.connect-row input{flex:1; min-width:220px; background:var(--panel2); border:1px solid var(--border); color:var(--text); padding:11px 12px; border-radius:10px; font-family:inherit;}
+.connect-row button{background:var(--accent); color:#031420; border:none; padding:11px 20px; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;}
+
+footer{text-align:center; padding:26px 10px 50px; color:var(--muted); font-size:12px;}
+
+/* ===== big display mode ===== */
+body.big .topctl .chip span.lbl, body.big .controls-row, body.big .connect-card{display:none;}
+body.big .gauge-center b{font-size:44px;}
+body.big .tcard b{font-size:44px;}
+body.big .tcard span{font-size:14px;}
+body.big main{max-width:1700px;}
+body.big .miss-name{font-size:17px;}
+body.big .miss-loc{font-size:14px;}
+body.big .point-card .pratio b{font-size:32px;}
+
+/* toast */
+#toast{position:fixed; bottom:20px; right:20px; left:20px; max-width:360px; margin:0 0 0 auto; background:var(--panel2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; font-size:13px; font-weight:600; box-shadow:0 10px 30px rgba(0,0,0,.4); display:none; z-index:50;}
+#toast.show{display:block; animation:slideIn .25s ease;}
+@keyframes slideIn{from{transform:translateY(20px); opacity:0;} to{transform:translateY(0); opacity:1;}}
 </style>
 </head>
 <body>
 
 <header>
-  <h1><span class="dot"></span> نظام إدارة نقاط التجمع</h1>
-  <div class="stats">
-    <div class="stat total"><b id="statTotal">0</b><span>إجمالي المتواجدين </span></div>
-    <div class="stat safe"><b id="statSafe">0</b><span>المتواجدين في نقاط التجمع </span></div>
-    <div class="stat missing"><b id="statMissing">0</b><span>مفقودون</span></div>
+  <div class="brand">
+    <span class="pulse idle" id="connPulse"></span>
+    <div>
+      <h1>مركز متابعة الطوارئ والإخلاء</h1>
+      <small id="connLabel">غير متصل بمصدر البيانات</small>
+    </div>
+  </div>
+  <div class="topctl">
+    <div class="chip" id="soundChip"><span class="dot"></span><span class="lbl">تنبيه صوتي: متوقف</span></div>
+    <button class="iconbtn" id="btnBig">🖥️ وضع العرض الكبير</button>
+    <button class="iconbtn" id="btnRefresh">↻ تحديث الآن</button>
+    <button class="iconbtn" id="btnChangeSource">تغيير المصدر</button>
   </div>
 </header>
 
 <main>
-  <div class="card scan-card">
-    <h2>مسح سريع بـ RFID</h2>
-    <input type="text" id="scanInput" class="scan-input" placeholder="امسح البطاقة الآن..." autocomplete="off" autofocus>
-    <div id="scanFeedback" class="scan-feedback"></div>
-    <span class="hint">وجّه المؤشر هنا واترك الجهاز يمسح — يُسجَّل الموظف "آمن" تلقائياً فور المسح بدون أي ضغط زر.</span>
+
+  <div class="connect-card" id="connectCard">
+    <label>الصق رابط تطبيق الويب (Google Apps Script Web App URL) — نفس الرابط المستخدم في نظام بوابات نقاط التجمع</label>
+    <div class="connect-row">
+      <input type="url" id="syncUrlInput" placeholder="https://script.google.com/macros/s/…/exec">
+      <button id="btnConnect">اتصال ومتابعة لحظية</button>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>1) استيراد وتحديث البيانات</h2>
-    <label>اختر ملف Excel (.xlsx / .xls) لقائمة الموظفين</label>
-    <input type="file" id="excelFile" accept=".xlsx,.xls">
-    
-    <div id="importStatus" class="status-msg"></div>
-    <div id="mapPreview" class="map-preview"></div>
-
-    <div class="sync-box">
-      <label>المزامنة الحية عبر قوقل شيت (تحديث لحظي بين الأجهزة)</label>
-      <div class="sync-row">
-        <span id="syncDot" class="sync-dot off"></span>
-        <input type="url" id="syncUrlInput" placeholder="الصق رابط تطبيق الويب (Web app URL) هنا">
-        <button id="btnConnectSync" class="secondary">تفعيل المزامنة</button>
+  <div class="hero">
+    <div class="gauge-card">
+      <div class="gauge-wrap">
+        <svg width="170" height="170" viewBox="0 0 170 170">
+          <circle class="gauge-bg" cx="85" cy="85" r="72"></circle>
+          <circle class="gauge-fg" id="gaugeFg" cx="85" cy="85" r="72" stroke-dasharray="452" stroke-dashoffset="452"></circle>
+        </svg>
+        <div class="gauge-center">
+          <b id="gaugePct">0%</b>
+          <span>نسبة السلامة</span>
+        </div>
       </div>
-      <span class="sync-label" id="syncStatusLabel">غير متصل — التحديثات تبقى محلية على هذا الجهاز فقط.</span>
+      <div class="gauge-label" id="emergState">لا توجد حالة طارئة نشطة</div>
+    </div>
+
+    <div class="totals-grid">
+      <div class="tcard total"><b id="statTotal">0</b><span>إجمالي المتواجدين المسجلين</span></div>
+      <div class="tcard safe"><b id="statSafe">0</b><span>تم تأكيد سلامتهم في نقاط التجمع</span></div>
+      <div class="tcard missing"><b id="statMissing">0</b><span>لم يُؤكد وصولهم — قيد المتابعة</span></div>
+      <div class="tcard timer"><b class="mono" id="statTimer">00:00:00</b><span id="timerLabel">لم تبدأ عملية الإخلاء بعد</span></div>
     </div>
   </div>
 
-  <div class="card">
-    <h2>2) قائمة الحضور والإخلاء</h2>
-    <div class="controls">
-      <input type="text" id="searchBox" class="search" placeholder="بحث بالاسم / الرقم الوظيفي / بطاقة الدخول...">
-      <select id="locationFilter" class="filter">
-        <option value="">كل المواقع</option>
-      </select>
-      <select id="statusFilter" class="filter">
-        <option value="">كل الحالات</option>
-        <option value="safe">آمن فقط</option>
-        <option value="pending">مفقود / لم يُؤكد</option>
-      </select>
-    </div>
-    <div class="list-info" id="listInfo">لا توجد بيانات مستوردة بعد.</div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>الحالة</th>
-            <th>الاسم / RFID</th>
-            <th>الرقم الوظيفي</th>
-            <th>القسم</th>
-            <th>الموقع</th>
-            <th>إجراء يدوي</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+  <div style="display:flex; gap:10px; margin-bottom:6px; flex-wrap:wrap;">
+    <button class="iconbtn" id="btnStartEmergency" style="border-color:var(--missing); color:var(--missing);">🚨 بدء تتبع حالة طارئة</button>
+    <button class="iconbtn" id="btnEndEmergency">إنهاء ومسح المؤقت</button>
   </div>
 
-  <div class="card">
-    <h2>3) إدارة الكشوفات</h2>
-    <div class="row">
-      <button id="btnExportSafe">تنزيل كشف الآمنين (CSV)</button>
-      <button class="secondary" id="btnResetAll" style="color:var(--missing); border-color:var(--missing);">تصفير حالة الحضور للجميع</button>
-    </div>
+  <div class="section-head">
+    <h2><span class="bar"></span> حالة نقاط التجمع</h2>
+    <span class="meta" id="pointsMeta">—</span>
   </div>
+  <div class="points-grid" id="pointsGrid"></div>
+
+  <div class="section-head">
+    <h2><span class="bar"></span> قائمة المتابعة الحرجة (غير مؤكَّد وصولهم)</h2>
+    <span class="meta" id="missMeta">—</span>
+  </div>
+  <div class="controls-row">
+    <input type="text" id="missSearch" placeholder="بحث بالاسم / الرقم الوظيفي...">
+    <select id="missDeptFilter"><option value="">كل الأقسام</option></select>
+    <button class="iconbtn" id="btnExportMiss">تنزيل قائمة الاتصال (CSV)</button>
+  </div>
+  <div class="miss-list" id="missList"></div>
+
+  <div class="section-head">
+    <h2><span class="bar"></span> التوزيع حسب القسم</h2>
+    <span class="meta">نسبة السلامة داخل كل قسم</span>
+  </div>
+  <div class="dept-grid" id="deptGrid"></div>
+
 </main>
 
-<footer>نظام إدارة الإخلاء — الإصدار المحدث</footer>
+<footer>مركز متابعة الطوارئ — يعمل بنفس مصدر بيانات نظام نقاط التجمع، تحديث كل 4 ثوانٍ</footer>
+<div id="toast"></div>
 
 <script>
 'use strict';
 
-let records = []; 
-let renderLimit = 150;
-let searchTerm = '';
-let locFilter = '';
-let statusFilterVal = '';
-
+let records = [];
 let syncUrl = '';
-let pollTimer = null;
 let syncInFlight = false;
+let pollTimer = null;
+let lastFetchOk = false;
+let soundOn = false;
+let missSearch = '', missDept = '';
+let prevMissingIds = new Set();
+let audioCtx = null;
 
-// دالة توحيد النصوص لتفادي الأصفار والفراغات أثناء المطابقة// دالة توحيد النصوص (النسخة المطورة لدعم أجهزة أبل والرموز المخفية)
-function normalizeStr(s){ 
+const $ = id => document.getElementById(id);
+
+function normalizeStr(s){
   if(!s) return '';
   let clean = String(s);
-  // 1. تحويل الأرقام العربية (إن وجدت) إلى إنجليزية
   clean = clean.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-  // 2. إزالة أي مسافات أو فراغات بالكامل (حتى التي بداخل النص)
   clean = clean.replace(/\s+/g, '');
-  // 3. إزالة رموز أبل المخفية (مثل علامات اتجاه النص LTR/RTL)
   clean = clean.replace(/[\u200B-\u200D\uFEFF\u200E\u200F]/g, '');
-  // 4. توحيد الحروف وإزالة الأصفار التي على اليسار
   return clean.toLowerCase().replace(/^0+/, '');
 }
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function parseSafe(val){ return val === true || String(val).toLowerCase() === 'true' || val === 1; }
 
+/* ---------- toast ---------- */
+function toast(msg){
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = 'show';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=> el.className = '', 3200);
+}
 
-function setSyncDot(connected){
-  const dot = document.getElementById('syncDot');
-  const label = document.getElementById('syncStatusLabel');
-  dot.className = 'sync-dot ' + (connected ? 'on' : 'off');
-  label.textContent = connected
-    ? 'متصل بالنظام السحابي — الأجهزة متزامنة بنجاح 🟢'
-    : 'غير متصل — التحديثات تبقى محلية على هذا الجهاز فقط 🔴';
+/* ---------- sound ---------- */
+function beep(freq, dur){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + dur);
+  }catch(e){}
+}
+
+$('soundChip').addEventListener('click', ()=>{
+  soundOn = !soundOn;
+  $('soundChip').classList.toggle('active', soundOn);
+  $('soundChip').querySelector('.lbl').textContent = 'تنبيه صوتي: ' + (soundOn ? 'يعمل' : 'متوقف');
+  if(soundOn) beep(880, 0.12);
+});
+
+/* ---------- big display mode ---------- */
+$('btnBig').addEventListener('click', ()=>{
+  document.body.classList.toggle('big');
+  if(document.body.requestFullscreen && document.body.classList.contains('big')){
+    document.body.requestFullscreen().catch(()=>{});
+  }
+});
+
+/* ---------- sync connection ---------- */
+function setConn(state){
+  // state: 'off' | 'live' | 'error'
+  const pulse = $('connPulse'), label = $('connLabel');
+  pulse.className = 'pulse ' + (state === 'live' ? 'ok' : state === 'off' ? 'idle' : '');
+  label.textContent = state === 'live'
+    ? 'مباشر — يتم التحديث تلقائياً كل 4 ثوانٍ 🟢'
+    : state === 'error'
+      ? 'تعذر الوصول لمصدر البيانات — سيُعاد المحاولة تلقائياً 🔴'
+      : 'غير متصل بمصدر البيانات';
 }
 
 function loadSyncConfig(){
-  const savedUrl = localStorage.getItem('evac-sync-url');
-  if(savedUrl){
-    syncUrl = savedUrl;
-    document.getElementById('syncUrlInput').value = syncUrl;
-    setSyncDot(true);
-    startPolling();
+  const saved = localStorage.getItem('evac-sync-url');
+  if(saved){
+    syncUrl = saved;
+    connectAndPoll();
+  } else {
+    $('connectCard').classList.add('show');
   }
 }
 
-async function connectSync(){
-  const url = document.getElementById('syncUrlInput').value.trim();
-  if(!url){ showStatus('الرجاء لصق الرابط أولاً.', 'err'); return; }
+$('btnChangeSource').addEventListener('click', ()=> $('connectCard').classList.toggle('show'));
+
+$('btnConnect').addEventListener('click', ()=>{
+  const url = $('syncUrlInput').value.trim();
+  if(!url){ toast('الرجاء لصق الرابط أولاً'); return; }
   syncUrl = url;
   localStorage.setItem('evac-sync-url', url);
-  setSyncDot(true);
-  showStatus('جارِ الاتصال بقاعدة البيانات...', 'warn');
-  
-  if(records.length){
-    const ok = await postToSync('import', { records });
-    showStatus(ok ? 'تم الرفع والمزامنة بنجاح.' : 'تم الحفظ، لكن تعذر الوصول للرابط.', ok ? 'ok' : 'err');
-  } else {
-    const pulled = await pullFromSync(true);
-    showStatus(pulled ? 'تم الربط وجلب البيانات بنجاح.' : 'تم الحفظ، لكن لا توجد بيانات لجلبها أو تعذر الوصول.', pulled ? 'ok' : 'err');
+  $('connectCard').classList.remove('show');
+  connectAndPoll();
+});
+
+async function connectAndPoll(){
+  setConn('off');
+  await pullFromSync();
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(pullFromSync, 4000);
+}
+
+$('btnRefresh').addEventListener('click', ()=>{
+  if(!syncUrl){ toast('لم يتم الاتصال بأي مصدر بيانات بعد'); return; }
+  pullFromSync();
+});
+
+async function pullFromSync(){
+  if(!syncUrl || syncInFlight) return;
+  syncInFlight = true;
+  try{
+    const res = await fetch(syncUrl + '?t=' + Date.now());
+    const data = await res.json();
+    syncInFlight = false;
+    if(!data || !data.ok || !Array.isArray(data.records)){ setConn('error'); return; }
+
+    records = data.records.map(r => ({
+      rfid: r.rfid || '', id: r.id || '', name: r.name || '',
+      dept: r.dept || '', location: r.location || '', safe: parseSafe(r.safe)
+    }));
+    setConn('live');
+    renderAll();
+  }catch(err){
+    syncInFlight = false;
+    setConn('error');
   }
-  startPolling();
 }
 
 async function postToSync(action, payload){
@@ -266,331 +397,186 @@ async function postToSync(action, payload){
   }catch(err){ return false; }
 }
 
-async function pullFromSync(replaceIfEmpty){
-  if(!syncUrl || syncInFlight) return false;
-  syncInFlight = true;
-  try{
-    const res = await fetch(syncUrl + '?t=' + Date.now());
-    const data = await res.json();
-    syncInFlight = false;
-    if(!data || !data.ok || !Array.isArray(data.records)) return false;
-
-    const parseSafe = (val) => val === true || String(val).toLowerCase() === 'true' || val === 1;
-
-    if(!records.length && replaceIfEmpty){
-      records = data.records.map(r => ({
-        rfid: r.rfid||'', id: r.id||'', name: r.name||'', dept: r.dept||'', location: r.location||'', safe: parseSafe(r.safe)
-      }));
-      buildLocationFilter(); renderTable(); updateStats();
-      return true;
-    }
-
-    let changed = false;
-    data.records.forEach(remote=>{
-      const isRemoteSafe = parseSafe(remote.safe);
-      
-      const match = records.find(r => 
-        (remote.rfid && normalizeStr(r.rfid) === normalizeStr(remote.rfid)) || 
-        (remote.id && normalizeStr(r.id) === normalizeStr(remote.id))
-      );
-      
-      if(match){
-        // هنا تم إضافة (القفل المؤقت 15 ثانية) لمنع الاسترجاع المزعج أثناء الحفظ
-        const isRecentlyModified = match.lastModified && (Date.now() - match.lastModified < 15000);
-        if(match.safe !== isRemoteSafe && !isRecentlyModified){ 
-          match.safe = isRemoteSafe; 
-          changed = true; 
-        }
-      } else if(remote.rfid || remote.id || remote.name){
-        records.push({
-          rfid: remote.rfid||'', id: remote.id||'', name: remote.name||'',
-          dept: remote.dept||'', location: remote.location||'', safe: isRemoteSafe
-        });
-        changed = true;
-      }
-    });
-    
-    if(changed){ buildLocationFilter(); renderTable(); updateStats(); }
-    return true;
-  }catch(err){
-    syncInFlight = false;
-    return false;
-  }
+/* ---------- emergency timer ---------- */
+let timerInterval = null;
+function fmtElapsed(ms){
+  const s = Math.floor(ms/1000);
+  const hh = String(Math.floor(s/3600)).padStart(2,'0');
+  const mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
+  const ss = String(s%60).padStart(2,'0');
+  return `${hh}:${mm}:${ss}`;
 }
-
-function startPolling(){
-  if(pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(()=> pullFromSync(false), 5000);
+function startTimerLoop(){
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    const startAt = localStorage.getItem('evac-emergency-start');
+    if(!startAt){ $('statTimer').textContent = '00:00:00'; $('timerLabel').textContent = 'لم تبدأ عملية الإخلاء بعد'; $('emergState').textContent = 'لا توجد حالة طارئة نشطة'; return; }
+    const elapsed = Date.now() - Number(startAt);
+    $('statTimer').textContent = fmtElapsed(elapsed);
+    $('timerLabel').textContent = 'الوقت المنقضي منذ بدء الإخلاء';
+    $('emergState').textContent = '🚨 حالة طارئة نشطة الآن';
+  }, 1000);
 }
-
-function showStatus(msg, type){
-  const el = document.getElementById('importStatus');
-  el.textContent = msg;
-  el.className = 'status-msg ' + type;
-}
-
-const FIELD_PATTERNS = {
-  rfid: ['rfid','شريحة','بطاقة الدخول','بطاقة'],
-  id:   ['الرقم الوظيفي','رقم الموظف','رقم وظيفي','employee id','emp id','emp no','كود','هوية','id'],
-  name: ['الاسم الكامل','اسم الموظف','اسم','name'],
-  dept: ['القسم','الإدارة','الادارة','قسم','dept','department','إدارة'],
-  loc:  ['الموقع','الموقع الحالي','برج','مبنى','location','site','موقع']
-};
-const EXCLUDE_PATTERNS = ['جوال','هاتف','موبايل','phone','mobile','فاكس','بريد','email','تاريخ','date'];
-
-function headerScore(rowVals){
-  const cells = rowVals.map(v => (v||'').toString().trim().toLowerCase());
-  let score = 0;
-  cells.forEach(c=>{
-    if(!c || EXCLUDE_PATTERNS.some(p=>c.includes(p))) return;
-    for(const key in FIELD_PATTERNS){ if(FIELD_PATTERNS[key].some(p=>c.includes(p))){ score++; break; } }
-  });
-  return score;
-}
-
-function findHeaderRowIndex(rows){
-  let bestIdx = -1, bestScore = 0;
-  for(let i=0; i<Math.min(rows.length, 6); i++){
-    const s = headerScore(rows[i]);
-    if(s > bestScore){ bestScore = s; bestIdx = i; }
-  }
-  return bestScore >= 2 ? bestIdx : -1;
-}
-
-function mapColumns(rows){
-  if(!rows.length) return { records: [], mapping: null };
-  const headerIdx = findHeaderRowIndex(rows);
-  const isHeader = headerIdx >= 0;
-  const headerRow = isHeader ? rows[headerIdx].map(h => (h||'').toString().trim().toLowerCase()) : [];
-  const dataRows = isHeader ? rows.slice(headerIdx + 1) : rows;
-  const colCount = Math.max(headerRow.length, ...dataRows.map(r=>r.length), 1);
-
-  const hasData = new Array(colCount).fill(false);
-  dataRows.forEach(r=>{ for(let c=0;c<colCount;c++) if((r[c]||'').toString().trim() !== '') hasData[c] = true; });
-
-  const used = new Set();
-  function pickColumn(patterns){
-    if(!isHeader) return -1;
-    for(const pattern of patterns){
-      for(let c=0;c<headerRow.length;c++){
-        if(!used.has(c) && !EXCLUDE_PATTERNS.some(p=>headerRow[c].includes(p)) && headerRow[c].includes(pattern)){
-          if(hasData[c]) return (used.add(c), c);
-        }
-      }
-    }
-    return -1;
-  }
-
-  let idxRfid = pickColumn(FIELD_PATTERNS.rfid);
-  let idxName = pickColumn(FIELD_PATTERNS.name);
-  let idxDept = pickColumn(FIELD_PATTERNS.dept);
-  let idxLoc  = pickColumn(FIELD_PATTERNS.loc);
-  let idxId   = pickColumn(FIELD_PATTERNS.id);
-
-  const recs = dataRows.map(r => ({
-    rfid: idxRfid >= 0 ? (r[idxRfid]||'').toString().trim() : '',
-    id:   idxId >= 0 ? (r[idxId]||'').toString().trim() : '',
-    name: idxName >= 0 ? (r[idxName]||'').toString().trim() : '',
-    dept: idxDept >= 0 ? (r[idxDept]||'').toString().trim() : '',
-    location: idxLoc >= 0 ? (r[idxLoc]||'').toString().trim() : '',
-    safe: false,
-    lastModified: 0
-  })).filter(rec => rec.name || rec.id || rec.rfid);
-  
-  recs.forEach(r => { if(!r.rfid) r.rfid = r.id; if(!r.id) r.id = r.rfid; });
-
-  const mapping = {
-    fields: {
-      rfid: idxRfid>=0 ? headerRow[idxRfid] : null,
-      id:   idxId>=0   ? headerRow[idxId] : null,
-      name: idxName>=0 ? headerRow[idxName] : null,
-      dept: idxDept>=0 ? headerRow[idxDept] : null,
-      loc:  idxLoc>=0  ? headerRow[idxLoc] : null
-    }
-  };
-  return { records: recs, mapping };
-}
-
-function showMapPreview(mapping){
-  const el = document.getElementById('mapPreview');
-  if(!mapping){ el.classList.remove('show'); return; }
-  const labels = { rfid:'البطاقة', id:'الرقم', name:'الاسم', dept:'القسم', loc:'الموقع' };
-  let html = '<b>الأعمدة المكتشفة:</b><br>';
-  Object.keys(labels).forEach(k=>{
-    const val = mapping.fields[k];
-    html += `<span class="field${val?'':' missing'}">${labels[k]}: ${val ? escapeHtml(val) : 'غير موجود'}</span>`;
-  });
-  el.innerHTML = html;
-  el.classList.add('show');
-}
-
-document.getElementById('excelFile').addEventListener('change', (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (evt)=>{
-    try{
-      const wb = XLSX.read(evt.target.result, {type:'array'});
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-      const { records: parsed, mapping } = mapColumns(rows);
-      
-      if(!parsed.length){
-        showStatus('لم يتم العثور على سجلات. تأكد من وجود عناوين واضحة للأعمدة.', 'err'); return;
-      }
-      
-      records = parsed;
-      showStatus(`تم استيراد ${records.length} موظف بنجاح من ملف الإكسل.`, 'ok');
-      showMapPreview(mapping);
-      buildLocationFilter(); renderTable(); updateStats();
-      if(syncUrl) postToSync('import', { records });
-
-    }catch(err){ showStatus('خطأ في القراءة: ' + err.message, 'err'); }
-  };
-  reader.readAsArrayBuffer(file);
+$('btnStartEmergency').addEventListener('click', ()=>{
+  localStorage.setItem('evac-emergency-start', Date.now());
+  toast('بدأ تتبع حالة الطوارئ');
+  if(syncUrl) postToSync('emergencyStart', {});
+});
+$('btnEndEmergency').addEventListener('click', ()=>{
+  if(!confirm('إنهاء المؤقت الحالي؟ (لن يتم مسح بيانات الحضور)')) return;
+  localStorage.removeItem('evac-emergency-start');
+  toast('تم إنهاء المؤقت');
+  if(syncUrl) postToSync('emergencyEnd', {});
 });
 
-function buildLocationFilter(){
-  const sel = document.getElementById('locationFilter');
+/* ---------- render: gauge + totals ---------- */
+function renderTotals(){
+  const total = records.length;
+  const safe = records.filter(r=>r.safe).length;
+  const missing = total - safe;
+  const pct = total ? Math.round((safe/total)*100) : 0;
+
+  $('statTotal').textContent = total;
+  $('statSafe').textContent = safe;
+  $('statMissing').textContent = missing;
+  $('gaugePct').textContent = pct + '%';
+
+  const circumference = 452;
+  const offset = circumference - (circumference * pct / 100);
+  const fg = $('gaugeFg');
+  fg.style.strokeDashoffset = offset;
+  fg.style.stroke = pct >= 95 ? 'var(--safe)' : pct >= 60 ? 'var(--warn)' : 'var(--missing)';
+}
+
+/* ---------- render: assembly points ---------- */
+function renderPoints(){
+  const grid = $('pointsGrid');
+  if(!records.length){
+    grid.innerHTML = '<div class="empty-state">لا توجد بيانات بعد — بانتظار الاتصال بمصدر البيانات.</div>';
+    $('pointsMeta').textContent = '—';
+    return;
+  }
+  const byLoc = {};
+  records.forEach(r=>{
+    const loc = r.location || 'بدون موقع محدد';
+    if(!byLoc[loc]) byLoc[loc] = {total:0, safe:0};
+    byLoc[loc].total++;
+    if(r.safe) byLoc[loc].safe++;
+  });
+  const locs = Object.keys(byLoc).sort((a,b)=> (byLoc[b].total - byLoc[b].safe) - (byLoc[a].total - byLoc[a].safe));
+  $('pointsMeta').textContent = `${locs.length} نقطة تجمع`;
+
+  grid.innerHTML = locs.map(loc=>{
+    const d = byLoc[loc];
+    const pct = d.total ? Math.round((d.safe/d.total)*100) : 0;
+    const state = pct === 100 ? 'complete' : d.safe === 0 ? 'empty' : 'partial';
+    return `<div class="point-card ${state}">
+      <div class="pname">${escapeHtml(loc)}</div>
+      <div class="pratio"><b>${d.safe}</b><span>/ ${d.total} آمن</span></div>
+      <div class="pbar"><i style="width:${pct}%"></i></div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- render: department breakdown ---------- */
+function renderDept(){
+  const grid = $('deptGrid');
+  if(!records.length){ grid.innerHTML = ''; return; }
+  const byDept = {};
+  records.forEach(r=>{
+    const d = r.dept || 'غير محدد';
+    if(!byDept[d]) byDept[d] = {total:0, safe:0};
+    byDept[d].total++;
+    if(r.safe) byDept[d].safe++;
+  });
+  const depts = Object.keys(byDept).sort((a,b)=> byDept[b].total - byDept[a].total);
+  grid.innerHTML = depts.map(d=>{
+    const v = byDept[d];
+    const pct = v.total ? Math.round((v.safe/v.total)*100) : 0;
+    return `<div class="dept-row">
+      <div class="dtitle"><span>${escapeHtml(d)}</span><span>${v.safe}/${v.total}</span></div>
+      <div class="pbar"><i style="width:${pct}%; background:${pct===100?'var(--safe)':pct===0?'var(--missing)':'var(--warn)'}"></i></div>
+    </div>`;
+  }).join('');
+
+  // populate dept filter for the critical list
+  const sel = $('missDeptFilter');
   const current = sel.value;
-  const locs = [...new Set(records.map(r=>r.location).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">كل المواقع</option>' + locs.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
-  sel.value = locs.includes(current) ? current : '';
+  sel.innerHTML = '<option value="">كل الأقسام</option>' + depts.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+  sel.value = depts.includes(current) ? current : '';
 }
 
-['searchBox','locationFilter','statusFilter'].forEach(id => {
-  document.getElementById(id).addEventListener('input', (e)=>{
-    if(id==='searchBox') searchTerm = e.target.value.trim().toLowerCase();
-    if(id==='locationFilter') locFilter = e.target.value;
-    if(id==='statusFilter') statusFilterVal = e.target.value;
-    renderTable();
-  });
-});
-
-function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
-function renderTable(){
-  const tbody = document.getElementById('tableBody');
-  const filtered = records.filter(r=>{
-    if(locFilter && r.location !== locFilter) return false;
-    if(statusFilterVal === 'safe' && !r.safe) return false;
-    if(statusFilterVal === 'pending' && r.safe) return false;
-    if(searchTerm){
+/* ---------- render: critical missing list ---------- */
+function renderMissing(){
+  const listEl = $('missList');
+  const missing = records.filter(r=>!r.safe).filter(r=>{
+    if(missDept && r.dept !== missDept) return false;
+    if(missSearch){
       const hay = (r.name+' '+r.id+' '+r.rfid).toLowerCase();
-      if(!hay.includes(searchTerm)) return false;
+      if(!hay.includes(missSearch)) return false;
     }
     return true;
   });
 
-  const frag = document.createDocumentFragment();
-  filtered.slice(0, renderLimit).forEach(rec=>{
-    const tr = document.createElement('tr');
-    tr.className = rec.safe ? 'safe-row' : 'missing-row';
-    
-    tr.innerHTML = `
-      <td><span class="badge ${rec.safe ? 'safe' : 'pending'}">${rec.safe ? 'آمن' : 'مفقود'}</span></td>
-      <td><div class="name-cell">${escapeHtml(rec.name)}</div><div class="sub-cell">${escapeHtml(rec.rfid)}</div></td>
-      <td>${escapeHtml(rec.id)}</td>
-      <td>${escapeHtml(rec.dept)}</td>
-      <td>${escapeHtml(rec.location)}</td>
-    `;
-    
-    const tdAction = document.createElement('td');
-    const btn = document.createElement('button');
-    btn.className = 'att-btn' + (rec.safe ? ' undo' : '');
-    btn.textContent = rec.safe ? 'تراجع' : 'تحضير';
-    btn.onclick = () => {
-      rec.safe = !rec.safe;
-      rec.lastModified = Date.now(); // إرسال قفل تحديث
-      renderTable(); updateStats();
-      if(syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: rec.safe });
-    };
-    tdAction.appendChild(btn);
-    tr.appendChild(tdAction);
-    frag.appendChild(tr);
-  });
+  $('missMeta').textContent = records.length ? `${missing.length} من ${records.length}` : '—';
 
-  tbody.innerHTML = '';
-  tbody.appendChild(frag);
-  
-  const info = document.getElementById('listInfo');
-  info.textContent = !records.length ? 'لا توجد بيانات.' : `عرض ${Math.min(filtered.length, renderLimit)} من ${filtered.length} (الإجمالي: ${records.length})`;
+  if(!records.length){
+    listEl.innerHTML = '<div class="empty-state">لا توجد بيانات بعد.</div>';
+  } else if(!missing.length){
+    listEl.innerHTML = `<div class="all-clear"><b>✅ الجميع آمن</b><span>تم تأكيد وصول جميع الأفراد المسجلين إلى نقاط التجمع</span></div>`;
+  } else {
+    listEl.innerHTML = missing.map(r=>`
+      <div class="miss-row">
+        <div>
+          <div class="miss-name">${escapeHtml(r.name || 'بدون اسم')}</div>
+          <div class="miss-sub mono">${escapeHtml(r.id || r.rfid)} ${r.dept ? ' · ' + escapeHtml(r.dept) : ''}</div>
+        </div>
+        <div class="miss-loc">${escapeHtml(r.location || 'غير معروف')}</div>
+        <button class="miss-act" data-rfid="${escapeHtml(r.rfid)}" data-id="${escapeHtml(r.id)}">تأكيد آمن</button>
+      </div>`).join('');
+
+    listEl.querySelectorAll('.miss-act').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const rfid = btn.dataset.rfid, id = btn.dataset.id;
+        const rec = records.find(r => (rfid && normalizeStr(r.rfid) === normalizeStr(rfid)) || (id && normalizeStr(r.id) === normalizeStr(id)));
+        if(rec){ rec.safe = true; renderAll(); if(syncUrl) postToSync('checkin', {rfid: rec.rfid, id: rec.id, safe: true}); toast('تم تأكيد سلامة ' + (rec.name||'')); }
+      });
+    });
+  }
+
+  // sound alert on newly appearing missing entries after the first load
+  const currentIds = new Set(missing.map(r => r.rfid || r.id));
+  if(prevMissingIds.size && lastFetchOk){
+    let hasNew = false;
+    currentIds.forEach(cid => { if(!prevMissingIds.has(cid)) hasNew = true; });
+    if(hasNew) beep(300, 0.25);
+  }
+  prevMissingIds = currentIds;
+  lastFetchOk = true;
 }
 
-function updateStats(){
-  document.getElementById('statTotal').textContent = records.length;
-  const safeCount = records.filter(r=>r.safe).length;
-  document.getElementById('statSafe').textContent = safeCount;
-  document.getElementById('statMissing').textContent = records.length - safeCount;
-}
+$('missSearch').addEventListener('input', e => { missSearch = e.target.value.trim().toLowerCase(); renderMissing(); });
+$('missDeptFilter').addEventListener('change', e => { missDept = e.target.value; renderMissing(); });
 
-document.getElementById('btnExportSafe').addEventListener('click', ()=>{
-  const safeList = records.filter(r=>r.safe);
-  if(!safeList.length){ alert('لا يوجد موظفون في نقاط التجمع للتصدير.'); return; }
-  const csv = '\uFEFFRFID,ID,الاسم,القسم,الموقع\n' + safeList.map(r => `${r.rfid},${r.id},"${r.name}",${r.dept},${r.location}`).join('\n');
+$('btnExportMiss').addEventListener('click', ()=>{
+  const missing = records.filter(r=>!r.safe);
+  if(!missing.length){ toast('لا يوجد أفراد قيد المتابعة حالياً'); return; }
+  const csv = '\uFEFFالاسم,الرقم الوظيفي,القسم,آخر موقع معروف\n' + missing.map(r=>`"${r.name}",${r.id},${r.dept},${r.location}`).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
-  a.download = `كشف_الآمنين_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `قائمة_المتابعة_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
   a.click();
 });
 
-document.getElementById('btnResetAll').addEventListener('click', ()=>{
-  if(!records.length || !confirm('هل أنت متأكد من تصفير الحضور للجميع لتجربة إخلاء جديدة؟')) return;
-  records.forEach(r=> { r.safe = false; r.lastModified = Date.now(); });
-  renderTable(); updateStats();
-  if(syncUrl) postToSync('reset', {});
-});
-
-document.getElementById('btnConnectSync').addEventListener('click', connectSync);
-
-// RFID Scanner Handling
-const scanInputEl = document.getElementById('scanInput');
-function focusScanInput(){ if(!['input','select'].includes(document.activeElement?.tagName.toLowerCase())) scanInputEl.focus(); }
-
-function showScanFeedback(hit, title, sub){
-  const el = document.getElementById('scanFeedback');
-  el.className = 'scan-feedback show ' + (hit ? 'hit' : 'miss');
-  el.innerHTML = `<div>${escapeHtml(title)}</div><div class="scan-sub">${escapeHtml(sub)}</div>`;
-  setTimeout(()=> el.classList.remove('show'), 2500);
+function renderAll(){
+  renderTotals();
+  renderPoints();
+  renderDept();
+  renderMissing();
 }
 
-function processScanCode(rawCode){
-  const code = normalizeStr(rawCode);
-  if(!code) return;
-  
-  const rec = records.find(r => normalizeStr(r.rfid) === code || normalizeStr(r.id) === code);
-
-  if(!rec){ showScanFeedback(false, 'غير معروف: ' + rawCode, 'لم يتم العثور على الموظف في القائمة المرفوعة'); return; }
-  
-  rec.safe = true;
-  rec.lastModified = Date.now(); // إرسال قفل التحديث
-  renderTable(); updateStats();
-  showScanFeedback(true, rec.name || rawCode, '✅ تم تسجيله كـ (آمن)');
-  if(syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: true });
-}
-
-scanInputEl.addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter'){
-    e.preventDefault();
-    processScanCode(scanInputEl.value);
-    scanInputEl.value = '';
-  }
-});
-
-let globalBuffer = '', globalLastTime = 0;
-document.addEventListener('keydown', (e)=>{
-  if(e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-  const now = Date.now();
-  if(now - globalLastTime > 200) globalBuffer = '';
-  globalLastTime = now;
-  if(e.key === 'Enter'){ processScanCode(globalBuffer); globalBuffer = ''; } 
-  else if(e.key.length === 1) globalBuffer += e.key;
-});
-
-setInterval(focusScanInput, 1500);
-document.addEventListener('click', focusScanInput);
-
-updateStats(); loadSyncConfig();
+startTimerLoop();
+loadSyncConfig();
 </script>
 </body>
 </html>
