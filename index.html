@@ -4,347 +4,381 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>نظام القيادة والسيطرة - إدارة الإخلاء</title>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-/* تصميم غرفة العمليات (Dark Mode / SOC Theme)
-*/
+/* =========================================
+   التصميم المتقدم (Cyber / Glassmorphism SOC)
+========================================= */
 :root {
-  --bg-main: #0b1120;       /* خلفية النظام */
-  --bg-panel: #1e293b;      /* خلفية البطاقات */
-  --bg-hover: #334155;
-  --border: #334155;
-  --text-main: #f8fafc;     /* نص أساسي */
-  --text-muted: #94a3b8;    /* نص ثانوي */
-  --accent: #0ea5e9;        /* أزرق تقني */
-  --accent-glow: rgba(14, 165, 233, 0.4);
-  --safe: #10b981;          /* أخضر نيون */
-  --safe-glow: rgba(16, 185, 129, 0.2);
-  --danger: #ef4444;        /* أحمر تحذيري */
-  --danger-glow: rgba(239, 68, 68, 0.2);
+  --bg-main: #050b14;
+  --bg-grid: rgba(255, 255, 255, 0.02);
+  --glass-bg: rgba(17, 24, 39, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #00f2fe;
+  --accent-grad: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --safe: #00ffa3;
+  --safe-grad: linear-gradient(135deg, #00b09b, #96c93d);
+  --danger: #ff0844;
+  --danger-grad: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
   --warning: #f59e0b;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
 body { 
   font-family: 'Tajawal', sans-serif; 
-  background: var(--bg-main); 
+  background-color: var(--bg-main); 
+  background-image: 
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size: 30px 30px;
   color: var(--text-main); 
   display: flex; 
   height: 100vh; 
   overflow: hidden; 
 }
 
-/* القائمة الجانبية (Sidebar) */
+/* القائمة الجانبية */
 .sidebar {
-  width: 260px;
-  background: var(--bg-panel);
-  border-left: 1px solid var(--border);
+  width: 280px;
+  background: rgba(5, 11, 20, 0.95);
+  backdrop-filter: blur(20px);
+  border-left: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
-  box-shadow: -4px 0 15px rgba(0,0,0,0.3);
-  z-index: 100;
+  box-shadow: -5px 0 25px rgba(0,0,0,0.5);
+  z-index: 1000;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .brand {
-  padding: 25px 20px;
-  font-size: 20px;
+  padding: 30px 20px;
+  font-size: 22px;
   font-weight: 800;
   color: #fff;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--glass-border);
   display: flex;
   align-items: center;
-  gap: 12px;
-  letter-spacing: 0.5px;
+  gap: 15px;
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
-.brand i { color: var(--accent); font-size: 24px; text-shadow: 0 0 10px var(--accent-glow); }
+.brand i { -webkit-text-fill-color: var(--accent); font-size: 26px; filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.5)); }
 
-.nav-menu { flex: 1; padding: 20px 0; overflow-y: auto; }
+.nav-menu { flex: 1; padding: 25px 0; overflow-y: auto; }
 .nav-item {
-  padding: 15px 25px;
+  padding: 16px 25px;
+  margin: 8px 15px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 15px;
   color: var(--text-muted);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  border-right: 4px solid transparent;
+  border: 1px solid transparent;
 }
-.nav-item i { font-size: 18px; width: 20px; text-align: center; }
-.nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
+.nav-item i { font-size: 18px; width: 22px; text-align: center; }
+.nav-item:hover { background: rgba(255,255,255,0.03); color: var(--text-main); }
 .nav-item.active {
-  background: rgba(14, 165, 233, 0.1);
-  color: var(--accent);
-  border-right-color: var(--accent);
+  background: rgba(0, 242, 254, 0.1);
+  color: #fff;
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  box-shadow: inset 0 0 20px rgba(0, 242, 254, 0.05);
 }
 
-.sidebar-footer {
-  padding: 20px;
-  border-top: 1px solid var(--border);
-  font-size: 12px;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-/* منطقة المحتوى الرئيسية */
+/* المحتوى الرئيسي */
 .main-content {
   flex: 1;
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  background: radial-gradient(circle at top right, #111827, var(--bg-main));
+  scroll-behavior: smooth;
 }
 
 header {
-  padding: 20px 30px;
+  padding: 15px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  background: rgba(11, 17, 32, 0.8);
-  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(5, 11, 20, 0.8);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   position: sticky;
   top: 0;
   z-index: 50;
 }
-.header-title { font-size: 22px; font-weight: 800; }
-.header-status { display: flex; align-items: center; gap: 15px; font-size: 14px; font-weight: 700; }
-.sync-badge { padding: 6px 12px; border-radius: 20px; background: var(--bg-panel); border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
-.sync-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 8px var(--danger); }
-.sync-dot.on { background: var(--safe); box-shadow: 0 0 8px var(--safe); }
 
-/* إدارة الشاشات (SPA Views) */
-.view-section {
+/* زر القائمة للموبايل */
+.menu-toggle {
   display: none;
-  padding: 30px;
-  animation: fadeIn 0.4s ease-out;
+  font-size: 24px;
+  color: var(--text-main);
+  cursor: pointer;
+  background: none;
+  border: none;
 }
-.view-section.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* بطاقات الداشبورد العلوية */
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
+.header-title { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 15px;}
+.header-status { display: flex; align-items: center; gap: 15px; font-size: 14px; font-weight: 700; }
+.sync-badge { padding: 8px 16px; border-radius: 30px; background: var(--glass-bg); border: 1px solid var(--glass-border); display: flex; align-items: center; gap: 10px; }
+.sync-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+.sync-dot.on { background: var(--safe); box-shadow: 0 0 10px var(--safe); }
+.clock-display { font-family: 'Orbitron', monospace; font-size: 16px; color: var(--accent); letter-spacing: 1px; }
+
+/* تأثيرات الزجاج للبطاقات */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.view-section { display: none; padding: 30px; animation: fadeInUp 0.5s ease-out; }
+.view-section.active { display: block; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* بطاقات الإحصائيات (KPIs) */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
 .kpi-card {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
-.kpi-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; }
-.kpi-card.total::before { background: var(--accent); }
-.kpi-card.safe::before { background: var(--safe); }
-.kpi-card.danger::before { background: var(--danger); }
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; right: 0; width: 100%; height: 4px;
+}
+.kpi-card.total::before { background: var(--accent-grad); }
+.kpi-card.safe::before { background: var(--safe-grad); }
+.kpi-card.danger::before { background: var(--danger-grad); }
 .kpi-card.timer::before { background: var(--warning); }
 
-.kpi-title { font-size: 14px; color: var(--text-muted); font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-.kpi-value { font-size: 36px; font-weight: 800; line-height: 1; font-family: monospace; }
-.kpi-card.safe .kpi-value { color: var(--safe); text-shadow: 0 0 15px var(--safe-glow); }
-.kpi-card.danger .kpi-value { color: var(--danger); text-shadow: 0 0 15px var(--danger-glow); }
-.kpi-card.timer .kpi-value { color: var(--warning); }
+.kpi-title { font-size: 15px; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.kpi-value { 
+  font-size: 42px; 
+  font-weight: 800; 
+  font-family: 'Orbitron', monospace; 
+  margin-top: 15px; 
+  line-height: 1;
+}
+.kpi-card.total .kpi-value { background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.kpi-card.safe .kpi-value { background: var(--safe-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(0,255,163,0.3));}
+.kpi-card.danger .kpi-value { background: var(--danger-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(255,8,68,0.3));}
+.kpi-card.timer .kpi-value { color: var(--warning); filter: drop-shadow(0 0 10px rgba(245,158,11,0.3)); }
+
+.kpi-icon { position: absolute; left: -10px; bottom: -15px; font-size: 80px; opacity: 0.05; }
 
 /* الرسوم البيانية */
-.charts-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 25px; }
+.charts-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; margin-bottom: 30px; }
 @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } }
-.chart-box {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
-  height: 350px;
-  position: relative;
-}
-.chart-header { font-size: 16px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: #fff; }
+.chart-container { height: 300px; width: 100%; margin-top: 15px; }
+.chart-header { font-size: 17px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; }
 
-/* قسم المسح (Scan View) */
-.scan-container { max-width: 600px; margin: 40px auto; text-align: center; }
-.scan-icon { font-size: 60px; color: var(--accent); margin-bottom: 20px; animation: pulse 2s infinite; }
-@keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
-.scan-input-wrapper { position: relative; margin-bottom: 20px; }
+/* شاشة المسح RFID */
+.scan-wrapper { max-width: 650px; margin: 40px auto; text-align: center; }
+.scan-radar {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: rgba(0, 242, 254, 0.1);
+  margin: 0 auto 30px; display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--accent); box-shadow: 0 0 30px rgba(0, 242, 254, 0.2);
+  animation: radarPulse 2s infinite;
+}
+.scan-radar i { font-size: 50px; color: var(--accent); }
+@keyframes radarPulse { 0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.4); } 70% { box-shadow: 0 0 0 30px rgba(0, 242, 254, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); } }
+
 .scan-input {
-  width: 100%; background: rgba(0,0,0,0.2); border: 2px solid var(--accent);
-  color: #fff; font-size: 28px; text-align: center; padding: 25px;
-  border-radius: 16px; letter-spacing: 3px; font-weight: 800; font-family: monospace;
-  transition: all 0.3s;
+  width: 100%; background: rgba(0,0,0,0.4); border: 2px solid var(--glass-border);
+  color: #fff; font-size: 32px; text-align: center; padding: 25px;
+  border-radius: 20px; letter-spacing: 4px; font-weight: 800; font-family: 'Orbitron', monospace;
+  transition: all 0.3s; box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
 }
-.scan-input:focus { outline: none; box-shadow: 0 0 25px var(--accent-glow); background: rgba(0,0,0,0.4); }
-.scan-hint { color: var(--text-muted); font-size: 14px; }
+.scan-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 25px rgba(0, 242, 254, 0.2), inset 0 4px 10px rgba(0,0,0,0.5); }
 
-.scan-log { margin-top: 40px; background: var(--bg-panel); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; text-align: right; }
-.scan-log-header { padding: 15px 20px; background: rgba(255,255,255,0.02); font-weight: 700; border-bottom: 1px solid var(--border); }
-.log-item { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; animation: slideIn 0.3s ease; }
-@keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-.log-item:last-child { border-bottom: none; }
-.log-name { font-weight: 700; color: #fff; font-size: 16px; }
-.log-time { font-family: monospace; color: var(--text-muted); font-size: 13px; }
-.log-badge { background: var(--safe-glow); color: var(--safe); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; border: 1px solid var(--safe); }
-
-/* الجداول والبيانات (Data View) */
-.control-panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
-.form-group { margin-bottom: 15px; }
-.form-group label { display: block; margin-bottom: 8px; color: var(--text-muted); font-weight: 700; font-size: 14px; }
+/* الجداول والبيانات */
+.form-group label { display: block; margin-bottom: 10px; color: var(--text-muted); font-weight: 700; font-size: 14px; }
 input[type=text], input[type=file], input[type=url], select {
-  width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: #fff;
-  padding: 12px 15px; border-radius: 8px; font-size: 14px; font-family: inherit; transition: 0.3s;
+  width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: #fff;
+  padding: 14px 18px; border-radius: 12px; font-size: 14px; font-family: inherit; transition: 0.3s;
 }
-input:focus, select:focus { border-color: var(--accent); outline: none; }
+input:focus, select:focus { border-color: var(--accent); outline: none; background: rgba(0,0,0,0.5); }
 
 button {
-  background: var(--accent); color: #fff; border: none; padding: 12px 24px;
-  border-radius: 8px; font-weight: 700; font-family: inherit; cursor: pointer;
-  transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; font-size: 14px;
+  background: var(--accent-grad); color: #fff; border: none; padding: 14px 28px;
+  border-radius: 12px; font-weight: 800; font-family: inherit; cursor: pointer;
+  transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 15px;
 }
-button:hover { background: #0284c7; transform: translateY(-2px); box-shadow: 0 4px 12px var(--accent-glow); }
-button.btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-button.btn-danger:hover { background: var(--danger-glow); box-shadow: none; }
+button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 242, 254, 0.3); }
+button.btn-danger { background: rgba(255, 8, 68, 0.1); border: 1px solid var(--danger); color: #ff4d6d; }
+button.btn-danger:hover { background: var(--danger-grad); color: #fff; box-shadow: 0 8px 20px rgba(255, 8, 68, 0.3); }
 
-.table-wrapper { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; overflow: auto; max-height: 500px; }
+.table-wrapper { overflow: auto; max-height: 500px; margin-top: 20px; border-radius: 12px; border: 1px solid var(--glass-border); }
 table { width: 100%; border-collapse: collapse; text-align: right; }
-thead th { background: rgba(0,0,0,0.3); color: var(--text-muted); padding: 15px; font-size: 13px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); }
-tbody td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+thead th { background: rgba(0,0,0,0.6); color: var(--text-muted); padding: 18px 15px; font-size: 13px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--glass-border); }
+tbody td { padding: 16px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 14.5px; }
 tbody tr:hover { background: rgba(255,255,255,0.02); }
-.status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; }
-.status-badge.safe { background: var(--safe-glow); color: var(--safe); border: 1px solid var(--safe); }
-.status-badge.missing { background: var(--danger-glow); color: var(--danger); border: 1px solid var(--danger); }
 
-/* تخصيص الـ Scrollbar */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-main); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+.status-badge { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; }
+.status-badge.safe { background: rgba(0, 255, 163, 0.1); color: var(--safe); border: 1px solid rgba(0, 255, 163, 0.3); }
+.status-badge.missing { background: rgba(255, 8, 68, 0.1); color: var(--danger); border: 1px solid rgba(255, 8, 68, 0.3); }
 
-/* رسائل النظام */
-.alert { padding: 12px 15px; border-radius: 8px; margin-top: 10px; font-size: 14px; font-weight: 700; display: none; }
-.alert.success { background: var(--safe-glow); color: var(--safe); border: 1px solid var(--safe); display: block; }
-.alert.error { background: var(--danger-glow); color: var(--danger); border: 1px solid var(--danger); display: block; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.flex-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.flex-row > * { flex: 1; min-width: 150px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+.flex-row { display: flex; gap: 15px; flex-wrap: wrap; }
+.flex-row > * { flex: 1; min-width: 200px; }
+
+/* =========================================
+   تجاوب الشاشات (دعم الجوال لحل مشكلة التداخل)
+========================================= */
+.mobile-overlay {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 900; opacity: 0; transition: 0.3s;
+}
+@media (max-width: 900px) {
+  .menu-toggle { display: block; }
+  .sidebar {
+    position: fixed; top: 0; right: 0; height: 100vh;
+    transform: translateX(100%); /* مخفي لليمين افتراضياً */
+  }
+  .sidebar.open { transform: translateX(0); }
+  .mobile-overlay.active { display: block; opacity: 1; }
+  .grid-2 { grid-template-columns: 1fr; }
+  header { padding: 15px 20px; }
+  .header-title span { display: none; } /* إخفاء النص الطويل في الجوال */
+  .view-section { padding: 20px 15px; }
+  .kpi-value { font-size: 34px; }
+}
 </style>
 </head>
 <body>
 
-<aside class="sidebar">
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
   <div class="brand">
     <i class="fa-solid fa-shield-halved"></i>
-    <span>نظام القيادة C2</span>
+    <span>C2 Command</span>
   </div>
   <nav class="nav-menu">
     <div class="nav-item active" onclick="switchTab('view-dashboard', this)">
-      <i class="fa-solid fa-chart-line"></i> مركز القيادة
+      <i class="fa-solid fa-chart-line"></i> مركز القيادة (Dashboard)
     </div>
     <div class="nav-item" onclick="switchTab('view-scan', this)">
-      <i class="fa-solid fa-barcode"></i> نقطة التجمع (RFID)
+      <i class="fa-solid fa-barcode"></i> بوابات الدخول (RFID)
     </div>
     <div class="nav-item" onclick="switchTab('view-data', this)">
-      <i class="fa-solid fa-database"></i> إدارة البيانات
+      <i class="fa-solid fa-database"></i> إدارة قواعد البيانات
     </div>
   </nav>
-  <div class="sidebar-footer">
-    الإصدار المتقدم (SOC) v2.0
-  </div>
 </aside>
 
 <main class="main-content">
   <header>
-    <div class="header-title" id="pageTitle">مركز القيادة والسيطرة (Dashboard)</div>
+    <div class="header-title">
+      <button class="menu-toggle" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
+      <span id="pageTitle">مركز القيادة والسيطرة</span>
+    </div>
     <div class="header-status">
       <div class="sync-badge">
         <span class="sync-dot" id="syncIndicator"></span>
         <span id="syncLabel">غير متصل</span>
       </div>
-      <div id="clockDisplay" style="font-family: monospace; color: var(--accent);">00:00:00</div>
+      <div class="clock-display" id="clockDisplay">00:00:00</div>
     </div>
   </header>
 
   <section id="view-dashboard" class="view-section active">
-    
     <div class="kpi-grid">
-      <div class="kpi-card total">
-        <div class="kpi-title"><i class="fa-solid fa-users"></i> إجمالي القوة البشرية</div>
+      <div class="glass-card kpi-card total">
+        <i class="fa-solid fa-users kpi-icon"></i>
+        <div class="kpi-title">إجمالي القوة البشرية</div>
         <div class="kpi-value" id="kpiTotal">0</div>
       </div>
-      <div class="kpi-card safe">
-        <div class="kpi-title"><i class="fa-solid fa-person-walking-arrow-right"></i> تم الإخلاء (آمن)</div>
+      <div class="glass-card kpi-card safe">
+        <i class="fa-solid fa-person-walking-arrow-right kpi-icon"></i>
+        <div class="kpi-title">تم الإخلاء (آمن)</div>
         <div class="kpi-value" id="kpiSafe">0</div>
       </div>
-      <div class="kpi-card danger">
-        <div class="kpi-title"><i class="fa-solid fa-triangle-exclamation"></i> مفقودون بالداخل</div>
+      <div class="glass-card kpi-card danger">
+        <i class="fa-solid fa-triangle-exclamation kpi-icon"></i>
+        <div class="kpi-title">مفقودون بالداخل (خطر)</div>
         <div class="kpi-value" id="kpiMissing">0</div>
       </div>
-      <div class="kpi-card timer">
-        <div class="kpi-title"><i class="fa-solid fa-stopwatch"></i> زمن الإخلاء (T-Zero)</div>
+      <div class="glass-card kpi-card timer">
+        <i class="fa-solid fa-stopwatch kpi-icon"></i>
+        <div class="kpi-title">زمن الإخلاء الفعلي (T-Zero)</div>
         <div class="kpi-value" id="kpiTimer">00:00</div>
       </div>
     </div>
 
     <div class="charts-grid">
-      <div class="chart-box">
-        <div class="chart-header"><i class="fa-solid fa-chart-pie"></i> نسبة الإنجاز</div>
-        <div style="height: 280px;"><canvas id="progressChart"></canvas></div>
+      <div class="glass-card">
+        <div class="chart-header"><i class="fa-solid fa-crosshairs text-accent"></i> مؤشر الإنجاز الكلي</div>
+        <div class="chart-container"><canvas id="progressChart"></canvas></div>
       </div>
-      <div class="chart-box">
-        <div class="chart-header"><i class="fa-solid fa-building-shield"></i> خريطة الخطر (المفقودين حسب الموقع/القسم)</div>
-        <div style="height: 280px;"><canvas id="deptChart"></canvas></div>
+      <div class="glass-card">
+        <div class="chart-header"><i class="fa-solid fa-map-location-dot text-accent"></i> الخريطة الحرارية للمفقودين (توجيه الإنقاذ)</div>
+        <div class="chart-container"><canvas id="deptChart"></canvas></div>
       </div>
     </div>
   </section>
 
   <section id="view-scan" class="view-section">
-    <div class="scan-container">
-      <i class="fa-solid fa-id-card scan-icon"></i>
-      <h2 style="margin-bottom: 20px; font-weight: 800;">بوابة التحضير الآلي</h2>
+    <div class="glass-card scan-wrapper">
+      <div class="scan-radar"><i class="fa-solid fa-id-card-clip"></i></div>
+      <h2 style="margin-bottom: 10px; font-weight: 800; color: #fff;">نظام التحضير الآلي للأسوار</h2>
+      <p style="color: var(--text-muted); margin-bottom: 30px;">بمجرد تمرير بطاقة الموظف، سيتم ترحيل حالته إلى (آمن) لحظياً.</p>
       
-      <div class="scan-input-wrapper">
-        <input type="text" id="scanInput" class="scan-input" placeholder="امسح البطاقة هنا..." autocomplete="off">
-      </div>
-      <div class="scan-hint">النظام في وضع الاستعداد. يُسجل الموظف "آمن" فور تمرير بطاقة الدخول.</div>
-
-      <div id="scanAlert" class="alert" style="margin-top: 20px; font-size: 18px;"></div>
-
-      <div class="scan-log">
-        <div class="scan-log-header">أحدث عمليات المسح (Live Feed)</div>
-        <div id="liveFeed">
-          <div style="padding: 20px; text-align: center; color: var(--text-muted);">لا توجد عمليات مسح حديثة...</div>
-        </div>
-      </div>
+      <input type="text" id="scanInput" class="scan-input" placeholder="SCAN RFID..." autocomplete="off">
+      
+      <div id="scanAlert" style="margin-top: 25px; padding: 15px; border-radius: 12px; display: none; font-weight: 800; font-size: 16px;"></div>
     </div>
   </section>
 
   <section id="view-data" class="view-section">
-    
     <div class="grid-2">
-      <div class="control-panel">
-        <h3 style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-file-excel text-accent"></i> 1. استيراد القوائم</h3>
+      <div class="glass-card">
+        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-file-arrow-up" style="color: var(--accent);"></i> استيراد قاعدة الموظفين</h3>
         <div class="form-group">
-          <label>رفع ملف الموظفين (Excel / CSV)</label>
+          <label>ارفع ملف Excel لتهيئة النظام</label>
           <input type="file" id="excelFile" accept=".xlsx,.xls">
         </div>
-        <div id="importStatus" class="alert"></div>
+        <div id="importStatus" style="margin-top: 15px; font-size: 14px; font-weight: 700;"></div>
       </div>
 
-      <div class="control-panel">
-        <h3 style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-cloud text-accent"></i> 2. المزامنة والربط</h3>
+      <div class="glass-card">
+        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-cloud-arrow-up" style="color: var(--accent);"></i> المزامنة الحية (Cloud API)</h3>
         <div class="form-group">
-          <label>رابط Google Apps Script (Web App URL)</label>
-          <input type="url" id="syncUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+          <label>رابط Google Web App للتزامن مع باقي البوابات</label>
+          <input type="url" id="syncUrlInput" placeholder="https://script.google.com/macros/s/...">
         </div>
-        <button id="btnConnectSync"><i class="fa-solid fa-link"></i> تفعيل الربط السحابي</button>
+        <button id="btnConnectSync" style="width: 100%; margin-top: 10px;"><i class="fa-solid fa-link"></i> ربط وتفعيل</button>
       </div>
     </div>
 
-    <div class="control-panel">
-      <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-table-list"></i> 3. كشف الحضور الحي</h3>
-      <div class="flex-row" style="margin-bottom: 15px;">
-        <input type="text" id="searchBox" placeholder="🔍 بحث بالرقم الوظيفي، الاسم، أو البطاقة...">
-        <select id="locationFilter"><option value="">🏢 كل المواقع/الأقسام</option></select>
+    <div class="glass-card">
+      <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-server" style="color: var(--accent);"></i> لوحة التحكم بالبيانات الحية</h3>
+      <div class="flex-row" style="margin-bottom: 20px;">
+        <input type="text" id="searchBox" placeholder="🔍 بحث سريع...">
+        <select id="locationFilter"><option value="">🏢 تصفية حسب الموقع</option></select>
         <select id="statusFilter">
           <option value="">🔘 كل الحالات</option>
           <option value="safe">🟢 تم الإخلاء (آمن)</option>
@@ -361,53 +395,63 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
               <th>الرقم الوظيفي</th>
               <th>القسم / الموقع</th>
               <th>رمز RFID</th>
-              <th>إجراء يدوي</th>
+              <th>العمليات</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
       </div>
       
-      <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-        <div id="listInfo" style="color: var(--text-muted); font-size: 13px;"></div>
-        <div style="display: flex; gap: 10px;">
-          <button id="btnExportSafe"><i class="fa-solid fa-download"></i> تصدير الآمنين (CSV)</button>
-          <button id="btnResetAll" class="btn-danger"><i class="fa-solid fa-rotate-left"></i> تصفير النظام وإعلان إخلاء جديد</button>
+      <div style="margin-top: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div id="listInfo" style="color: var(--text-muted); font-size: 14px;"></div>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+          <button id="btnExportSafe"><i class="fa-solid fa-file-csv"></i> تصدير التقرير النهائي</button>
+          <button id="btnResetAll" class="btn-danger"><i class="fa-solid fa-power-off"></i> تصفير النظام لعملية جديدة</button>
         </div>
       </div>
     </div>
-
   </section>
-
 </main>
 
 <script>
 'use strict';
 
 // ==========================================
-// 1. إعدادات الواجهة (SPA Navigation & Dark Theme)
+// 1. إدارة القائمة الجانبية في الجوال
+// ==========================================
+const sidebar = document.getElementById('sidebar');
+const menuBtn = document.getElementById('menuBtn');
+const overlay = document.getElementById('mobileOverlay');
+
+function toggleMenu() {
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('active');
+}
+menuBtn.addEventListener('click', toggleMenu);
+overlay.addEventListener('click', toggleMenu);
+
+// ==========================================
+// 2. إعدادات الواجهة (SPA Navigation)
 // ==========================================
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.font.family = 'Tajawal';
 
 function switchTab(viewId, navElement) {
-  // تحديث الأزرار
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   navElement.classList.add('active');
   
-  // تحديث الشاشات
   document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
   document.getElementById(viewId).classList.add('active');
 
-  // تحديث عنوان الصفحة
   const titles = {
-    'view-dashboard': 'مركز القيادة والسيطرة (Dashboard)',
-    'view-scan': 'نقاط المسح الآلي (RFID Gate)',
-    'view-data': 'إدارة قواعد البيانات والمزامنة'
+    'view-dashboard': 'مركز القيادة والسيطرة',
+    'view-scan': 'بوابات الدخول (RFID)',
+    'view-data': 'إدارة قواعد البيانات'
   };
   document.getElementById('pageTitle').textContent = titles[viewId];
 
-  // إجراءات مخصصة لكل شاشة
+  if(window.innerWidth <= 900) toggleMenu(); // إغلاق القائمة في الجوال بعد الاختيار
+
   if(viewId === 'view-dashboard') {
     if(progressChart) progressChart.update();
     if(deptChart) deptChart.update();
@@ -417,76 +461,72 @@ function switchTab(viewId, navElement) {
   }
 }
 
-// الساعة الحية
 setInterval(() => {
-  const now = new Date();
-  document.getElementById('clockDisplay').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+  document.getElementById('clockDisplay').textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
 }, 1000);
 
 
 // ==========================================
-// 2. المتغيرات والبيانات الأساسية
+// 3. المتغيرات والبيانات الأساسية
 // ==========================================
 let records = []; 
 let renderLimit = 200;
-let searchTerm = '';
-let locFilter = '';
-let statusFilterVal = '';
-
-let syncUrl = '';
-let pollTimer = null;
-let syncInFlight = false;
-
-let progressChart = null;
-let deptChart = null;
-let evacStartTime = null;
-let evacTimerInterval = null;
+let searchTerm = '', locFilter = '', statusFilterVal = '';
+let syncUrl = '', pollTimer = null, syncInFlight = false;
+let progressChart = null, deptChart = null;
+let evacStartTime = null, evacTimerInterval = null;
 
 
 // ==========================================
-// 3. تهيئة وتحديث رسوم الداشبورد (Chart.js)
+// 4. الرسوم البيانية (Charts.js) - بتصميم متطور
 // ==========================================
 function initDashboard() {
   const ctxProg = document.getElementById('progressChart').getContext('2d');
   progressChart = new Chart(ctxProg, {
     type: 'doughnut',
     data: {
-      labels: ['تم الإخلاء', 'مفقود'],
+      labels: ['آمن', 'مفقود'],
       datasets: [{
         data: [0, 0],
-        backgroundColor: ['#10b981', '#ef4444'],
+        backgroundColor: ['#00ffa3', '#ff0844'],
         borderWidth: 0,
-        hoverOffset: 5
+        hoverOffset: 10,
+        borderRadius: 5
       }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '75%',
+      responsive: true, maintainAspectRatio: false, cutout: '80%',
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#f8fafc', padding: 20 } }
+        legend: { position: 'bottom', labels: { color: '#f8fafc', padding: 20, font: {family: 'Tajawal', size: 14} } }
       }
     }
   });
 
   const ctxDept = document.getElementById('deptChart').getContext('2d');
+  
+  // إنشاء تدرج لوني للأعمدة
+  let gradientBar = ctxDept.createLinearGradient(0, 0, 0, 400);
+  gradientBar.addColorStop(0, '#ff0844');
+  gradientBar.addColorStop(1, 'rgba(255, 8, 68, 0.2)');
+
   deptChart = new Chart(ctxDept, {
     type: 'bar',
     data: {
       labels: [],
       datasets: [{
-        label: 'أفراد مفقودون',
+        label: 'مفقودون',
         data: [],
-        backgroundColor: 'rgba(239, 68, 68, 0.8)',
-        borderColor: '#ef4444',
-        borderWidth: 1,
-        borderRadius: 4
+        backgroundColor: gradientBar,
+        borderRadius: 8,
+        barThickness: 30
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { precision: 0 } },
-        x: { grid: { display: false } }
+        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', precision: 0 } },
+        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: {family: 'Tajawal'} } }
       }
     }
   });
@@ -508,13 +548,12 @@ function updateDashboardData() {
     }
   });
 
-  const sortedDepts = Object.keys(missingByDept).sort((a, b) => missingByDept[b] - missingByDept[a]).slice(0, 10);
+  const sortedDepts = Object.keys(missingByDept).sort((a, b) => missingByDept[b] - missingByDept[a]).slice(0, 8);
   deptChart.data.labels = sortedDepts;
   deptChart.data.datasets[0].data = sortedDepts.map(d => missingByDept[d]);
   deptChart.update();
 }
 
-// مؤقت الطوارئ
 function startEvacTimer() {
   if (evacTimerInterval) return; 
   evacStartTime = Date.now();
@@ -534,15 +573,10 @@ function resetEvacTimer() {
 
 
 // ==========================================
-// 4. العمليات الأساسية ومعالجة البيانات
+// 5. الوظائف الأساسية
 // ==========================================
-function normalizeStr(s){ 
-  if(!s) return '';
-  return String(s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-                  .replace(/\s+/g, '')
-                  .replace(/[\u200B-\u200D\uFEFF\u200E\u200F]/g, '')
-                  .toLowerCase().replace(/^0+/, '');
-}
+function normalizeStr(s){ return String(s||'').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\s+/g, '').replace(/[\u200B-\u200D\uFEFF\u200E\u200F]/g, '').toLowerCase().replace(/^0+/, ''); }
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
 function updateStats(){
   document.getElementById('kpiTotal').textContent = records.length;
@@ -554,45 +588,41 @@ function updateStats(){
   if (safeCount > 0 && records.length > 0) startEvacTimer();
 }
 
-function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
 function renderTable(){
   const tbody = document.getElementById('tableBody');
   const filtered = records.filter(r=>{
     if(locFilter && (r.location !== locFilter && r.dept !== locFilter)) return false;
     if(statusFilterVal === 'safe' && !r.safe) return false;
     if(statusFilterVal === 'pending' && r.safe) return false;
-    if(searchTerm){
+    if(searchTerm) {
       const hay = (r.name+' '+r.id+' '+r.rfid).toLowerCase();
       if(!hay.includes(searchTerm)) return false;
     }
     return true;
   });
 
-  const html = filtered.slice(0, renderLimit).map(rec => `
+  tbody.innerHTML = filtered.slice(0, renderLimit).map(rec => `
     <tr>
-      <td><span class="status-badge ${rec.safe ? 'safe' : 'missing'}">${rec.safe ? 'آمن' : 'مفقود'}</span></td>
+      <td><span class="status-badge ${rec.safe ? 'safe' : 'missing'}"><i class="fa-solid ${rec.safe ? 'fa-check':'fa-xmark'}"></i> ${rec.safe ? 'آمن' : 'مفقود'}</span></td>
       <td style="font-weight:700;">${escapeHtml(rec.name)}</td>
-      <td style="font-family:monospace;">${escapeHtml(rec.id)}</td>
+      <td style="font-family:'Orbitron', monospace;">${escapeHtml(rec.id)}</td>
       <td>${escapeHtml(rec.dept || rec.location)}</td>
-      <td style="font-family:monospace; color:var(--text-muted);">${escapeHtml(rec.rfid)}</td>
+      <td style="font-family:'Orbitron', monospace; color:var(--text-muted);">${escapeHtml(rec.rfid)}</td>
       <td>
-        <button onclick="toggleManualSafety('${rec.rfid}', '${rec.id}')" style="padding: 6px 12px; font-size:12px; background: ${rec.safe ? 'transparent' : 'var(--safe)'}; border: ${rec.safe ? '1px solid var(--danger)' : 'none'}; color: ${rec.safe ? 'var(--danger)' : '#fff'};">
+        <button onclick="toggleManualSafety('${rec.rfid}', '${rec.id}')" style="padding: 8px 15px; font-size:12px; background: ${rec.safe ? 'rgba(255,255,255,0.05)' : 'var(--safe-grad)'}; color: ${rec.safe ? '#fff' : '#000'};">
           ${rec.safe ? 'تراجع' : 'تحضير يدوي'}
         </button>
       </td>
     </tr>
   `).join('');
 
-  tbody.innerHTML = html;
   document.getElementById('listInfo').textContent = !records.length ? 'لا توجد بيانات بالنظام.' : `عرض ${Math.min(filtered.length, renderLimit)} من ${filtered.length}`;
 }
 
 window.toggleManualSafety = function(rfid, id) {
   const rec = records.find(r => r.rfid === rfid && r.id === id);
   if(rec) {
-    rec.safe = !rec.safe;
-    rec.lastModified = Date.now();
+    rec.safe = !rec.safe; rec.lastModified = Date.now();
     renderTable(); updateStats();
     if(syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: rec.safe });
   }
@@ -600,47 +630,29 @@ window.toggleManualSafety = function(rfid, id) {
 
 
 // ==========================================
-// 5. نظام الماسح الضوئي (RFID Scanner)
+// 6. نظام ماسح RFID
 // ==========================================
 const scanInputEl = document.getElementById('scanInput');
-const liveFeedEl = document.getElementById('liveFeed');
 
 function showScanAlert(msg, type) {
   const el = document.getElementById('scanAlert');
-  el.className = `alert ${type}`;
-  el.innerHTML = type === 'success' ? `<i class="fa-solid fa-circle-check"></i> ${msg}` : `<i class="fa-solid fa-circle-xmark"></i> ${msg}`;
+  el.style.display = 'block';
+  el.style.background = type === 'success' ? 'rgba(0, 255, 163, 0.1)' : 'rgba(255, 8, 68, 0.1)';
+  el.style.color = type === 'success' ? 'var(--safe)' : 'var(--danger)';
+  el.style.border = `1px solid ${type === 'success' ? 'var(--safe)' : 'var(--danger)'}`;
+  el.innerHTML = type === 'success' ? `<i class="fa-solid fa-circle-check"></i> ${msg}` : `<i class="fa-solid fa-triangle-exclamation"></i> ${msg}`;
   setTimeout(() => el.style.display = 'none', 3000);
-}
-
-function addToLiveFeed(name, timeStr) {
-  const item = document.createElement('div');
-  item.className = 'log-item';
-  item.innerHTML = `
-    <div><span class="log-badge">آمن</span> <span class="log-name">${escapeHtml(name)}</span></div>
-    <div class="log-time">${timeStr}</div>
-  `;
-  liveFeedEl.prepend(item);
-  if(liveFeedEl.children.length > 5) liveFeedEl.removeChild(liveFeedEl.lastChild);
-  // إزالة رسالة "لا توجد عمليات مسح" إن وجدت
-  if(liveFeedEl.innerHTML.includes('لا توجد عمليات')) liveFeedEl.lastElementChild.remove();
 }
 
 function processScanCode(rawCode){
   const code = normalizeStr(rawCode);
   if(!code) return;
-  
   const rec = records.find(r => normalizeStr(r.rfid) === code || normalizeStr(r.id) === code);
-  if(!rec){ 
-    showScanAlert(`البطاقة (${rawCode}) غير مسجلة بالنظام!`, 'error'); 
-    return; 
-  }
+  if(!rec){ showScanAlert(`غير مصرح: البطاقة (${rawCode}) غير مسجلة بالنظام!`, 'error'); return; }
   
   if(!rec.safe) {
-    rec.safe = true;
-    rec.lastModified = Date.now();
+    rec.safe = true; rec.lastModified = Date.now();
     renderTable(); updateStats();
-    const timeStr = new Date().toLocaleTimeString('en-US', {hour12:false});
-    addToLiveFeed(rec.name || rec.id, timeStr);
     showScanAlert(`تم تحضير: ${rec.name || rec.id}`, 'success');
     if(syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: true });
   } else {
@@ -651,11 +663,8 @@ function processScanCode(rawCode){
 scanInputEl.addEventListener('keydown', (e)=>{
   if(e.key === 'Enter'){ e.preventDefault(); processScanCode(scanInputEl.value); scanInputEl.value = ''; }
 });
-
-// التقاط المسح حتى لو لم يكن المربع محدداً (Global Key Catcher)
 let globalBuffer = '', globalLastTime = 0;
 document.addEventListener('keydown', (e)=>{
-  // تجاهل إذا كان يكتب في مربع بحث أو إعدادات
   if(['INPUT','SELECT'].includes(e.target.tagName)) return;
   const now = Date.now();
   if(now - globalLastTime > 200) globalBuffer = '';
@@ -666,14 +675,8 @@ document.addEventListener('keydown', (e)=>{
 
 
 // ==========================================
-// 6. استيراد الإكسل وبناء القوائم
+// 7. استيراد الإكسل
 // ==========================================
-function showAlertStatus(msg, type) {
-  const el = document.getElementById('importStatus');
-  el.className = `alert ${type}`;
-  el.textContent = msg;
-}
-
 document.getElementById('excelFile').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -681,18 +684,16 @@ document.getElementById('excelFile').addEventListener('change', (e)=>{
   reader.onload = (evt)=>{
     try{
       const wb = XLSX.read(evt.target.result, {type:'array'});
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''});
       
-      // منطق التعرّف على الأعمدة (نفس خوارزميتك السابقة الدقيقة)
       let headerIdx = -1, bestScore = 0;
       const patterns = ['rfid','بطاقة','رقم','id','اسم','name','قسم','dept','موقع','site'];
       for(let i=0; i<Math.min(rows.length, 6); i++){
         let score = rows[i].filter(c => c && patterns.some(p => String(c).toLowerCase().includes(p))).length;
         if(score > bestScore){ bestScore = score; headerIdx = i; }
       }
+      if(headerIdx === -1) { alert('لم يتم التعرف على عناوين الأعمدة.'); return; }
       
-      if(headerIdx === -1) { showAlertStatus('عذراً، لم يتم التعرف على عناوين الأعمدة.', 'error'); return; }
       const headers = rows[headerIdx].map(h => String(h).toLowerCase());
       const idxRfid = headers.findIndex(h => h.includes('rfid') || h.includes('بطاقة'));
       const idxId = headers.findIndex(h => h.includes('رقم') || h.includes('id') || h.includes('emp'));
@@ -709,55 +710,44 @@ document.getElementById('excelFile').addEventListener('change', (e)=>{
       
       records.forEach(r => { if(!r.rfid) r.rfid = r.id; if(!r.id) r.id = r.rfid; });
       
-      showAlertStatus(`تم استيراد ${records.length} سجل بنجاح.`, 'success');
-      buildLocationFilter(); renderTable(); updateStats();
+      document.getElementById('importStatus').innerHTML = `<span style="color:var(--safe)"><i class="fa-solid fa-check"></i> تم رفع ${records.length} سجل بنجاح.</span>`;
+      
+      const locs = [...new Set(records.map(r=>r.dept || r.location).filter(Boolean))].sort();
+      document.getElementById('locationFilter').innerHTML = '<option value="">🏢 تصفية حسب الموقع</option>' + locs.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+      
+      renderTable(); updateStats();
       if(syncUrl) postToSync('import', { records });
-
-    }catch(err){ showAlertStatus('خطأ في القراءة: ' + err.message, 'error'); }
+    }catch(err){ alert('خطأ: ' + err.message); }
   };
   reader.readAsArrayBuffer(file);
 });
 
-function buildLocationFilter(){
-  const sel = document.getElementById('locationFilter');
-  const locs = [...new Set(records.map(r=>r.dept || r.location).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">🏢 كل المواقع/الأقسام</option>' + locs.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
-}
-
 
 // ==========================================
-// 7. المزامنة السحابية (Cloud Sync)
+// 8. المزامنة السحابية وباقي الأزرار
 // ==========================================
 function setSyncStatus(isConnected) {
-  const dot = document.getElementById('syncIndicator');
-  const label = document.getElementById('syncLabel');
-  dot.className = 'sync-dot ' + (isConnected ? 'on' : '');
-  label.textContent = isConnected ? 'متصل (Live)' : 'غير متصل (Local)';
-  label.style.color = isConnected ? 'var(--safe)' : 'var(--danger)';
+  document.getElementById('syncIndicator').className = 'sync-dot ' + (isConnected ? 'on' : '');
+  document.getElementById('syncLabel').textContent = isConnected ? 'متصل (Live)' : 'محلي (Local)';
+  document.getElementById('syncLabel').style.color = isConnected ? 'var(--safe)' : 'var(--danger)';
 }
 
 async function connectSync(){
   const url = document.getElementById('syncUrlInput').value.trim();
   if(!url){ alert('الرجاء إدخال الرابط.'); return; }
-  syncUrl = url;
-  localStorage.setItem('evac-sync-url-soc', url);
+  syncUrl = url; localStorage.setItem('evac-sync-url-soc', url);
   setSyncStatus(true);
   
-  if(records.length){
-    await postToSync('import', { records });
-  } else {
-    await pullFromSync(true);
-  }
+  if(records.length) await postToSync('import', { records });
+  else await pullFromSync(true);
+  
   if(pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(()=> pullFromSync(false), 5000);
 }
 
 async function postToSync(action, payload){
   if(!syncUrl) return false;
-  try{
-    await fetch(syncUrl, { method: 'POST', body: JSON.stringify(Object.assign({action}, payload)) });
-    return true;
-  }catch(e){ return false; }
+  try{ await fetch(syncUrl, { method: 'POST', body: JSON.stringify(Object.assign({action}, payload)) }); return true; }catch(e){ return false; }
 }
 
 async function pullFromSync(replaceEmpty){
@@ -765,36 +755,27 @@ async function pullFromSync(replaceEmpty){
   syncInFlight = true;
   try{
     const res = await fetch(syncUrl + '?t=' + Date.now());
-    const data = await res.json();
-    syncInFlight = false;
+    const data = await res.json(); syncInFlight = false;
     if(!data || !data.ok) return;
 
     let changed = false;
     const parseSafe = (v) => v === true || String(v).toLowerCase() === 'true';
 
     if(!records.length && replaceEmpty){
-      records = data.records.map(r => ({ ...r, safe: parseSafe(r.safe) }));
-      changed = true;
+      records = data.records.map(r => ({ ...r, safe: parseSafe(r.safe) })); changed = true;
     } else {
       data.records.forEach(remote=>{
         const match = records.find(r => r.rfid === remote.rfid || r.id === remote.id);
         const isRemoteSafe = parseSafe(remote.safe);
         if(match) {
-          if(match.safe !== isRemoteSafe && (Date.now() - (match.lastModified||0) > 15000)) {
-            match.safe = isRemoteSafe; changed = true;
-          }
-        } else {
-          records.push({ ...remote, safe: isRemoteSafe }); changed = true;
-        }
+          if(match.safe !== isRemoteSafe && (Date.now() - (match.lastModified||0) > 15000)) { match.safe = isRemoteSafe; changed = true; }
+        } else { records.push({ ...remote, safe: isRemoteSafe }); changed = true; }
       });
     }
-    if(changed){ buildLocationFilter(); renderTable(); updateStats(); }
+    if(changed){ renderTable(); updateStats(); }
   }catch(e){ syncInFlight = false; }
 }
 
-// ==========================================
-// 8. فلاتر وأزرار الكنترول
-// ==========================================
 ['searchBox','locationFilter','statusFilter'].forEach(id => {
   document.getElementById(id).addEventListener('input', (e)=>{
     if(id==='searchBox') searchTerm = e.target.value.trim().toLowerCase();
@@ -805,11 +786,9 @@ async function pullFromSync(replaceEmpty){
 });
 
 document.getElementById('btnResetAll').addEventListener('click', ()=>{
-  if(!records.length || !confirm('تنبيه أمني: هل أنت متأكد من تصفير جميع السجلات لإعلان حالة طوارئ/إخلاء جديدة؟')) return;
+  if(!records.length || !confirm('تنبيه: هل أنت متأكد من تصفير النظام لإعلان إخلاء جديد؟')) return;
   records.forEach(r=> { r.safe = false; r.lastModified = Date.now(); });
-  resetEvacTimer();
-  document.getElementById('liveFeed').innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">تم تصفير النظام. بانتظار عمليات المسح...</div>';
-  renderTable(); updateStats();
+  resetEvacTimer(); renderTable(); updateStats();
   if(syncUrl) postToSync('reset', {});
 });
 
@@ -817,21 +796,16 @@ document.getElementById('btnExportSafe').addEventListener('click', ()=>{
   const safeList = records.filter(r=>r.safe);
   if(!safeList.length){ alert('لا يوجد موظفون في نقاط التجمع للتصدير.'); return; }
   const csv = '\uFEFFRFID,الرقم,الاسم,القسم\n' + safeList.map(r => `${r.rfid},${r.id},"${r.name}",${r.dept||r.location}`).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
-  a.download = `SOC_Evac_Report_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+  a.download = `SOC_Evac_Report_${new Date().toISOString().slice(0,10)}.csv`; a.click();
 });
 
 document.getElementById('btnConnectSync').addEventListener('click', connectSync);
 
-// التهيئة عند فتح الصفحة
 initDashboard();
 const savedUrl = localStorage.getItem('evac-sync-url-soc');
-if(savedUrl) { 
-  document.getElementById('syncUrlInput').value = savedUrl; 
-  connectSync(); 
-}
+if(savedUrl) { document.getElementById('syncUrlInput').value = savedUrl; connectSync(); }
+
 </script>
 </body>
 </html>
