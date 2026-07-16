@@ -11,7 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* ===== الهوية اللونية المطابقة تماماً للصور ===== */
+        /* ===== الهوية اللونية ===== */
         :root {
             --bg-sidebar: #0f172a;
             --bg-main: #0b1120;
@@ -32,12 +32,14 @@
         body {
             font-family: var(--font-family); background-color: var(--bg-main);
             color: var(--text-main); display: flex; height: 100vh; overflow: hidden; font-size: 14px;
+            /* لتجنب مشاكل السحب باللمس في الجوال */
+            overscroll-behavior-y: none;
         }
 
         /* ===== القائمة الجانبية (Sidebar) ===== */
         .sidebar {
             width: 250px; background-color: var(--bg-sidebar); border-left: 1px solid var(--border);
-            display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; z-index: 10;
+            display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; z-index: 100;
         }
 
         .sidebar-header {
@@ -59,13 +61,13 @@
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
         .page-header h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
         .page-header p { color: var(--text-muted); font-size: 14px; }
 
         .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .btn {
-            display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 8px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 8px; font-weight: 700;
             cursor: pointer; border: none; transition: var(--transition); font-family: var(--font-family); font-size: 13px;
         }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
@@ -83,7 +85,7 @@
         /* شاشة مسح RFID */
         .rfid-box {
             background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
-            padding: 48px; width: 450px; text-align: center; margin: 40px auto;
+            padding: 48px; width: 100%; max-width: 450px; text-align: center; margin: 40px auto;
         }
         .rfid-icon {
             width: 80px; height: 80px; border-radius: 50%; background: var(--bg-main); border: 2px solid var(--accent-orange);
@@ -94,9 +96,9 @@
         }
 
         /* الجداول */
-        .table-container { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; text-align: right; }
-        th { background-color: rgba(15, 23, 42, 0.6); color: var(--text-muted); padding: 16px; font-weight: 700; font-size: 13px; }
+        .table-wrapper { width: 100%; overflow-x: auto; background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 600px; }
+        th { background-color: rgba(15, 23, 42, 0.6); color: var(--text-muted); padding: 16px; font-weight: 700; font-size: 13px; white-space: nowrap; }
         td { padding: 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:hover td { background-color: rgba(255,255,255,0.02); }
         
@@ -107,7 +109,7 @@
         .status-badge.safe { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); }
         .status-badge.missing { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); }
 
-        .action-btn-small { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; font-family: var(--font-family); }
+        .action-btn-small { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; font-family: var(--font-family); white-space: nowrap;}
         .action-btn-small.safe { background: var(--accent-green); color: black; }
         .action-btn-small.undo { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
         
@@ -119,10 +121,49 @@
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
         .stat-card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
         .stat-card.red-glow { border-color: rgba(239, 68, 68, 0.3); background-color: rgba(239, 68, 68, 0.02); }
-
-        /* ضبط حاويات الشارتات لمنع الطول اللانهائي */
+        
+        .charts-container { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .chart-box { background-color: var(--bg-card); padding: 24px; border-radius: 12px; border: 1px solid var(--border); width: 100%; }
         .chart-wrapper-bar { position: relative; height: 220px; width: 100%; }
         .chart-wrapper-donut { position: relative; height: 220px; width: 100%; display: flex; justify-content: center; align-items: center; }
+
+        /* =======================================================
+           التوافق مع شاشات الجوال (Mobile Responsiveness)
+           ======================================================= */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            
+            /* تحويل القائمة الجانبية لشريط سفلي */
+            .sidebar { 
+                width: 100%; height: 65px; flex-direction: row; border-left: none; 
+                border-top: 1px solid var(--border); position: fixed; bottom: 0; z-index: 999; 
+            }
+            .sidebar-header { display: none; }
+            .nav-items { 
+                flex-direction: row; justify-content: space-around; width: 100%; 
+                padding: 0; align-items: center; height: 100%;
+            }
+            .nav-item { 
+                flex-direction: column; padding: 6px; gap: 4px; border-radius: 8px; font-size: 10px; flex: 1; text-align: center;
+            }
+            .nav-item i { width: 20px; height: 20px; }
+            .nav-item span { display: block; font-size: 9px; }
+            
+            /* المحتوى الرئيسي */
+            .main-content { padding: 16px; margin-bottom: 65px; } /* مسافة للشريط السفلي */
+            .page-header h1 { font-size: 20px; }
+            
+            /* الشبكات */
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .charts-container { grid-template-columns: 1fr; }
+            .points-grid { grid-template-columns: 1fr; }
+            
+            /* الإدخالات والأزرار */
+            .header-actions { width: 100%; flex-direction: column; align-items: stretch; }
+            .input-styled, .btn { width: 100%; }
+            #searchBox { width: 100% !important; }
+            .rfid-box { padding: 32px 16px; }
+        }
     </style>
 </head>
 <body>
@@ -147,7 +188,7 @@
                     <i data-lucide="map-pin"></i><span>نقاط التجمع</span>
                 </div>
                 <div class="nav-item" onclick="switchPage('sync', this)">
-                    <i data-lucide="cloud-cog"></i><span>الإعدادات والمزامنة</span>
+                    <i data-lucide="cloud-cog"></i><span>المزامنة</span>
                 </div>
             </div>
         </div>
@@ -162,72 +203,66 @@
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px;">إجمالي الموظفين</div>
-                    <div class="stat-value" id="statTotal" style="font-size: 32px; font-weight: 800;">0</div>
+                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px; font-size: 12px;">إجمالي الموظفين</div>
+                    <div class="stat-value" id="statTotal" style="font-size: 28px; font-weight: 800;">0</div>
                 </div>
                 <div class="stat-card" style="border-color: rgba(16, 185, 129, 0.3);">
-                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px;">المتواجدون بأمان</div>
-                    <div class="stat-value" id="statSafe" style="font-size: 32px; font-weight: 800; color: var(--accent-green);">0</div>
+                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px; font-size: 12px;">متواجدون بأمان</div>
+                    <div class="stat-value" id="statSafe" style="font-size: 28px; font-weight: 800; color: var(--accent-green);">0</div>
                 </div>
                 <div class="stat-card red-glow">
-                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px;">المفقودون</div>
-                    <div class="stat-value" id="statMissing" style="font-size: 32px; font-weight: 800; color: var(--accent-red);">0</div>
+                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px; font-size: 12px;">المفقودون</div>
+                    <div class="stat-value" id="statMissing" style="font-size: 28px; font-weight: 800; color: var(--accent-red);">0</div>
                 </div>
                 <div class="stat-card">
-                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px;">نسبة الاكتمال</div>
-                    <div class="stat-value" id="statRatio" style="font-size: 32px; font-weight: 800; color: var(--accent-yellow);">0%</div>
+                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px; font-size: 12px;">الاكتمال</div>
+                    <div class="stat-value" id="statRatio" style="font-size: 28px; font-weight: 800; color: var(--accent-yellow);">0%</div>
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
-                <div style="background-color: var(--bg-card); padding: 24px; border-radius: 12px; border: 1px solid var(--border);">
-                    <h3 style="margin-bottom: 20px;">الحضور حسب نقطة التجمع</h3>
-                    <div class="chart-wrapper-bar">
-                        <canvas id="barChart"></canvas>
-                    </div>
+            <div class="charts-container">
+                <div class="chart-box">
+                    <h3 style="margin-bottom: 20px; font-size: 14px;">الحضور حسب التجمع</h3>
+                    <div class="chart-wrapper-bar"><canvas id="barChart"></canvas></div>
                 </div>
-                <div style="background-color: var(--bg-card); padding: 24px; border-radius: 12px; border: 1px solid var(--border);">
-                    <h3 style="margin-bottom: 20px; text-align:center;">الحالة العامة</h3>
-                    <div class="chart-wrapper-donut">
-                        <canvas id="donutChart"></canvas>
-                    </div>
+                <div class="chart-box">
+                    <h3 style="margin-bottom: 20px; text-align:center; font-size: 14px;">الحالة العامة</h3>
+                    <div class="chart-wrapper-donut"><canvas id="donutChart"></canvas></div>
                 </div>
             </div>
         </div>
 
         <div id="page-rfid" class="page">
             <div class="page-header" style="justify-content: center; text-align: center;">
-                <div><h1>مسح البطاقات (RFID)</h1><p>قم بتمرير بطاقة الموظف على القارئ لتسجيل الحضور</p></div>
+                <div><h1>مسح البطاقات (RFID)</h1><p>قم بتمرير البطاقة للتسجيل</p></div>
             </div>
             <div class="rfid-box">
                 <div class="rfid-icon"><i data-lucide="scan-face" style="width: 40px; height: 40px;"></i></div>
-                <input type="text" id="scanInput" class="input-styled" style="width: 100%; text-align: center; font-size: 18px;" placeholder="في انتظار المسح..." autofocus autocomplete="off">
+                <input type="text" id="scanInput" class="input-styled" style="width: 100%; text-align: center; font-size: 18px;" placeholder="في انتظار المسح..." autocomplete="off">
                 <div id="scanFeedback" class="scan-feedback"></div>
             </div>
         </div>
 
         <div id="page-employees" class="page">
             <div class="page-header">
-                <div><h1>إدارة الموظفين</h1><p>القائمة الشاملة للموظفين وحالاتهم</p></div>
-                <div class="header-actions">
-                    <button class="btn btn-red" id="btnResetAll"><i data-lucide="rotate-ccw" style="width: 16px;"></i> تصفير الحضور</button>
+                <div><h1>إدارة الموظفين</h1><p>قائمة الموظفين وحالاتهم</p></div>
+                <div class="header-actions" style="flex-direction: row; width: auto;">
+                    <button class="btn btn-red" id="btnResetAll"><i data-lucide="rotate-ccw" style="width: 16px;"></i> تصفير</button>
                     <button class="btn btn-outline" id="btnMarkAllSafe"><i data-lucide="shield-check" style="width: 16px;"></i> الكل آمن</button>
                 </div>
             </div>
 
-            <div class="header-actions" style="margin-bottom: 16px; justify-content: space-between;">
-                <div class="header-actions">
-                    <select id="locationFilter" class="input-styled"><option value="">جميع النقاط</option></select>
-                    <select id="statusFilter" class="input-styled">
-                        <option value="">كل الحالات</option>
-                        <option value="safe">آمن</option>
-                        <option value="missing">مفقود</option>
-                    </select>
-                </div>
-                <input type="text" id="searchBox" class="input-styled" style="width: 280px;" placeholder="بحث بالاسم أو الرقم الوظيفي...">
+            <div class="header-actions" style="margin-bottom: 16px;">
+                <input type="text" id="searchBox" class="input-styled" placeholder="بحث بالاسم أو الرقم...">
+                <select id="locationFilter" class="input-styled"><option value="">جميع النقاط</option></select>
+                <select id="statusFilter" class="input-styled">
+                    <option value="">كل الحالات</option>
+                    <option value="safe">آمن</option>
+                    <option value="missing">مفقود</option>
+                </select>
             </div>
 
-            <div class="table-container">
+            <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
@@ -246,28 +281,33 @@
 
         <div id="page-points" class="page">
             <div class="page-header">
-                <div><h1>نقاط التجمع</h1><p>إدارة نقاط تجمع الإخلاء وطاقتها الاستيعابية</p></div>
+                <div><h1>نقاط التجمع</h1><p>الطاقة الاستيعابية للإخلاء</p></div>
             </div>
             <div class="points-grid" id="locationsGrid"></div>
         </div>
 
         <div id="page-sync" class="page">
             <div class="page-header">
-                <div><h1>المزامنة السحابية</h1><p>ربط النظام مع Google Sheets وملفات Excel</p></div>
+                <div><h1>المزامنة والإعدادات</h1><p>لربط الأجهزة مع بعضها البعض ومع Google Sheets</p></div>
             </div>
             
-            <div style="background-color: var(--bg-card); padding: 24px; border-radius: 12px; margin-bottom: 20px;">
-                <h3 style="margin-bottom: 12px;">ربط Google Sheets</h3>
-                <div style="display: flex; gap: 12px;">
-                    <input type="url" id="syncUrlInput" class="input-styled" style="flex-grow: 1;" placeholder="رابط تطبيق الويب (Google Web App URL)">
-                    <button class="btn btn-orange" id="btnConnectSync">تفعيل الربط</button>
+            <div style="background-color: var(--bg-card); padding: 24px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border);">
+                <h3 style="margin-bottom: 12px; color: var(--accent-orange);">ربط الأجهزة والجوال (Google Sheets)</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                    لجعل التسجيل عبر الجوال ينعكس فوراً على الكمبيوتر، **يجب** وضع رابط المزامنة (Web App URL) في كلا الجهازين أدناه والضغط على "تفعيل الربط".
+                </p>
+                <div class="header-actions">
+                    <input type="url" id="syncUrlInput" class="input-styled" style="flex-grow: 1;" placeholder="الصق الرابط هنا...">
+                    <button class="btn btn-orange" id="btnConnectSync">تفعيل الربط والمزامنة</button>
                 </div>
-                <p id="syncStatusLabel" style="margin-top: 12px; color: var(--text-muted);">غير متصل — التحديثات محلية فقط</p>
+                <p id="syncStatusLabel" style="margin-top: 16px; font-weight: bold; font-size: 13px; color: var(--text-muted); padding: 10px; background: rgba(0,0,0,0.2); border-radius: 6px;">
+                    🔴 غير متصل — البيانات الحالية محفوظة في هذا الجهاز فقط.
+                </p>
             </div>
 
-            <div style="background-color: var(--bg-card); padding: 24px; border-radius: 12px;">
-                <h3 style="margin-bottom: 12px;">استيراد ملف Excel</h3>
-                <input type="file" id="excelFile" accept=".xlsx,.xls" class="input-styled" style="width: 100%;">
+            <div style="background-color: var(--bg-card); padding: 24px; border-radius: 12px; border: 1px solid var(--border);">
+                <h3 style="margin-bottom: 12px;">استيراد الأسماء (ملف Excel)</h3>
+                <input type="file" id="excelFile" accept=".xlsx,.xls" class="input-styled">
             </div>
         </div>
 
@@ -276,15 +316,13 @@
     <script>
         lucide.createIcons();
 
-        // 1. بيانات افتراضية أولية (Mock Data) مطابقة تماماً للصور لضمان عمل التسجيل فوراً دون تعليق
+        // بيانات تجريبية أولية (تحل مشكلة تعليق التسجيل عند فراغ النظام)
         let records = [
             { name: "محمد عبدالله الأحمد", rfid: "12345", id: "EMP-001", dept: "تقنية المعلومات", location: "نقطة تجمع A", safe: true, lastModified: Date.now() },
             { name: "نورة سلطان المنصور", rfid: "67890", id: "EMP-004", dept: "العمليات", location: "نقطة تجمع B", safe: true, lastModified: Date.now() },
             { name: "خالد عبدالرحمن الزهراني", rfid: "11223", id: "EMP-005", dept: "تقنية المعلومات", location: "نقطة تجمع C", safe: false, lastModified: Date.now() },
             { name: "سارة محمد القحطاني", rfid: "44556", id: "EMP-006", dept: "التسويق", location: "نقطة تجمع C", safe: true, lastModified: Date.now() },
-            { name: "عمر عبدالعزيز الشمري", rfid: "77889", id: "EMP-007", dept: "الموارد البشرية", location: "نقطة تجمع A", safe: false, lastModified: Date.now() },
-            { name: "هند سعد الدوسري", rfid: "99001", id: "EMP-008", dept: "المالية", location: "نقطة تجمع D", safe: true, lastModified: Date.now() },
-            { name: "يوسف عادل الحربي", rfid: "22334", id: "EMP-009", dept: "العمليات", location: "نقطة تجمع D", safe: false, lastModified: Date.now() }
+            { name: "هند سعد الدوسري", rfid: "99001", id: "EMP-008", dept: "المالية", location: "نقطة تجمع D", safe: true, lastModified: Date.now() }
         ];
 
         let syncUrl = localStorage.getItem('evac-sync-url') || '';
@@ -300,7 +338,7 @@
             if(pageId === 'rfid') { setTimeout(() => document.getElementById('scanInput').focus(), 100); }
         }
 
-        // 2. معالجة وتحديث المخططات والرسوم ديناميكياً لتفادي الطول الزائد والتعليق
+        // تحديث البيانات والرسومات
         function updateStatsAndCharts() {
             const total = records.length;
             const safe = records.filter(r => r.safe).length;
@@ -316,54 +354,40 @@
             const safeData = locs.map(loc => records.filter(r => r.location === loc && r.safe).length);
             const missingData = locs.map(loc => records.filter(r => r.location === loc && !r.safe).length);
 
-            // تدمير المخطط القديم لإنشاء جديد بدون تعليق
             if (myBarChart) { myBarChart.destroy(); }
             if (myDonutChart) { myDonutChart.destroy(); }
 
-            // بناء مخطط الأعمدة بحد أقصى للارتفاع وتصميم مطابق
             myBarChart = new Chart(document.getElementById('barChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: locs,
                     datasets: [
-                        { label: 'مفقود', data: missingData, backgroundColor: '#ef4444', borderRadius: 4, barThickness: 25 },
-                        { label: 'آمن', data: safeData, backgroundColor: '#10b981', borderRadius: 4, barThickness: 25 }
+                        { label: 'مفقود', data: missingData, backgroundColor: '#ef4444', borderRadius: 4, barThickness: window.innerWidth < 768 ? 15 : 25 },
+                        { label: 'آمن', data: safeData, backgroundColor: '#10b981', borderRadius: 4, barThickness: window.innerWidth < 768 ? 15 : 25 }
                     ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    scales: { 
-                        x: { stacked: true, grid: { display: false } }, 
-                        y: { stacked: true, grid: { color: '#334155' }, ticks: { stepSize: 1 } } 
-                    },
+                    scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#334155' }, ticks: { stepSize: 1 } } },
                     plugins: { legend: { display: false } }
                 }
             });
 
-            // مخطط الحالة العامة الدائري
             myDonutChart = new Chart(document.getElementById('donutChart').getContext('2d'), {
                 type: 'doughnut',
-                data: {
-                    labels: ['آمن', 'مفقود'],
-                    datasets: [{ data: [safe, missing], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0, cutout: '75%' }]
-                },
+                data: { labels: ['آمن', 'مفقود'], datasets: [{ data: [safe, missing], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0, cutout: '75%' }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
             buildLocationsGrid(locs, safeData, missingData);
         }
 
-        // بناء بطاقات نقاط التجمع ديناميكياً
         function buildLocationsGrid(locs, safeData, missingData) {
             const grid = document.getElementById('locationsGrid');
             grid.innerHTML = '';
-            
             locs.forEach((loc, index) => {
-                const s = safeData[index];
-                const m = missingData[index];
-                const total = s + m;
+                const s = safeData[index], m = missingData[index], total = s + m;
                 const ratio = total ? Math.round((s / total) * 100) : 0;
-
                 grid.innerHTML += `
                     <div class="point-card">
                         <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
@@ -371,19 +395,17 @@
                             <i data-lucide="map-pin" style="color:var(--accent-yellow); width:20px;"></i>
                         </div>
                         <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px; color:var(--text-muted);">
-                            <span>العدد الحالي: ${s} من ${total}</span>
-                            <span>${ratio}%</span>
+                            <span>العدد الحالي: ${s} من ${total}</span><span>${ratio}%</span>
                         </div>
                         <div style="background:var(--bg-main); height:8px; border-radius:4px; overflow:hidden;">
                             <div style="background:var(--accent-green); height:100%; width:${ratio}%;"></div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
             lucide.createIcons();
         }
 
-        // 3. بناء جدول الموظفين
+        // بناء الجدول
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             const searchVal = document.getElementById('searchBox').value.toLowerCase();
@@ -394,10 +416,7 @@
                 if (filterLoc && r.location !== filterLoc) return false;
                 if (filterStatus === 'safe' && !r.safe) return false;
                 if (filterStatus === 'missing' && r.safe) return false;
-                if (searchVal) {
-                    const hay = (r.name + ' ' + r.id + ' ' + r.rfid).toLowerCase();
-                    if (!hay.includes(searchVal)) return false;
-                }
+                if (searchVal && !(r.name + ' ' + r.id + ' ' + r.rfid).toLowerCase().includes(searchVal)) return false;
                 return true;
             });
 
@@ -406,32 +425,23 @@
                 const isSafe = rec.safe;
                 const tr = document.createElement('tr');
                 tr.className = isSafe ? 'row-safe' : 'row-missing';
-                
                 tr.innerHTML = `
                     <td><span class="status-badge ${isSafe ? 'safe' : 'missing'}">${isSafe ? 'آمن' : 'مفقود'}</span></td>
-                    <td>
-                        <div style="font-weight: 700; color: white;">${rec.name}</div>
-                        <div style="font-size: 11px; color: var(--text-muted);">${rec.rfid}</div>
-                    </td>
+                    <td><div style="font-weight: 700; color: white;">${rec.name}</div><div style="font-size: 11px; color: var(--text-muted);">${rec.rfid}</div></td>
                     <td style="color: var(--text-muted);">${rec.id}</td>
                     <td>${rec.dept}</td>
                     <td>${rec.location || 'غير محدد'}</td>
                 `;
-
                 const tdAction = document.createElement('td');
                 const btn = document.createElement('button');
                 btn.className = `action-btn-small ${isSafe ? 'undo' : 'safe'}`;
                 btn.textContent = isSafe ? 'إلغاء' : 'تسجيل آمن';
                 btn.onclick = () => {
-                    rec.safe = !rec.safe;
-                    rec.lastModified = Date.now();
-                    renderTable();
-                    updateStatsAndCharts();
+                    rec.safe = !rec.safe; rec.lastModified = Date.now();
+                    renderTable(); updateStatsAndCharts();
                     if (syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: rec.safe });
                 };
-                tdAction.appendChild(btn);
-                tr.appendChild(tdAction);
-                tbody.appendChild(tr);
+                tdAction.appendChild(btn); tr.appendChild(tdAction); tbody.appendChild(tr);
             });
         }
 
@@ -443,59 +453,60 @@
             sel.value = locs.includes(current) ? current : '';
         }
 
-        // 4. معالجة عمليات مسح RFID الحية بشكل صحيح
+        // مسح RFID
+        let globalBuffer = '', globalLastTime = 0;
         function processScanCode(rawCode) {
             const code = String(rawCode).trim().toLowerCase();
             if (!code) return;
-
             const rec = records.find(r => String(r.rfid).toLowerCase() === code || String(r.id).toLowerCase() === code);
             const feedback = document.getElementById('scanFeedback');
             feedback.style.display = 'block';
 
             if (!rec) {
-                feedback.style.background = 'rgba(239, 68, 68, 0.1)';
-                feedback.style.color = 'var(--accent-red)';
-                feedback.innerHTML = `البطاقة غير مسجلة بالنظام: <b>${rawCode}</b>`;
-                setTimeout(() => feedback.style.display = 'none', 3000);
-                return;
+                feedback.style.background = 'rgba(239, 68, 68, 0.1)'; feedback.style.color = 'var(--accent-red)';
+                feedback.innerHTML = `البطاقة غير مسجلة: <b>${rawCode}</b>`;
+                setTimeout(() => feedback.style.display = 'none', 3000); return;
             }
 
-            rec.safe = true;
-            rec.lastModified = Date.now();
-            
-            feedback.style.background = 'rgba(16, 185, 129, 0.1)';
-            feedback.style.color = 'var(--accent-green)';
+            rec.safe = true; rec.lastModified = Date.now();
+            feedback.style.background = 'rgba(16, 185, 129, 0.1)'; feedback.style.color = 'var(--accent-green)';
             feedback.innerHTML = `تم تحضير الموظف بنجاح: <b>${rec.name}</b>`;
             setTimeout(() => feedback.style.display = 'none', 3000);
 
-            updateStatsAndCharts();
-            renderTable();
-
+            updateStatsAndCharts(); renderTable();
             if (syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: true });
         }
 
         document.getElementById('scanInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                processScanCode(e.target.value);
-                e.target.value = '';
-            }
+            if (e.key === 'Enter') { e.preventDefault(); processScanCode(e.target.value); e.target.value = ''; }
         });
 
-        // 5. مزامنة Google Sheets والربط السحابي (كامل ومصحح)
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            const now = Date.now();
+            if (now - globalLastTime > 200) globalBuffer = ''; 
+            globalLastTime = now;
+            if (e.key === 'Enter') { processScanCode(globalBuffer); globalBuffer = ''; } 
+            else if (e.key.length === 1) { globalBuffer += e.key; }
+        });
+
+        // المزامنة הסحابية
         function setSyncUI(connected) {
             const label = document.getElementById('syncStatusLabel');
-            label.textContent = connected ? '🟢 متصل - يتم المزامنة حياً مع Google Sheets' : '🔴 غير متصل - البيانات محلية';
+            if(connected) {
+                label.innerHTML = '🟢 متصل - يتم مزامنة البيانات حياً مع الجوالات الأخرى';
+                label.style.color = 'var(--accent-green)';
+            } else {
+                label.innerHTML = '🔴 غير متصل - البيانات محفوظة في هذا الجهاز فقط';
+                label.style.color = 'var(--accent-red)';
+            }
         }
 
         async function postToSync(action, payload) {
             if (!syncUrl) return false;
             try {
-                await fetch(syncUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(Object.assign({ action }, payload))
-                });
+                await fetch(syncUrl, { method: 'POST', body: JSON.stringify(Object.assign({ action }, payload)) });
+                pullFromSync(); // جلب البيانات فوراً بعد الإرسال لتحديث الأجهزة الأخرى
                 return true;
             } catch { return false; }
         }
@@ -513,48 +524,29 @@
                     data.records.forEach(remote => {
                         const match = records.find(r => r.id === remote.id || r.rfid === remote.rfid);
                         const isRemoteSafe = remote.safe === true || String(remote.safe).toLowerCase() === 'true';
-                        
-                        if (match && match.safe !== isRemoteSafe) {
-                            match.safe = isRemoteSafe;
-                            changed = true;
-                        } else if (!match) {
-                            records.push({...remote, safe: isRemoteSafe});
-                            changed = true;
-                        }
+                        if (match && match.safe !== isRemoteSafe) { match.safe = isRemoteSafe; changed = true; } 
+                        else if (!match) { records.push({...remote, safe: isRemoteSafe}); changed = true; }
                     });
-
-                    if (changed) {
-                        updateStatsAndCharts();
-                        renderTable();
-                        updateLocationFilter();
-                    }
+                    if (changed) { updateStatsAndCharts(); renderTable(); updateLocationFilter(); }
                     setSyncUI(true);
                 }
-            } catch {
-                syncInFlight = false;
-                setSyncUI(false);
-            }
+            } catch { syncInFlight = false; setSyncUI(false); }
         }
 
         document.getElementById('btnConnectSync').addEventListener('click', () => {
             const url = document.getElementById('syncUrlInput').value.trim();
             if (url) {
-                syncUrl = url;
-                localStorage.setItem('evac-sync-url', url);
-                setSyncUI(true);
-                pullFromSync();
-                setInterval(pullFromSync, 5000);
+                syncUrl = url; localStorage.setItem('evac-sync-url', url);
+                setSyncUI(true); pullFromSync(); setInterval(pullFromSync, 4000);
             }
         });
 
         if (syncUrl) {
             document.getElementById('syncUrlInput').value = syncUrl;
-            setSyncUI(true);
-            pullFromSync();
-            setInterval(pullFromSync, 5000);
+            setSyncUI(true); pullFromSync(); setInterval(pullFromSync, 4000);
         }
 
-        // استيراد ملفات Excel
+        // استيراد Excel
         document.getElementById('excelFile').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -562,21 +554,12 @@
             reader.onload = (evt) => {
                 const wb = XLSX.read(evt.target.result, { type: 'array' });
                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-                
                 if (rows.length > 1) {
                     records = rows.slice(1).map(r => ({
-                        name: r[0] || 'غير معروف',
-                        rfid: r[1] || r[2] || '',
-                        id: r[2] || '',
-                        dept: r[3] || 'إدارة عامة',
-                        location: r[4] || 'غير محدد',
-                        safe: false,
-                        lastModified: Date.now()
+                        name: r[0] || 'غير معروف', rfid: r[1] || r[2] || '', id: r[2] || '',
+                        dept: r[3] || 'إدارة عامة', location: r[4] || 'غير محدد', safe: false, lastModified: Date.now()
                     })).filter(x => x.name !== 'غير معروف');
-
-                    updateStatsAndCharts();
-                    renderTable();
-                    updateLocationFilter();
+                    updateStatsAndCharts(); renderTable(); updateLocationFilter();
                     if (syncUrl) postToSync('import', { records });
                     alert(`تم استيراد ${records.length} موظف بنجاح!`);
                 }
@@ -589,20 +572,17 @@
         document.getElementById('statusFilter').addEventListener('change', renderTable);
 
         document.getElementById('btnMarkAllSafe').addEventListener('click', () => {
-            records.forEach(r => r.safe = true);
-            updateStatsAndCharts(); renderTable();
+            records.forEach(r => r.safe = true); updateStatsAndCharts(); renderTable();
             if (syncUrl) postToSync('checkin_all', { safe: true });
         });
-
         document.getElementById('btnResetAll').addEventListener('click', () => {
             if(confirm('هل أنت متأكد من تصفير الحضور للجميع؟')) {
-                records.forEach(r => r.safe = false);
-                updateStatsAndCharts(); renderTable();
+                records.forEach(r => r.safe = false); updateStatsAndCharts(); renderTable();
                 if (syncUrl) postToSync('checkin_all', { safe: false });
             }
         });
 
-        // تشغيل الريندر الأولي
+        // التشغيل الأولي
         window.onload = function() {
             Chart.defaults.color = '#94a3b8';
             Chart.defaults.font.family = 'Tajawal';
