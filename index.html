@@ -1,102 +1,175 @@
-<!DOCTYPE html>
+
+# Write the complete HTML file directly to avoid JSON escaping issues
+with open('/mnt/agents/output/evacuation_dashboard_v2_2026.html', 'w', encoding='utf-8') as f:
+    f.write('''<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>نظام القيادة والسيطرة - إدارة الإخلاء</title>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
 /* =========================================
-   التصميم المتقدم (Cyber / Glassmorphism SOC)
+   2026 DESIGN SYSTEM - Bento Grid + Glassmorphism 2.0
+   Trends: Bento Grid, Glassmorphism 2.0, Micro-animations,
+   Dark Mode Premium, Kinetic Typography, 3D Depth
 ========================================= */
 :root {
-  --bg-main: #050b14;
-  --bg-grid: rgba(255, 255, 255, 0.02);
-  --glass-bg: rgba(17, 24, 39, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --bg-deep: #030712;
+  --bg-surface: rgba(17, 24, 39, 0.4);
+  --bg-elevated: rgba(17, 24, 39, 0.7);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-active: rgba(255, 255, 255, 0.12);
   --accent: #00f2fe;
-  --accent-grad: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --accent-soft: rgba(0, 242, 254, 0.1);
+  --accent-glow: rgba(0, 242, 254, 0.3);
   --safe: #00ffa3;
-  --safe-grad: linear-gradient(135deg, #00b09b, #96c93d);
+  --safe-soft: rgba(0, 255, 163, 0.1);
+  --safe-glow: rgba(0, 255, 163, 0.3);
   --danger: #ff0844;
-  --danger-grad: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+  --danger-soft: rgba(255, 8, 68, 0.1);
+  --danger-glow: rgba(255, 8, 68, 0.3);
   --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.1);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-muted: #475569;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --t-micro: 150ms;
+  --t-fast: 250ms;
+  --t-normal: 400ms;
+  --t-slow: 600ms;
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body { 
   font-family: 'Tajawal', sans-serif; 
-  background-color: var(--bg-main); 
+  background: var(--bg-deep);
   background-image: 
-    linear-gradient(var(--bg-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
-  background-size: 30px 30px;
-  color: var(--text-main); 
+    radial-gradient(ellipse at 20% 50%, rgba(0, 242, 254, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(0, 255, 163, 0.02) 0%, transparent 50%),
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+  color: var(--text-primary); 
   display: flex; 
   height: 100vh; 
-  overflow: hidden; 
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* القائمة الجانبية */
+/* ===== SIDEBAR - Glassmorphism 2.0 ===== */
 .sidebar {
-  width: 280px;
-  background: rgba(5, 11, 20, 0.95);
-  backdrop-filter: blur(20px);
-  border-left: 1px solid var(--glass-border);
+  width: 260px;
+  background: var(--bg-surface);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border-left: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  box-shadow: -5px 0 25px rgba(0,0,0,0.5);
+  box-shadow: -8px 0 32px rgba(0,0,0,0.3);
   z-index: 1000;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--t-normal) var(--ease-out);
 }
 
 .brand {
-  padding: 30px 20px;
-  font-size: 22px;
+  padding: var(--space-6) var(--space-5);
+  font-size: 20px;
   font-weight: 800;
-  color: #fff;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
-  gap: 15px;
-  background: var(--accent-grad);
+  gap: var(--space-3);
+  position: relative;
+  overflow: hidden;
+}
+.brand::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 100%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: shimmer-line 3s infinite;
+}
+@keyframes shimmer-line {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.brand i { 
+  font-size: 24px; 
+  color: var(--accent);
+  filter: drop-shadow(0 0 12px var(--accent-glow));
+  animation: icon-pulse 3s ease-in-out infinite;
+}
+@keyframes icon-pulse {
+  0%, 100% { filter: drop-shadow(0 0 8px var(--accent-glow)); }
+  50% { filter: drop-shadow(0 0 16px var(--accent-glow)); }
+}
+.brand span {
+  background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.brand i { -webkit-text-fill-color: var(--accent); font-size: 26px; filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.5)); }
 
-.nav-menu { flex: 1; padding: 25px 0; overflow-y: auto; }
+.nav-menu { flex: 1; padding: var(--space-4) 0; overflow-y: auto; }
 .nav-item {
-  padding: 16px 25px;
-  margin: 8px 15px;
-  border-radius: 12px;
+  padding: 14px var(--space-5);
+  margin: var(--space-1) var(--space-3);
+  border-radius: 10px;
   display: flex;
   align-items: center;
-  gap: 15px;
-  color: var(--text-muted);
-  font-size: 15px;
+  gap: var(--space-3);
+  color: var(--text-secondary);
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--t-fast) var(--ease-out);
   border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
 }
-.nav-item i { font-size: 18px; width: 22px; text-align: center; }
-.nav-item:hover { background: rgba(255,255,255,0.03); color: var(--text-main); }
+.nav-item::before {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+  transform: scaleY(0);
+  transition: transform var(--t-fast) var(--ease-out);
+}
+.nav-item:hover { 
+  background: rgba(255,255,255,0.03); 
+  color: var(--text-primary);
+  transform: translateX(-4px);
+}
+.nav-item:hover::before { transform: scaleY(1); }
 .nav-item.active {
-  background: rgba(0, 242, 254, 0.1);
+  background: var(--accent-soft);
   color: #fff;
-  border: 1px solid rgba(0, 242, 254, 0.3);
-  box-shadow: inset 0 0 20px rgba(0, 242, 254, 0.05);
+  border: 1px solid rgba(0, 242, 254, 0.2);
+  box-shadow: inset 0 0 20px rgba(0, 242, 254, 0.05), 0 4px 12px rgba(0,0,0,0.2);
 }
+.nav-item.active::before { transform: scaleY(1); }
+.nav-item i { font-size: 16px; width: 20px; text-align: center; transition: transform var(--t-fast); }
+.nav-item:hover i { transform: scale(1.15); }
 
-/* المحتوى الرئيسي */
+/* ===== MAIN CONTENT ===== */
 .main-content {
   flex: 1;
   position: relative;
@@ -106,165 +179,580 @@ body {
 }
 
 header {
-  padding: 15px 30px;
+  padding: var(--space-4) var(--space-6);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--glass-border);
-  background: rgba(5, 11, 20, 0.8);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   position: sticky;
   top: 0;
   z-index: 50;
 }
 
-/* زر القائمة للموبايل */
 .menu-toggle {
   display: none;
-  font-size: 24px;
-  color: var(--text-main);
+  font-size: 22px;
+  color: var(--text-primary);
   cursor: pointer;
   background: none;
   border: none;
+  padding: var(--space-2);
+  transition: transform var(--t-fast);
+}
+.menu-toggle:hover { transform: scale(1.1); }
+
+.header-title { 
+  font-size: 18px; 
+  font-weight: 800; 
+  display: flex; 
+  align-items: center; 
+  gap: var(--space-3);
+}
+.header-status { 
+  display: flex; 
+  align-items: center; 
+  gap: var(--space-4); 
+  font-size: 13px; 
+  font-weight: 700; 
+}
+.sync-badge { 
+  padding: var(--space-2) var(--space-4); 
+  border-radius: 30px; 
+  background: var(--bg-surface); 
+  border: 1px solid var(--border-subtle); 
+  display: flex; 
+  align-items: center; 
+  gap: var(--space-2);
+  transition: all var(--t-fast);
+}
+.sync-badge:hover { border-color: var(--border-active); }
+.sync-dot { 
+  width: 8px; height: 8px; 
+  border-radius: 50%; 
+  background: var(--danger); 
+  box-shadow: 0 0 8px var(--danger-glow);
+  transition: all var(--t-normal);
+}
+.sync-dot.on { 
+  background: var(--safe); 
+  box-shadow: 0 0 8px var(--safe-glow);
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 8px var(--safe-glow); }
+  50% { box-shadow: 0 0 16px var(--safe-glow); }
+}
+.clock-display { 
+  font-family: 'Orbitron', monospace; 
+  font-size: 15px; 
+  color: var(--accent); 
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
 }
 
-.header-title { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 15px;}
-.header-status { display: flex; align-items: center; gap: 15px; font-size: 14px; font-weight: 700; }
-.sync-badge { padding: 8px 16px; border-radius: 30px; background: var(--glass-bg); border: 1px solid var(--glass-border); display: flex; align-items: center; gap: 10px; }
-.sync-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 10px var(--danger); }
-.sync-dot.on { background: var(--safe); box-shadow: 0 0 10px var(--safe); }
-.clock-display { font-family: 'Orbitron', monospace; font-size: 16px; color: var(--accent); letter-spacing: 1px; }
+/* ===== BENTO GRID LAYOUT (2026 Trend) ===== */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, minmax(140px, auto));
+  gap: var(--space-3);
+  max-width: 1400px;
+  margin: 0 auto;
+}
 
-/* تأثيرات الزجاج للبطاقات */
-.glass-card {
-  background: var(--glass-bg);
+.bento-card {
+  background: var(--bg-surface);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  padding: 25px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-
-.view-section { display: none; padding: 30px; animation: fadeInUp 0.5s ease-out; }
-.view-section.active { display: block; }
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-/* بطاقات الإحصائيات (KPIs) */
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
-.kpi-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: var(--space-5);
   position: relative;
   overflow: hidden;
+  transition: all var(--t-normal) var(--ease-out);
+}
+.bento-card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 100%; height: 3px;
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+.bento-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: var(--border-active);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+}
+.bento-card:hover::before { opacity: 1; }
+
+.span-1 { grid-column: span 1; }
+.span-2 { grid-column: span 2; }
+.span-2r { grid-column: span 2; grid-row: span 2; }
+.span-4 { grid-column: span 4; }
+
+.bento-card.accent-top::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+.bento-card.safe-top::before { background: linear-gradient(90deg, transparent, var(--safe), transparent); }
+.bento-card.danger-top::before { background: linear-gradient(90deg, transparent, var(--danger), transparent); }
+.bento-card.warn-top::before { background: linear-gradient(90deg, transparent, var(--warning), transparent); }
+
+/* ===== KPI CARDS - Kinetic Typography ===== */
+.kpi-label { 
+  font-size: 13px; 
+  color: var(--text-tertiary); 
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.kpi-value { 
+  font-size: 38px; 
+  font-weight: 700; 
+  font-family: 'Orbitron', monospace; 
+  margin-top: var(--space-2);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  transition: all var(--t-normal);
+}
+.kpi-value.kpi-accent { 
+  background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(0,242,254,0.2));
+}
+.kpi-value.kpi-safe { 
+  background: linear-gradient(135deg, var(--safe) 0%, #96c93d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(0,255,163,0.2));
+}
+.kpi-value.kpi-danger { 
+  background: linear-gradient(135deg, var(--danger) 0%, #ffb199 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(255,8,68,0.2));
+}
+.kpi-value.kpi-warn { 
+  color: var(--warning);
+  filter: drop-shadow(0 0 20px rgba(245,158,11,0.2));
+}
+
+.kpi-change {
+  margin-top: var(--space-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.kpi-change.up { color: var(--safe); }
+.kpi-change.down { color: var(--danger); }
+
+.sparkline-container {
+  margin-top: var(--space-3);
+  height: 36px;
+  opacity: 0.6;
+}
+
+/* ===== PROGRESS RING - SVG Animation ===== */
+.progress-ring-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  justify-content: center;
+  padding: var(--space-4) 0;
+}
+.progress-ring {
+  width: 130px; height: 130px;
+  transform: rotate(-90deg);
+}
+.progress-ring circle {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.5s var(--ease-smooth);
+}
+.progress-ring .bg { 
+  stroke: var(--border-subtle); 
+}
+.progress-ring .fill {
+  stroke: var(--safe);
+  stroke-dasharray: 377;
+  stroke-dashoffset: 377;
+  filter: drop-shadow(0 0 6px var(--safe-glow));
+}
+.progress-ring-text {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'Orbitron', monospace;
+  color: var(--text-primary);
+}
+.progress-legend {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: var(--space-3);
 }
-.kpi-card::before {
-  content: ''; position: absolute; top: 0; right: 0; width: 100%; height: 4px;
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
 }
-.kpi-card.total::before { background: var(--accent-grad); }
-.kpi-card.safe::before { background: var(--safe-grad); }
-.kpi-card.danger::before { background: var(--danger-grad); }
-.kpi-card.timer::before { background: var(--warning); }
-
-.kpi-title { font-size: 15px; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; gap: 10px; }
-.kpi-value { 
-  font-size: 42px; 
-  font-weight: 800; 
-  font-family: 'Orbitron', monospace; 
-  margin-top: 15px; 
-  line-height: 1;
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
 }
-.kpi-card.total .kpi-value { background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.kpi-card.safe .kpi-value { background: var(--safe-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(0,255,163,0.3));}
-.kpi-card.danger .kpi-value { background: var(--danger-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(255,8,68,0.3));}
-.kpi-card.timer .kpi-value { color: var(--warning); filter: drop-shadow(0 0 10px rgba(245,158,11,0.3)); }
 
-.kpi-icon { position: absolute; left: -10px; bottom: -15px; font-size: 80px; opacity: 0.05; }
+/* ===== BAR CHART - SVG ===== */
+.bar-chart-container {
+  width: 100%;
+  height: 180px;
+  margin-top: var(--space-3);
+}
+.bar-chart-svg { width: 100%; height: 100%; }
+.bar-rect {
+  fill: var(--danger);
+  opacity: 0.75;
+  rx: 4;
+  transition: all var(--t-fast);
+  cursor: pointer;
+}
+.bar-rect:hover { 
+  opacity: 1; 
+  filter: drop-shadow(0 0 8px var(--danger-glow));
+}
+.bar-label { 
+  font-size: 11px; 
+  fill: var(--text-tertiary); 
+  text-anchor: middle;
+  font-family: 'Tajawal', sans-serif;
+}
+.bar-value {
+  font-size: 11px;
+  fill: var(--text-secondary);
+  text-anchor: middle;
+  font-family: 'Orbitron', monospace;
+  font-variant-numeric: tabular-nums;
+}
+.grid-line {
+  stroke: var(--border-subtle);
+  stroke-dasharray: 3;
+}
 
-/* الرسوم البيانية */
-.charts-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; margin-bottom: 30px; }
-@media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } }
-.chart-container { height: 300px; width: 100%; margin-top: 15px; }
-.chart-header { font-size: 17px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; }
-
-/* شاشة المسح RFID */
-.scan-wrapper { max-width: 650px; margin: 40px auto; text-align: center; }
+/* ===== SCAN SECTION - 3D Depth + Micro-animations ===== */
+.scan-wrapper { 
+  max-width: 600px; 
+  margin: 0 auto; 
+  text-align: center; 
+}
 .scan-radar {
-  width: 120px; height: 120px; border-radius: 50%;
-  background: rgba(0, 242, 254, 0.1);
-  margin: 0 auto 30px; display: flex; align-items: center; justify-content: center;
-  border: 2px solid var(--accent); box-shadow: 0 0 30px rgba(0, 242, 254, 0.2);
-  animation: radarPulse 2s infinite;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  margin: 0 auto var(--space-5);
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--accent);
+  position: relative;
+  animation: radar-pulse 2.5s infinite;
 }
-.scan-radar i { font-size: 50px; color: var(--accent); }
-@keyframes radarPulse { 0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.4); } 70% { box-shadow: 0 0 0 30px rgba(0, 242, 254, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); } }
+.scan-radar::before, .scan-radar::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  opacity: 0;
+}
+.scan-radar::before {
+  width: 140px; height: 140px;
+  animation: radar-ring 2.5s infinite 0.5s;
+}
+.scan-radar::after {
+  width: 180px; height: 180px;
+  animation: radar-ring 2.5s infinite 1s;
+}
+@keyframes radar-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.4); }
+  50% { box-shadow: 0 0 30px 10px rgba(0, 242, 254, 0); }
+}
+@keyframes radar-ring {
+  0% { transform: scale(0.5); opacity: 0.6; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+.scan-radar i { 
+  font-size: 40px; 
+  color: var(--accent);
+  filter: drop-shadow(0 0 10px var(--accent-glow));
+}
 
 .scan-input {
-  width: 100%; background: rgba(0,0,0,0.4); border: 2px solid var(--glass-border);
-  color: #fff; font-size: 32px; text-align: center; padding: 25px;
-  border-radius: 20px; letter-spacing: 4px; font-weight: 800; font-family: 'Orbitron', monospace;
-  transition: all 0.3s; box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+  width: 100%;
+  background: rgba(0,0,0,0.3);
+  border: 2px solid var(--border-subtle);
+  color: #fff;
+  font-size: 28px;
+  text-align: center;
+  padding: var(--space-5) var(--space-4);
+  border-radius: 12px;
+  letter-spacing: 6px;
+  font-weight: 700;
+  font-family: 'Orbitron', monospace;
+  transition: all var(--t-fast);
+  box-shadow: inset 0 4px 12px rgba(0,0,0,0.3);
 }
-.scan-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 25px rgba(0, 242, 254, 0.2), inset 0 4px 10px rgba(0,0,0,0.5); }
+.scan-input:focus { 
+  outline: none; 
+  border-color: var(--accent); 
+  box-shadow: 0 0 30px rgba(0, 242, 254, 0.15), inset 0 4px 12px rgba(0,0,0,0.3);
+  transform: scale(1.02);
+}
+.scan-input::placeholder { color: var(--text-muted); }
 
-/* الجداول والبيانات */
-.form-group label { display: block; margin-bottom: 10px; color: var(--text-muted); font-weight: 700; font-size: 14px; }
+.scan-alert {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 15px;
+  display: none;
+  animation: slide-up var(--t-normal) var(--ease-out) forwards;
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.scan-alert.success {
+  background: var(--safe-soft);
+  color: var(--safe);
+  border: 1px solid rgba(0, 255, 163, 0.3);
+}
+.scan-alert.error {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid rgba(255, 8, 68, 0.3);
+}
+
+/* ===== FORMS ===== */
+.form-group label { 
+  display: block; 
+  margin-bottom: var(--space-2); 
+  color: var(--text-tertiary); 
+  font-weight: 600; 
+  font-size: 13px; 
+}
 input[type=text], input[type=file], input[type=url], select {
-  width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: #fff;
-  padding: 14px 18px; border-radius: 12px; font-size: 14px; font-family: inherit; transition: 0.3s;
+  width: 100%;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 14px var(--space-4);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all var(--t-fast);
 }
-input:focus, select:focus { border-color: var(--accent); outline: none; background: rgba(0,0,0,0.5); }
+input:focus, select:focus { 
+  border-color: var(--accent); 
+  outline: none; 
+  background: rgba(0,0,0,0.4);
+  box-shadow: 0 0 16px rgba(0, 242, 254, 0.08);
+}
 
+/* ===== BUTTONS - Micro-interactions ===== */
 button {
-  background: var(--accent-grad); color: #fff; border: none; padding: 14px 28px;
-  border-radius: 12px; font-weight: 800; font-family: inherit; cursor: pointer;
-  transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 15px;
+  background: linear-gradient(135deg, #4facfe 0%, var(--accent) 100%);
+  color: #fff;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: 14px;
+  position: relative;
+  overflow: hidden;
 }
-button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 242, 254, 0.3); }
-button.btn-danger { background: rgba(255, 8, 68, 0.1); border: 1px solid var(--danger); color: #ff4d6d; }
-button.btn-danger:hover { background: var(--danger-grad); color: #fff; box-shadow: 0 8px 20px rgba(255, 8, 68, 0.3); }
+button::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 242, 254, 0.25);
+}
+button:hover::after {
+  width: 300px; height: 300px;
+}
+button:active {
+  transform: translateY(0) scale(0.98);
+}
+button.btn-danger { 
+  background: var(--danger-soft); 
+  border: 1px solid var(--danger); 
+  color: #ff4d6d; 
+}
+button.btn-danger:hover { 
+  background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); 
+  color: #fff; 
+  box-shadow: 0 8px 24px rgba(255, 8, 68, 0.25);
+}
+button.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+button.btn-secondary:hover {
+  border-color: var(--border-active);
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.03);
+}
+button.btn-success {
+  background: var(--safe-soft);
+  border: 1px solid var(--safe);
+  color: var(--safe);
+}
+button.btn-success:hover {
+  background: linear-gradient(135deg, #00b09b, #96c93d);
+  color: #000;
+  box-shadow: 0 8px 24px rgba(0, 255, 163, 0.25);
+}
 
-.table-wrapper { overflow: auto; max-height: 500px; margin-top: 20px; border-radius: 12px; border: 1px solid var(--glass-border); }
-table { width: 100%; border-collapse: collapse; text-align: right; }
-thead th { background: rgba(0,0,0,0.6); color: var(--text-muted); padding: 18px 15px; font-size: 13px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--glass-border); }
-tbody td { padding: 16px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 14.5px; }
-tbody tr:hover { background: rgba(255,255,255,0.02); }
+/* ===== TABLES - Glassmorphism rows ===== */
+.table-wrapper { 
+  overflow: auto; 
+  max-height: 450px; 
+  margin-top: var(--space-4); 
+  border-radius: 10px; 
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  backdrop-filter: blur(8px);
+}
+table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  text-align: right; 
+}
+thead th { 
+  background: rgba(0,0,0,0.4); 
+  color: var(--text-tertiary); 
+  padding: 14px var(--space-4); 
+  font-size: 12px; 
+  position: sticky; 
+  top: 0; 
+  z-index: 10; 
+  border-bottom: 1px solid var(--border-subtle);
+  font-weight: 600;
+}
+tbody td { 
+  padding: 14px var(--space-4); 
+  border-bottom: 1px solid rgba(255,255,255,0.02); 
+  font-size: 14px;
+  color: var(--text-secondary);
+  transition: all var(--t-fast);
+}
+tbody tr { transition: all var(--t-fast); }
+tbody tr:hover { 
+  background: rgba(255,255,255,0.03);
+  transform: scale(1.005);
+}
 
-.status-badge { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; }
-.status-badge.safe { background: rgba(0, 255, 163, 0.1); color: var(--safe); border: 1px solid rgba(0, 255, 163, 0.3); }
-.status-badge.missing { background: rgba(255, 8, 68, 0.1); color: var(--danger); border: 1px solid rgba(255, 8, 68, 0.3); }
+.status-badge { 
+  padding: 5px 12px; 
+  border-radius: 20px; 
+  font-size: 12px; 
+  font-weight: 700; 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 6px;
+  transition: all var(--t-fast);
+}
+.status-badge.safe { 
+  background: var(--safe-soft); 
+  color: var(--safe); 
+  border: 1px solid rgba(0, 255, 163, 0.25);
+}
+.status-badge.missing { 
+  background: var(--danger-soft); 
+  color: var(--danger); 
+  border: 1px solid rgba(255, 8, 68, 0.25);
+}
+.status-badge i { font-size: 10px; }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
-.flex-row { display: flex; gap: 15px; flex-wrap: wrap; }
-.flex-row > * { flex: 1; min-width: 200px; }
+/* ===== VIEW SECTIONS ===== */
+.view-section { 
+  display: none; 
+  padding: var(--space-5); 
+  animation: fadeInUp var(--t-normal) var(--ease-out) forwards;
+}
+.view-section.active { display: block; }
+@keyframes fadeInUp { 
+  from { opacity: 0; transform: translateY(24px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
 
-/* =========================================
-   تجاوب الشاشات (دعم الجوال لحل مشكلة التداخل)
-========================================= */
+/* ===== RESPONSIVE ===== */
 .mobile-overlay {
   display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 900; opacity: 0; transition: 0.3s;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 900; opacity: 0; transition: 0.3s;
 }
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
+  .bento-grid { grid-template-columns: repeat(2, 1fr); }
+  .span-2, .span-2r { grid-column: span 2; }
+  .span-4 { grid-column: span 2; }
+}
+@media (max-width: 768px) {
   .menu-toggle { display: block; }
   .sidebar {
     position: fixed; top: 0; right: 0; height: 100vh;
-    transform: translateX(100%); /* مخفي لليمين افتراضياً */
+    transform: translateX(100%);
   }
   .sidebar.open { transform: translateX(0); }
   .mobile-overlay.active { display: block; opacity: 1; }
+  .bento-grid { grid-template-columns: 1fr; }
+  .span-1, .span-2, .span-2r, .span-4 { grid-column: span 1; grid-row: span 1; }
+  header { padding: var(--space-3) var(--space-4); }
+  .header-title span { display: none; }
+  .view-section { padding: var(--space-4); }
+  .kpi-value { font-size: 30px; }
+  .progress-ring-container { flex-direction: column; gap: var(--space-4); }
+}
+
+/* ===== UTILITY ===== */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-5); }
+.flex-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.flex-row > * { flex: 1; min-width: 200px; }
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.section-title i { font-size: 14px; color: var(--accent); }
+
+@media (max-width: 768px) {
   .grid-2 { grid-template-columns: 1fr; }
-  header { padding: 15px 20px; }
-  .header-title span { display: none; } /* إخفاء النص الطويل في الجوال */
-  .view-section { padding: 20px 15px; }
-  .kpi-value { font-size: 34px; }
 }
 </style>
 </head>
@@ -305,58 +793,145 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
     </div>
   </header>
 
+  <!-- ===== DASHBOARD: BENTO GRID ===== -->
   <section id="view-dashboard" class="view-section active">
-    <div class="kpi-grid">
-      <div class="glass-card kpi-card total">
-        <i class="fa-solid fa-users kpi-icon"></i>
-        <div class="kpi-title">إجمالي القوة البشرية</div>
-        <div class="kpi-value" id="kpiTotal">0</div>
+    <div class="bento-grid">
+      
+      <!-- KPI: Total -->
+      <div class="bento-card span-1 accent-top">
+        <div class="kpi-label"><i class="fa-solid fa-users"></i> إجمالي القوة البشرية</div>
+        <div class="kpi-value kpi-accent" id="kpiTotal">0</div>
+        <div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> 100% مسجل</div>
+        <svg class="sparkline-container" viewBox="0 0 120 36" preserveAspectRatio="none">
+          <polyline fill="none" stroke="var(--accent)" stroke-width="2" 
+            points="0,30 20,25 40,28 60,20 80,24 100,15 120,18" opacity="0.5"/>
+          <polyline fill="none" stroke="var(--accent)" stroke-width="1" 
+            points="0,30 20,25 40,28 60,20 80,24 100,15 120,18" opacity="0.2" 
+            style="filter:blur(2px)"/>
+        </svg>
       </div>
-      <div class="glass-card kpi-card safe">
-        <i class="fa-solid fa-person-walking-arrow-right kpi-icon"></i>
-        <div class="kpi-title">تم الإخلاء (آمن)</div>
-        <div class="kpi-value" id="kpiSafe">0</div>
+      
+      <!-- KPI: Safe -->
+      <div class="bento-card span-1 safe-top">
+        <div class="kpi-label"><i class="fa-solid fa-person-walking-arrow-right"></i> تم الإخلاء (آمن)</div>
+        <div class="kpi-value kpi-safe" id="kpiSafe">0</div>
+        <div class="kpi-change up" id="safePct"><i class="fa-solid fa-check"></i> 0%</div>
       </div>
-      <div class="glass-card kpi-card danger">
-        <i class="fa-solid fa-triangle-exclamation kpi-icon"></i>
-        <div class="kpi-title">مفقودون بالداخل (خطر)</div>
-        <div class="kpi-value" id="kpiMissing">0</div>
+      
+      <!-- KPI: Missing -->
+      <div class="bento-card span-1 danger-top">
+        <div class="kpi-label"><i class="fa-solid fa-triangle-exclamation"></i> مفقودون بالداخل</div>
+        <div class="kpi-value kpi-danger" id="kpiMissing">0</div>
+        <div class="kpi-change down" id="missingPct"><i class="fa-solid fa-xmark"></i> 0%</div>
       </div>
-      <div class="glass-card kpi-card timer">
-        <i class="fa-solid fa-stopwatch kpi-icon"></i>
-        <div class="kpi-title">زمن الإخلاء الفعلي (T-Zero)</div>
-        <div class="kpi-value" id="kpiTimer">00:00</div>
+      
+      <!-- KPI: Timer -->
+      <div class="bento-card span-1 warn-top">
+        <div class="kpi-label"><i class="fa-solid fa-stopwatch"></i> زمن الإخلاء (T-Zero)</div>
+        <div class="kpi-value kpi-warn" id="kpiTimer">00:00</div>
+        <div style="text-align:center; margin-top:8px; font-size:11px; color:var(--text-muted);">
+          دقيقة:ثانية
+        </div>
       </div>
-    </div>
-
-    <div class="charts-grid">
-      <div class="glass-card">
-        <div class="chart-header"><i class="fa-solid fa-crosshairs text-accent"></i> مؤشر الإنجاز الكلي</div>
-        <div class="chart-container"><canvas id="progressChart"></canvas></div>
+      
+      <!-- Progress Ring -->
+      <div class="bento-card span-2 accent-top">
+        <div class="section-title"><i class="fa-solid fa-crosshairs"></i> مؤشر الإنجاز الكلي</div>
+        <div class="progress-ring-container">
+          <div style="position:relative;">
+            <svg class="progress-ring" viewBox="0 0 130 130">
+              <circle class="bg" cx="65" cy="65" r="55"/>
+              <circle class="fill" id="progressRingFill" cx="65" cy="65" r="55"/>
+            </svg>
+            <div class="progress-ring-text" id="progressText">0%</div>
+          </div>
+          <div class="progress-legend">
+            <div class="legend-item">
+              <span class="legend-dot" style="background:var(--safe); box-shadow:0 0 6px var(--safe-glow);"></span>
+              <span id="legendSafe">آمن: 0</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:var(--danger); box-shadow:0 0 6px var(--danger-glow);"></span>
+              <span id="legendMissing">مفقود: 0</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="glass-card">
-        <div class="chart-header"><i class="fa-solid fa-map-location-dot text-accent"></i> الخريطة الحرارية للمفقودين (توجيه الإنقاذ)</div>
-        <div class="chart-container"><canvas id="deptChart"></canvas></div>
+      
+      <!-- Bar Chart -->
+      <div class="bento-card span-2 danger-top">
+        <div class="section-title"><i class="fa-solid fa-map-location-dot"></i> المفقودون حسب القسم</div>
+        <div class="bar-chart-container" id="barChartContainer">
+          <svg class="bar-chart-svg" id="deptBarChart" viewBox="0 0 400 180">
+            <line class="grid-line" x1="50" y1="20" x2="390" y2="20"/>
+            <line class="grid-line" x1="50" y1="60" x2="390" y2="60"/>
+            <line class="grid-line" x1="50" y1="100" x2="390" y2="100"/>
+            <line class="grid-line" x1="50" y1="140" x2="390" y2="140"/>
+            <line x1="50" y1="155" x2="390" y2="155" stroke="var(--border-subtle)" stroke-width="1"/>
+            <g id="barsGroup"></g>
+            <g id="labelsGroup"></g>
+          </svg>
+        </div>
       </div>
+      
+      <!-- Recent Activity Table -->
+      <div class="bento-card span-2r accent-top">
+        <div class="section-title"><i class="fa-solid fa-list-ul"></i> آخر التحديثات</div>
+        <div class="table-wrapper" style="max-height:300px; border:none; background:transparent;">
+          <table>
+            <thead>
+              <tr>
+                <th>الحالة</th>
+                <th>الاسم</th>
+                <th>الرقم الوظيفي</th>
+                <th>القسم</th>
+                <th>الوقت</th>
+              </tr>
+            </thead>
+            <tbody id="recentTableBody">
+              <tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:40px;">لا توجد بيانات</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Quick Actions -->
+      <div class="bento-card span-2 safe-top">
+        <div class="section-title"><i class="fa-solid fa-bolt"></i> إجراءات سريعة</div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+          <button onclick="document.getElementById('btnResetAll').click()" class="btn-danger" style="width:100%;">
+            <i class="fa-solid fa-power-off"></i> تصفير النظام لعملية جديدة
+          </button>
+          <button onclick="document.getElementById('btnExportSafe').click()" class="btn-secondary" style="width:100%;">
+            <i class="fa-solid fa-file-csv"></i> تصدير التقرير النهائي
+          </button>
+          <button onclick="document.getElementById('btnConnectSync').click()" class="btn-success" style="width:100%;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> مزامنة السحابة
+          </button>
+        </div>
+      </div>
+      
     </div>
   </section>
 
+  <!-- ===== SCAN SECTION ===== -->
   <section id="view-scan" class="view-section">
-    <div class="glass-card scan-wrapper">
+    <div class="bento-card scan-wrapper" style="max-width:650px; margin:40px auto;">
       <div class="scan-radar"><i class="fa-solid fa-id-card-clip"></i></div>
-      <h2 style="margin-bottom: 10px; font-weight: 800; color: #fff;">نظام التحضير الآلي للأسوار</h2>
-      <p style="color: var(--text-muted); margin-bottom: 30px;">بمجرد تمرير بطاقة الموظف، سيتم ترحيل حالته إلى (آمن) لحظياً.</p>
+      <h2 style="margin-bottom: 10px; font-weight: 800; color: #fff; font-size:22px;">نظام التحضير الآلي للأسوار</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 30px; font-size:14px;">بمجرد تمرير بطاقة الموظف، سيتم ترحيل حالته إلى (آمن) لحظياً.</p>
       
       <input type="text" id="scanInput" class="scan-input" placeholder="SCAN RFID..." autocomplete="off">
       
-      <div id="scanAlert" style="margin-top: 25px; padding: 15px; border-radius: 12px; display: none; font-weight: 800; font-size: 16px;"></div>
+      <div id="scanAlert" class="scan-alert"></div>
     </div>
   </section>
 
+  <!-- ===== DATA MANAGEMENT ===== -->
   <section id="view-data" class="view-section">
     <div class="grid-2">
-      <div class="glass-card">
-        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-file-arrow-up" style="color: var(--accent);"></i> استيراد قاعدة الموظفين</h3>
+      <div class="bento-card accent-top">
+        <div class="section-title"><i class="fa-solid fa-file-arrow-up"></i> استيراد قاعدة الموظفين</div>
         <div class="form-group">
           <label>ارفع ملف Excel لتهيئة النظام</label>
           <input type="file" id="excelFile" accept=".xlsx,.xls">
@@ -364,8 +939,8 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
         <div id="importStatus" style="margin-top: 15px; font-size: 14px; font-weight: 700;"></div>
       </div>
 
-      <div class="glass-card">
-        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-cloud-arrow-up" style="color: var(--accent);"></i> المزامنة الحية (Cloud API)</h3>
+      <div class="bento-card accent-top">
+        <div class="section-title"><i class="fa-solid fa-cloud-arrow-up"></i> المزامنة الحية (Cloud API)</div>
         <div class="form-group">
           <label>رابط Google Web App للتزامن مع باقي البوابات</label>
           <input type="url" id="syncUrlInput" placeholder="https://script.google.com/macros/s/...">
@@ -374,15 +949,15 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
       </div>
     </div>
 
-    <div class="glass-card">
-      <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-server" style="color: var(--accent);"></i> لوحة التحكم بالبيانات الحية</h3>
+    <div class="bento-card accent-top">
+      <div class="section-title"><i class="fa-solid fa-server"></i> لوحة التحكم بالبيانات الحية</div>
       <div class="flex-row" style="margin-bottom: 20px;">
-        <input type="text" id="searchBox" placeholder="🔍 بحث سريع...">
-        <select id="locationFilter"><option value="">🏢 تصفية حسب الموقع</option></select>
+        <input type="text" id="searchBox" placeholder="بحث سريع...">
+        <select id="locationFilter"><option value="">تصفية حسب الموقع</option></select>
         <select id="statusFilter">
-          <option value="">🔘 كل الحالات</option>
-          <option value="safe">🟢 تم الإخلاء (آمن)</option>
-          <option value="pending">🔴 مفقود بالداخل</option>
+          <option value="">كل الحالات</option>
+          <option value="safe">تم الإخلاء (آمن)</option>
+          <option value="pending">مفقود بالداخل</option>
         </select>
       </div>
 
@@ -403,8 +978,8 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
       </div>
       
       <div style="margin-top: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-        <div id="listInfo" style="color: var(--text-muted); font-size: 14px;"></div>
-        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <div id="listInfo" style="color: var(--text-secondary); font-size: 13px;"></div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
           <button id="btnExportSafe"><i class="fa-solid fa-file-csv"></i> تصدير التقرير النهائي</button>
           <button id="btnResetAll" class="btn-danger"><i class="fa-solid fa-power-off"></i> تصفير النظام لعملية جديدة</button>
         </div>
@@ -416,9 +991,7 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
 <script>
 'use strict';
 
-// ==========================================
-// 1. إدارة القائمة الجانبية في الجوال
-// ==========================================
+// ===== MOBILE SIDEBAR =====
 const sidebar = document.getElementById('sidebar');
 const menuBtn = document.getElementById('menuBtn');
 const overlay = document.getElementById('mobileOverlay');
@@ -430,17 +1003,12 @@ function toggleMenu() {
 menuBtn.addEventListener('click', toggleMenu);
 overlay.addEventListener('click', toggleMenu);
 
-// ==========================================
-// 2. إعدادات الواجهة (SPA Navigation)
-// ==========================================
-Chart.defaults.color = '#94a3b8';
-Chart.defaults.font.family = 'Tajawal';
-
+// ===== SPA NAVIGATION =====
 function switchTab(viewId, navElement) {
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
   navElement.classList.add('active');
   
-  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.view-section').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById(viewId).classList.add('active');
 
   const titles = {
@@ -450,147 +1018,156 @@ function switchTab(viewId, navElement) {
   };
   document.getElementById('pageTitle').textContent = titles[viewId];
 
-  if(window.innerWidth <= 900) toggleMenu(); // إغلاق القائمة في الجوال بعد الاختيار
-
-  if(viewId === 'view-dashboard') {
-    if(progressChart) progressChart.update();
-    if(deptChart) deptChart.update();
-  }
+  if(window.innerWidth <= 768) toggleMenu();
   if(viewId === 'view-scan') {
-    setTimeout(() => document.getElementById('scanInput').focus(), 100);
+    setTimeout(function() { document.getElementById('scanInput').focus(); }, 100);
   }
 }
 
-setInterval(() => {
+setInterval(function() {
   document.getElementById('clockDisplay').textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
 }, 1000);
 
 
-// ==========================================
-// 3. المتغيرات والبيانات الأساسية
-// ==========================================
+// ===== DATA & STATE =====
 let records = []; 
 let renderLimit = 200;
 let searchTerm = '', locFilter = '', statusFilterVal = '';
 let syncUrl = '', pollTimer = null, syncInFlight = false;
-let progressChart = null, deptChart = null;
 let evacStartTime = null, evacTimerInterval = null;
+let recentScans = [];
 
 
-// ==========================================
-// 4. الرسوم البيانية (Charts.js) - بتصميم متطور
-// ==========================================
-function initDashboard() {
-  const ctxProg = document.getElementById('progressChart').getContext('2d');
-  progressChart = new Chart(ctxProg, {
-    type: 'doughnut',
-    data: {
-      labels: ['آمن', 'مفقود'],
-      datasets: [{
-        data: [0, 0],
-        backgroundColor: ['#00ffa3', '#ff0844'],
-        borderWidth: 0,
-        hoverOffset: 10,
-        borderRadius: 5
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '80%',
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#f8fafc', padding: 20, font: {family: 'Tajawal', size: 14} } }
-      }
-    }
-  });
-
-  const ctxDept = document.getElementById('deptChart').getContext('2d');
+// ===== SVG BAR CHART =====
+function renderBarChart() {
+  const container = document.getElementById('barsGroup');
+  const labelsGroup = document.getElementById('labelsGroup');
+  if(!container) return;
   
-  // إنشاء تدرج لوني للأعمدة
-  let gradientBar = ctxDept.createLinearGradient(0, 0, 0, 400);
-  gradientBar.addColorStop(0, '#ff0844');
-  gradientBar.addColorStop(1, 'rgba(255, 8, 68, 0.2)');
-
-  deptChart = new Chart(ctxDept, {
-    type: 'bar',
-    data: {
-      labels: [],
-      datasets: [{
-        label: 'مفقودون',
-        data: [],
-        backgroundColor: gradientBar,
-        borderRadius: 8,
-        barThickness: 30
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', precision: 0 } },
-        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: {family: 'Tajawal'} } }
-      }
-    }
-  });
-}
-
-function updateDashboardData() {
-  if (!progressChart || !deptChart) return;
-  const safeCount = records.filter(r => r.safe).length;
-  const missingCount = records.length - safeCount;
-  
-  progressChart.data.datasets[0].data = [safeCount, missingCount];
-  progressChart.update();
-
   const missingByDept = {};
-  records.forEach(r => {
-    if (!r.safe) {
-      const dept = (r.location || r.dept || 'غير محدد');
+  records.forEach(function(r) {
+    if(!r.safe) {
+      const dept = (r.dept || r.location || 'غير محدد');
       missingByDept[dept] = (missingByDept[dept] || 0) + 1;
     }
   });
-
-  const sortedDepts = Object.keys(missingByDept).sort((a, b) => missingByDept[b] - missingByDept[a]).slice(0, 8);
-  deptChart.data.labels = sortedDepts;
-  deptChart.data.datasets[0].data = sortedDepts.map(d => missingByDept[d]);
-  deptChart.update();
+  
+  const sorted = Object.entries(missingByDept)
+    .sort(function(a,b) { return b[1] - a[1]; })
+    .slice(0, 6);
+  
+  if(!sorted.length) {
+    container.innerHTML = '<text x="200" y="90" text-anchor="middle" fill="var(--text-muted)" font-size="14">لا يوجد بيانات</text>';
+    labelsGroup.innerHTML = '';
+    return;
+  }
+  
+  const maxVal = Math.max.apply(null, sorted.map(function(s) { return s[1]; }));
+  const barWidth = 40;
+  const gap = 20;
+  const startX = 60;
+  const chartHeight = 120;
+  const baseY = 155;
+  
+  let barsHtml = '';
+  let labelsHtml = '';
+  
+  sorted.forEach(function(item, i) {
+    var dept = item[0], count = item[1];
+    const x = startX + i * (barWidth + gap);
+    const barHeight = (count / maxVal) * chartHeight;
+    const y = baseY - barHeight;
+    
+    barsHtml += '<rect class="bar-rect" x="' + x + '" y="' + y + '" width="' + barWidth + '" height="' + barHeight + '"/>';
+    barsHtml += '<text class="bar-value" x="' + (x + barWidth/2) + '" y="' + (y - 6) + '">' + count + '</text>';
+    labelsHtml += '<text class="bar-label" x="' + (x + barWidth/2) + '" y="' + (baseY + 16) + '">' + dept.substring(0,6) + '</text>';
+  });
+  
+  container.innerHTML = barsHtml;
+  labelsGroup.innerHTML = labelsHtml;
 }
 
-function startEvacTimer() {
-  if (evacTimerInterval) return; 
-  evacStartTime = Date.now();
-  evacTimerInterval = setInterval(() => {
-    const elapsed = Math.floor((Date.now() - evacStartTime) / 1000);
-    const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
-    const s = String(elapsed % 60).padStart(2, '0');
-    document.getElementById('kpiTimer').textContent = `${m}:${s}`;
-  }, 1000);
-}
-function resetEvacTimer() {
-  clearInterval(evacTimerInterval);
-  evacTimerInterval = null;
-  evacStartTime = null;
-  document.getElementById('kpiTimer').textContent = '00:00';
+// ===== PROGRESS RING =====
+function updateProgressRing() {
+  const safeCount = records.filter(function(r) { return r.safe; }).length;
+  const total = records.length;
+  const pct = total > 0 ? Math.round((safeCount / total) * 100) : 0;
+  
+  const circle = document.getElementById('progressRingFill');
+  const text = document.getElementById('progressText');
+  const legendSafe = document.getElementById('legendSafe');
+  const legendMissing = document.getElementById('legendMissing');
+  
+  if(circle) {
+    const circumference = 2 * Math.PI * 55;
+    const offset = circumference - (pct / 100) * circumference;
+    circle.style.strokeDasharray = circumference;
+    circle.style.strokeDashoffset = offset;
+    
+    if(pct >= 80) circle.style.stroke = 'var(--safe)';
+    else if(pct >= 50) circle.style.stroke = 'var(--warning)';
+    else circle.style.stroke = 'var(--danger)';
+  }
+  if(text) text.textContent = pct + '%';
+  if(legendSafe) legendSafe.textContent = 'آمن: ' + safeCount;
+  if(legendMissing) legendMissing.textContent = 'مفقود: ' + (total - safeCount);
 }
 
-
-// ==========================================
-// 5. الوظائف الأساسية
-// ==========================================
-function normalizeStr(s){ return String(s||'').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\s+/g, '').replace(/[\u200B-\u200D\uFEFF\u200E\u200F]/g, '').toLowerCase().replace(/^0+/, ''); }
-function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+// ===== CORE FUNCTIONS =====
+function normalizeStr(s){ 
+  return String(s||'').replace(/[\u0660-\u0669]/g, function(d) { return '\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669'.indexOf(d); }).replace(/\s+/g, '').replace(/[\u200B-\u200D\uFEFF\u200E\u200F]/g, '').toLowerCase().replace(/^0+/, ''); 
+}
+function escapeHtml(s){ 
+  return String(s||'').replace(/[&<>"']/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); 
+}
 
 function updateStats(){
-  document.getElementById('kpiTotal').textContent = records.length;
-  const safeCount = records.filter(r=>r.safe).length;
-  document.getElementById('kpiSafe').textContent = safeCount;
-  document.getElementById('kpiMissing').textContent = records.length - safeCount;
+  const total = records.length;
+  const safeCount = records.filter(function(r) { return r.safe; }).length;
+  const missingCount = total - safeCount;
+  const safePct = total > 0 ? ((safeCount/total)*100).toFixed(1) : 0;
+  const missingPct = total > 0 ? ((missingCount/total)*100).toFixed(1) : 0;
   
-  updateDashboardData();
-  if (safeCount > 0 && records.length > 0) startEvacTimer();
+  document.getElementById('kpiTotal').textContent = total.toLocaleString();
+  document.getElementById('kpiSafe').textContent = safeCount.toLocaleString();
+  document.getElementById('kpiMissing').textContent = missingCount.toLocaleString();
+  
+  const safePctEl = document.getElementById('safePct');
+  const missingPctEl = document.getElementById('missingPct');
+  if(safePctEl) safePctEl.innerHTML = '<i class="fa-solid fa-check"></i> ' + safePct + '%';
+  if(missingPctEl) missingPctEl.innerHTML = '<i class="fa-solid fa-xmark"></i> ' + missingPct + '%';
+  
+  updateProgressRing();
+  renderBarChart();
+  renderRecentTable();
+  
+  if(safeCount > 0 && total > 0) startEvacTimer();
+}
+
+function renderRecentTable(){
+  const tbody = document.getElementById('recentTableBody');
+  if(!tbody) return;
+  
+  const recent = recentScans.slice(0, 8);
+  if(!recent.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:40px;">لا توجد بيانات</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = recent.map(function(rec) {
+    return '<tr>' +
+      '<td><span class="status-badge ' + (rec.safe ? 'safe' : 'missing') + '"><i class="fa-solid ' + (rec.safe ? 'fa-check' : 'fa-xmark') + '"></i> ' + (rec.safe ? 'آمن' : 'مفقود') + '</span></td>' +
+      '<td style="font-weight:700;">' + escapeHtml(rec.name) + '</td>' +
+      '<td style="font-family:\'Orbitron\', monospace;">' + escapeHtml(rec.id) + '</td>' +
+      '<td>' + escapeHtml(rec.dept || rec.location) + '</td>' +
+      '<td style="color:var(--text-tertiary); font-size:12px;">' + (rec.time || '--') + '</td>' +
+    '</tr>';
+  }).join('');
 }
 
 function renderTable(){
   const tbody = document.getElementById('tableBody');
-  const filtered = records.filter(r=>{
+  const filtered = records.filter(function(r){
     if(locFilter && (r.location !== locFilter && r.dept !== locFilter)) return false;
     if(statusFilterVal === 'safe' && !r.safe) return false;
     if(statusFilterVal === 'pending' && r.safe) return false;
@@ -601,71 +1178,96 @@ function renderTable(){
     return true;
   });
 
-  tbody.innerHTML = filtered.slice(0, renderLimit).map(rec => `
-    <tr>
-      <td><span class="status-badge ${rec.safe ? 'safe' : 'missing'}"><i class="fa-solid ${rec.safe ? 'fa-check':'fa-xmark'}"></i> ${rec.safe ? 'آمن' : 'مفقود'}</span></td>
-      <td style="font-weight:700;">${escapeHtml(rec.name)}</td>
-      <td style="font-family:'Orbitron', monospace;">${escapeHtml(rec.id)}</td>
-      <td>${escapeHtml(rec.dept || rec.location)}</td>
-      <td style="font-family:'Orbitron', monospace; color:var(--text-muted);">${escapeHtml(rec.rfid)}</td>
-      <td>
-        <button onclick="toggleManualSafety('${rec.rfid}', '${rec.id}')" style="padding: 8px 15px; font-size:12px; background: ${rec.safe ? 'rgba(255,255,255,0.05)' : 'var(--safe-grad)'}; color: ${rec.safe ? '#fff' : '#000'};">
-          ${rec.safe ? 'تراجع' : 'تحضير يدوي'}
-        </button>
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = filtered.slice(0, renderLimit).map(function(rec) {
+    return '<tr>' +
+      '<td><span class="status-badge ' + (rec.safe ? 'safe' : 'missing') + '"><i class="fa-solid ' + (rec.safe ? 'fa-check' : 'fa-xmark') + '"></i> ' + (rec.safe ? 'آمن' : 'مفقود') + '</span></td>' +
+      '<td style="font-weight:700;">' + escapeHtml(rec.name) + '</td>' +
+      '<td style="font-family:\'Orbitron\', monospace;">' + escapeHtml(rec.id) + '</td>' +
+      '<td>' + escapeHtml(rec.dept || rec.location) + '</td>' +
+      '<td style="font-family:\'Orbitron\', monospace; color:var(--text-tertiary);">' + escapeHtml(rec.rfid) + '</td>' +
+      '<td>' +
+        '<button onclick="toggleManualSafety(\'' + rec.rfid + '\', \'' + rec.id + '\')" style="padding: 8px 16px; font-size:12px; background: ' + (rec.safe ? 'rgba(255,255,255,0.05)' : 'var(--safe-soft)') + '; color: ' + (rec.safe ? '#fff' : 'var(--safe)') + '; border: 1px solid ' + (rec.safe ? 'var(--border-subtle)' : 'rgba(0,255,163,0.3)') + '; border-radius: 8px; cursor:pointer; font-family:inherit; font-weight:700; transition:all 0.2s;">' +
+          (rec.safe ? 'تراجع' : 'تحضير يدوي') +
+        '</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
 
-  document.getElementById('listInfo').textContent = !records.length ? 'لا توجد بيانات بالنظام.' : `عرض ${Math.min(filtered.length, renderLimit)} من ${filtered.length}`;
+  document.getElementById('listInfo').textContent = !records.length ? 'لا توجد بيانات بالنظام.' : 'عرض ' + Math.min(filtered.length, renderLimit) + ' من ' + filtered.length;
 }
 
 window.toggleManualSafety = function(rfid, id) {
-  const rec = records.find(r => r.rfid === rfid && r.id === id);
+  const rec = records.find(function(r) { return r.rfid === rfid && r.id === id; });
   if(rec) {
-    rec.safe = !rec.safe; rec.lastModified = Date.now();
+    rec.safe = !rec.safe; 
+    rec.lastModified = Date.now();
+    if(rec.safe) {
+      rec.time = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit'});
+      recentScans.unshift(Object.assign({}, rec));
+    }
     renderTable(); updateStats();
     if(syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: rec.safe });
   }
 };
 
 
-// ==========================================
-// 6. نظام ماسح RFID
-// ==========================================
+// ===== EVACUATION TIMER =====
+function startEvacTimer() {
+  if(evacTimerInterval) return; 
+  evacStartTime = Date.now();
+  evacTimerInterval = setInterval(function() {
+    const elapsed = Math.floor((Date.now() - evacStartTime) / 1000);
+    const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    document.getElementById('kpiTimer').textContent = m + ':' + s;
+  }, 1000);
+}
+function resetEvacTimer() {
+  clearInterval(evacTimerInterval);
+  evacTimerInterval = null;
+  evacStartTime = null;
+  document.getElementById('kpiTimer').textContent = '00:00';
+}
+
+
+// ===== RFID SCANNER =====
 const scanInputEl = document.getElementById('scanInput');
 
 function showScanAlert(msg, type) {
   const el = document.getElementById('scanAlert');
   el.style.display = 'block';
-  el.style.background = type === 'success' ? 'rgba(0, 255, 163, 0.1)' : 'rgba(255, 8, 68, 0.1)';
-  el.style.color = type === 'success' ? 'var(--safe)' : 'var(--danger)';
-  el.style.border = `1px solid ${type === 'success' ? 'var(--safe)' : 'var(--danger)'}`;
-  el.innerHTML = type === 'success' ? `<i class="fa-solid fa-circle-check"></i> ${msg}` : `<i class="fa-solid fa-triangle-exclamation"></i> ${msg}`;
-  setTimeout(() => el.style.display = 'none', 3000);
+  el.className = 'scan-alert ' + type;
+  el.innerHTML = type === 'success' 
+    ? '<i class="fa-solid fa-circle-check"></i> ' + msg 
+    : '<i class="fa-solid fa-triangle-exclamation"></i> ' + msg;
+  setTimeout(function() { el.style.display = 'none'; }, 3500);
 }
 
 function processScanCode(rawCode){
   const code = normalizeStr(rawCode);
   if(!code) return;
-  const rec = records.find(r => normalizeStr(r.rfid) === code || normalizeStr(r.id) === code);
-  if(!rec){ showScanAlert(`غير مصرح: البطاقة (${rawCode}) غير مسجلة بالنظام!`, 'error'); return; }
+  const rec = records.find(function(r) { return normalizeStr(r.rfid) === code || normalizeStr(r.id) === code; });
+  if(!rec){ showScanAlert('غير مصرح: البطاقة (' + rawCode + ') غير مسجلة بالنظام!', 'error'); return; }
   
   if(!rec.safe) {
-    rec.safe = true; rec.lastModified = Date.now();
+    rec.safe = true; 
+    rec.lastModified = Date.now();
+    rec.time = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit'});
+    recentScans.unshift(Object.assign({}, rec));
     renderTable(); updateStats();
-    showScanAlert(`تم تحضير: ${rec.name || rec.id}`, 'success');
+    showScanAlert('تم تحضير: ' + (rec.name || rec.id), 'success');
     if(syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: true });
   } else {
-    showScanAlert(`الموظف ${rec.name} محضر مسبقاً!`, 'success');
+    showScanAlert('الموظف ' + rec.name + ' محضر مسبقاً!', 'success');
   }
 }
 
-scanInputEl.addEventListener('keydown', (e)=>{
+scanInputEl.addEventListener('keydown', function(e){
   if(e.key === 'Enter'){ e.preventDefault(); processScanCode(scanInputEl.value); scanInputEl.value = ''; }
 });
 let globalBuffer = '', globalLastTime = 0;
-document.addEventListener('keydown', (e)=>{
-  if(['INPUT','SELECT'].includes(e.target.tagName)) return;
+document.addEventListener('keydown', function(e){
+  if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
   const now = Date.now();
   if(now - globalLastTime > 200) globalBuffer = '';
   globalLastTime = now;
@@ -674,14 +1276,12 @@ document.addEventListener('keydown', (e)=>{
 });
 
 
-// ==========================================
-// 7. استيراد الإكسل
-// ==========================================
-document.getElementById('excelFile').addEventListener('change', (e)=>{
+// ===== EXCEL IMPORT =====
+document.getElementById('excelFile').addEventListener('change', function(e){
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = (evt)=>{
+  reader.onload = function(evt){
     try{
       const wb = XLSX.read(evt.target.result, {type:'array'});
       const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''});
@@ -689,43 +1289,43 @@ document.getElementById('excelFile').addEventListener('change', (e)=>{
       let headerIdx = -1, bestScore = 0;
       const patterns = ['rfid','بطاقة','رقم','id','اسم','name','قسم','dept','موقع','site'];
       for(let i=0; i<Math.min(rows.length, 6); i++){
-        let score = rows[i].filter(c => c && patterns.some(p => String(c).toLowerCase().includes(p))).length;
+        let score = rows[i].filter(function(c) { return c && patterns.some(function(p) { return String(c).toLowerCase().includes(p); }); }).length;
         if(score > bestScore){ bestScore = score; headerIdx = i; }
       }
       if(headerIdx === -1) { alert('لم يتم التعرف على عناوين الأعمدة.'); return; }
       
-      const headers = rows[headerIdx].map(h => String(h).toLowerCase());
-      const idxRfid = headers.findIndex(h => h.includes('rfid') || h.includes('بطاقة'));
-      const idxId = headers.findIndex(h => h.includes('رقم') || h.includes('id') || h.includes('emp'));
-      const idxName = headers.findIndex(h => h.includes('اسم') || h.includes('name'));
-      const idxDept = headers.findIndex(h => h.includes('قسم') || h.includes('dept') || h.includes('موقع') || h.includes('loc'));
+      const headers = rows[headerIdx].map(function(h) { return String(h).toLowerCase(); });
+      const idxRfid = headers.findIndex(function(h) { return h.includes('rfid') || h.includes('بطاقة'); });
+      const idxId = headers.findIndex(function(h) { return h.includes('رقم') || h.includes('id') || h.includes('emp'); });
+      const idxName = headers.findIndex(function(h) { return h.includes('اسم') || h.includes('name'); });
+      const idxDept = headers.findIndex(function(h) { return h.includes('قسم') || h.includes('dept') || h.includes('موقع') || h.includes('loc'); });
 
-      records = rows.slice(headerIdx + 1).map(r => ({
-        rfid: idxRfid >= 0 ? String(r[idxRfid]||'').trim() : '',
-        id: idxId >= 0 ? String(r[idxId]||'').trim() : '',
-        name: idxName >= 0 ? String(r[idxName]||'').trim() : '',
-        dept: idxDept >= 0 ? String(r[idxDept]||'').trim() : '',
-        safe: false, lastModified: 0
-      })).filter(rec => rec.name || rec.id || rec.rfid);
+      records = rows.slice(headerIdx + 1).map(function(r) {
+        return {
+          rfid: idxRfid >= 0 ? String(r[idxRfid]||'').trim() : '',
+          id: idxId >= 0 ? String(r[idxId]||'').trim() : '',
+          name: idxName >= 0 ? String(r[idxName]||'').trim() : '',
+          dept: idxDept >= 0 ? String(r[idxDept]||'').trim() : '',
+          safe: false, lastModified: 0, time: null
+        };
+      }).filter(function(rec) { return rec.name || rec.id || rec.rfid; });
       
-      records.forEach(r => { if(!r.rfid) r.rfid = r.id; if(!r.id) r.id = r.rfid; });
+      records.forEach(function(r) { if(!r.rfid) r.rfid = r.id; if(!r.id) r.id = r.rfid; });
       
-      document.getElementById('importStatus').innerHTML = `<span style="color:var(--safe)"><i class="fa-solid fa-check"></i> تم رفع ${records.length} سجل بنجاح.</span>`;
+      document.getElementById('importStatus').innerHTML = '<span style="color:var(--safe)"><i class="fa-solid fa-check"></i> تم رفع ' + records.length + ' سجل بنجاح.</span>';
       
-      const locs = [...new Set(records.map(r=>r.dept || r.location).filter(Boolean))].sort();
-      document.getElementById('locationFilter').innerHTML = '<option value="">🏢 تصفية حسب الموقع</option>' + locs.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+      const locs = Array.from(new Set(records.map(function(r){return r.dept || r.location;}).filter(Boolean))).sort();
+      document.getElementById('locationFilter').innerHTML = '<option value="">تصفية حسب الموقع</option>' + locs.map(function(l){return '<option value="' + escapeHtml(l) + '">' + escapeHtml(l) + '</option>';}).join('');
       
       renderTable(); updateStats();
-      if(syncUrl) postToSync('import', { records });
+      if(syncUrl) postToSync('import', { records: records });
     }catch(err){ alert('خطأ: ' + err.message); }
   };
   reader.readAsArrayBuffer(file);
 });
 
 
-// ==========================================
-// 8. المزامنة السحابية وباقي الأزرار
-// ==========================================
+// ===== CLOUD SYNC =====
 function setSyncStatus(isConnected) {
   document.getElementById('syncIndicator').className = 'sync-dot ' + (isConnected ? 'on' : '');
   document.getElementById('syncLabel').textContent = isConnected ? 'متصل (Live)' : 'محلي (Local)';
@@ -738,16 +1338,19 @@ async function connectSync(){
   syncUrl = url; localStorage.setItem('evac-sync-url-soc', url);
   setSyncStatus(true);
   
-  if(records.length) await postToSync('import', { records });
+  if(records.length) await postToSync('import', { records: records });
   else await pullFromSync(true);
   
   if(pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(()=> pullFromSync(false), 5000);
+  pollTimer = setInterval(function(){ pullFromSync(false); }, 5000);
 }
 
 async function postToSync(action, payload){
   if(!syncUrl) return false;
-  try{ await fetch(syncUrl, { method: 'POST', body: JSON.stringify(Object.assign({action}, payload)) }); return true; }catch(e){ return false; }
+  try{ 
+    await fetch(syncUrl, { method: 'POST', body: JSON.stringify(Object.assign({action: action}, payload)) }); 
+    return true; 
+  }catch(e){ return false; }
 }
 
 async function pullFromSync(replaceEmpty){
@@ -759,53 +1362,27 @@ async function pullFromSync(replaceEmpty){
     if(!data || !data.ok) return;
 
     let changed = false;
-    const parseSafe = (v) => v === true || String(v).toLowerCase() === 'true';
+    const parseSafe = function(v) { return v === true || String(v).toLowerCase() === 'true'; };
 
     if(!records.length && replaceEmpty){
-      records = data.records.map(r => ({ ...r, safe: parseSafe(r.safe) })); changed = true;
+      records = data.records.map(function(r) { return Object.assign({}, r, {safe: parseSafe(r.safe)}); });
+      changed = true;
     } else {
-      data.records.forEach(remote=>{
-        const match = records.find(r => r.rfid === remote.rfid || r.id === remote.id);
+      data.records.forEach(function(remote){
+        const match = records.find(function(r) { return r.rfid === remote.rfid || r.id === remote.id; });
         const isRemoteSafe = parseSafe(remote.safe);
         if(match) {
           if(match.safe !== isRemoteSafe && (Date.now() - (match.lastModified||0) > 15000)) { match.safe = isRemoteSafe; changed = true; }
-        } else { records.push({ ...remote, safe: isRemoteSafe }); changed = true; }
+        } else { 
+          records.push(Object.assign({}, remote, {safe: isRemoteSafe})); 
+          changed = true; 
+        }
       });
     }
     if(changed){ renderTable(); updateStats(); }
   }catch(e){ syncInFlight = false; }
 }
 
-['searchBox','locationFilter','statusFilter'].forEach(id => {
-  document.getElementById(id).addEventListener('input', (e)=>{
-    if(id==='searchBox') searchTerm = e.target.value.trim().toLowerCase();
-    if(id==='locationFilter') locFilter = e.target.value;
-    if(id==='statusFilter') statusFilterVal = e.target.value;
-    renderTable();
-  });
-});
-
-document.getElementById('btnResetAll').addEventListener('click', ()=>{
-  if(!records.length || !confirm('تنبيه: هل أنت متأكد من تصفير النظام لإعلان إخلاء جديد؟')) return;
-  records.forEach(r=> { r.safe = false; r.lastModified = Date.now(); });
-  resetEvacTimer(); renderTable(); updateStats();
-  if(syncUrl) postToSync('reset', {});
-});
-
-document.getElementById('btnExportSafe').addEventListener('click', ()=>{
-  const safeList = records.filter(r=>r.safe);
-  if(!safeList.length){ alert('لا يوجد موظفون في نقاط التجمع للتصدير.'); return; }
-  const csv = '\uFEFFRFID,الرقم,الاسم,القسم\n' + safeList.map(r => `${r.rfid},${r.id},"${r.name}",${r.dept||r.location}`).join('\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
-  a.download = `SOC_Evac_Report_${new Date().toISOString().slice(0,10)}.csv`; a.click();
-});
-
-document.getElementById('btnConnectSync').addEventListener('click', connectSync);
-
-initDashboard();
-const savedUrl = localStorage.getItem('evac-sync-url-soc');
-if(savedUrl) { document.getElementById('syncUrlInput').value = savedUrl; connectSync(); }
-
-</script>
-</body>
-</html>
+['searchBox','locationFilter','statusFilter'].forEach(function(id) {
+  document.getElementById(id).addEventListener('input', function(e){
+    if
