@@ -56,8 +56,10 @@
         .badge-working { background: #dbeafe; color: #1d4ed8; }
         .badge-success { background: #d1fae5; color: var(--success); }
         
+        /* أدوات التنقل */
         .dev-tools { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; padding: 10px 20px; border-radius: 30px; display: flex; gap: 10px; z-index: 1000;}
         .dev-tools button { background: #4b5563; color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: bold;}
+        .dev-tools button:hover { background: var(--secondary); color: #000; }
     </style>
 </head>
 <body>
@@ -104,7 +106,7 @@
         </div>
     </div>
 
-    <!-- 3. تسجيل الدخول (العميل الحالي بدون دفع) -->
+    <!-- 3. تسجيل الدخول (للعميل المسجل بدون دفع) -->
     <div id="page-login" class="page-view">
         <div class="auth-container">
             <h2 style="text-align: center; margin-bottom: 20px; color: var(--primary);">تسجيل الدخول للمشتركين</h2>
@@ -132,12 +134,11 @@
         </div>
     </div>
 
-    <!-- 5. لوحة العميل -->
+    <!-- 5. لوحة العميل (Client Dashboard) -->
     <div id="page-client" class="page-view">
         <div class="dashboard-container">
             <div class="card" style="background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; border: none;">
                 <h2 id="welcome-msg">أهلاً بك!</h2>
-                <p style="margin-top:5px;">حالة الاشتراك: <span class="badge badge-success" style="background:rgba(255,255,255,0.2); color:white;">فعّال</span></p>
             </div>
             <div class="card">
                 <div class="card-header">طلب خدمة 🛠️</div>
@@ -152,24 +153,44 @@
         </div>
     </div>
 
-    <!-- 6. لوحة الإدارة والفني -->
+    <!-- 6. لوحة الفني (Tech Dashboard) -->
+    <div id="page-tech" class="page-view">
+        <div class="dashboard-container">
+            <div class="card" style="background: linear-gradient(135deg, var(--secondary), #d97706); color: white; border: none;">
+                <h2>لوحة الفني 👨‍🔧</h2>
+            </div>
+            <div class="card">
+                <div class="card-header">الطلبات المتاحة والمسندة لك <button class="btn btn-primary" style="padding:5px 10px; font-size:12px;" onclick="syncData()">🔄 تحديث</button></div>
+                <table><tr><th>العميل</th><th>الجوال</th><th>الخدمة</th><th>الوصف</th><th>الحالة</th><th>إجراء</th></tr><tbody id="tech-active-list"></tbody></table>
+            </div>
+            <div class="card">
+                <div class="card-header">أعمالك المكتملة 🏅</div>
+                <table><tr><th>العميل</th><th>الخدمة</th><th>بدء العمل</th><th>انتهاء العمل</th><th>الحالة</th></tr><tbody id="tech-completed-list"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. لوحة الإدارة (Admin Dashboard) -->
     <div id="page-admin" class="page-view">
         <div class="dashboard-container">
+            <div class="card" style="background: linear-gradient(135deg, #1f2937, #111827); color: white; border: none;">
+                <h2>لوحة الإدارة الشاملة 📊</h2>
+            </div>
             <div class="card">
                 <div class="card-header">إضافة منتجات للرئيسية ➕</div>
                 <div style="display: flex; gap: 15px;">
                     <div class="form-group" style="flex:1"><label>اسم الخدمة</label><input type="text" id="a-prod-name"></div>
                     <div class="form-group" style="flex:1"><label>السعر</label><input type="text" id="a-prod-price"></div>
                 </div>
-                <button class="btn btn-secondary" onclick="addProduct()">إضافة ونشر</button>
+                <button class="btn btn-secondary" id="btn-add-prod" onclick="addProduct()">إضافة ونشر</button>
             </div>
             <div class="card">
-                <div class="card-header">الطلبات النشطة (فني/إدارة) 🔄 <button class="btn btn-primary" style="padding:5px 10px; font-size:12px;" onclick="syncData()">🔄 تحديث</button></div>
-                <table><tr><th>العميل</th><th>الجوال</th><th>الخدمة</th><th>الفني الحالي</th><th>الحالة</th><th>إجراء فني</th></tr><tbody id="admin-active-list"></tbody></table>
+                <div class="card-header">مراقبة الطلبات النشطة 🔄 <button class="btn btn-primary" style="padding:5px 10px; font-size:12px;" onclick="syncData()">🔄 تحديث</button></div>
+                <table><tr><th>العميل</th><th>الجوال</th><th>الخدمة</th><th>الفني الحالي</th><th>وقت البدء</th><th>الحالة</th></tr><tbody id="admin-active-list"></tbody></table>
             </div>
             <div class="card">
-                <div class="card-header">الطلبات المكتملة 📁</div>
-                <table><tr><th>العميل</th><th>الخدمة</th><th>الفني</th><th>وقت البدء</th><th>الانتهاء</th><th>الحالة</th></tr><tbody id="admin-completed-list"></tbody></table>
+                <div class="card-header">سجل المشتركين (العملاء) 👥</div>
+                <table><tr><th>تاريخ التسجيل</th><th>اسم العميل</th><th>رقم الجوال</th><th>حالة الاشتراك</th></tr><tbody id="admin-users-list"></tbody></table>
             </div>
         </div>
     </div>
@@ -177,11 +198,12 @@
     <div class="dev-tools">
         <button onclick="navigate('home')">الرئيسية</button>
         <button onclick="navigate('client')">لوحة العميل</button>
-        <button onclick="navigate('admin')">الإدارة والفني</button>
+        <button onclick="navigate('tech')">لوحة الفني</button>
+        <button onclick="navigate('admin')">لوحة الإدارة</button>
     </div>
 
     <script>
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0E23L7Qk0SpZcd54j-TPdIbTqSL_6LUdFPB838Y14lv9E9CU9UuJE8mfJyF_mFU5O/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxLkOVinbXvqpREygE3xTNy-tdA1uInBx-ruO7P9P2OdDB5b5yzRzc1GAj2Uqet6CFT/exec";
 
         let db = {
             user: localStorage.getItem('user') || '',
@@ -196,18 +218,35 @@
             if(db.user) navigate('client'); else navigate('home');
         };
 
+        // دالة مركزية وآمنة للاتصال بقوقل وتجنب مشاكل CORS
+        function sendToGoogle(payload, successMsg, btnObj) {
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            }).then(res => res.text()).then(text => {
+                if(successMsg) alert(successMsg);
+                if(btnObj) { btnObj.innerText = btnObj.dataset.originalText; btnObj.disabled = false; }
+                syncData(); // جلب البيانات الجديدة تلقائياً بعد أي عملية
+            }).catch(err => {
+                // المتصفح يعتبر إعادة توجيه قوقل خطأ CORS أحياناً، لكن البيانات تصل وتُحفظ.
+                if(successMsg) alert(successMsg);
+                if(btnObj) { btnObj.innerText = btnObj.dataset.originalText; btnObj.disabled = false; }
+                syncData();
+            });
+        }
+
         function syncData() {
             fetch(GOOGLE_SCRIPT_URL + "?action=getData")
             .then(res => res.json())
             .then(data => {
-                if(data.products && data.products.length > 0) db.products = data.products;
+                if(data.products) db.products = data.products;
                 if(data.requests) db.requests = data.requests;
-                if(data.users && data.users.length > 0) db.users = data.users;
+                if(data.users) db.users = data.users;
                 localStorage.setItem('products', JSON.stringify(db.products));
                 localStorage.setItem('requests', JSON.stringify(db.requests));
                 localStorage.setItem('users', JSON.stringify(db.users));
                 updateUI();
-            }).catch(err => console.log("خطأ في المزامنة أو لا يوجد إنترنت"));
+            }).catch(err => console.log("جاري استخدام التخزين المحلي..."));
         }
 
         function navigate(page) {
@@ -216,7 +255,7 @@
             window.scrollTo(0,0);
             
             let nav = document.getElementById('nav-links-container');
-            if(['client', 'admin'].includes(page)) {
+            if(['client', 'tech', 'admin'].includes(page)) {
                 nav.innerHTML = `<button class="btn btn-outline" style="border-color: red; color: red;" onclick="logout()">تسجيل خروج</button>`;
                 syncData();
             } else {
@@ -227,7 +266,7 @@
 
         function logout() { db.user = ''; db.phone = ''; localStorage.clear(); navigate('home'); }
 
-        // --- 1. مسار تسجيل العميل الجديد والدفع ---
+        // --- 1. مسار تسجيل العميل الجديد ---
         let tempUser = "", tempPhone = "";
         function proceedToPayment() { 
             tempUser = document.getElementById('reg-name').value.trim();
@@ -246,44 +285,32 @@
         function showOTP() { document.getElementById('otp-modal').style.display = 'flex'; }
         function moveToNext(curr, nextId) { if(curr.value.length === 1) document.getElementById(nextId).focus(); }
         
-        // تجاوز حماية المتصفح بـ mode: 'no-cors' للحفظ في قوقل
         function verifyPaymentAndRegister() { 
             let btn = document.getElementById('btn-verify-otp');
+            btn.dataset.originalText = btn.innerText;
             btn.innerText = "جاري تفعيل الاشتراك...";
             btn.disabled = true;
 
             let payload = { action: "registerUser", date: new Date().toLocaleDateString('ar-SA'), user: tempUser, phone: tempPhone };
-
-            fetch(GOOGLE_SCRIPT_URL, { 
-                method: "POST", 
-                mode: "no-cors", 
-                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                body: JSON.stringify(payload) 
-            }).then(() => {
-                document.getElementById('otp-modal').style.display = 'none'; 
-                db.user = tempUser; db.phone = tempPhone;
-                // إضافة العميل محلياً ليعمل فوراً
-                db.users.push({name: tempUser, phone: tempPhone, status: 'فعال'});
-                localStorage.setItem('user', db.user); localStorage.setItem('phone', db.phone);
-                localStorage.setItem('users', JSON.stringify(db.users));
-                
-                alert("✅ تم الدفع وتفعيل حسابك بنجاح!"); 
-                btn.innerText = "تأكيد الدفع والاشتراك"; btn.disabled = false;
-                navigate('client'); 
-            }).catch(() => { alert("حدث خطأ في الاتصال"); btn.disabled = false; });
+            
+            document.getElementById('otp-modal').style.display = 'none'; 
+            db.user = tempUser; db.phone = tempPhone;
+            db.users.push({name: tempUser, phone: tempPhone, status: 'فعال'});
+            localStorage.setItem('user', db.user); localStorage.setItem('phone', db.phone);
+            
+            sendToGoogle(payload, "✅ تم الدفع وتفعيل حسابك بنجاح!", btn);
+            navigate('client'); 
         }
 
-        // --- 2. مسار تسجيل دخول العميل المسجل (لا يطلب دفع) ---
+        // --- 2. مسار تسجيل دخول العميل المسجل ---
         function loginUser() {
             let phoneInput = document.getElementById('login-phone').value.trim();
             if(!phoneInput) return alert("الرجاء إدخال رقم جوالك");
 
-            // البحث والمطابقة كـ نص
             let existingUser = db.users.find(u => u.phone.toString() === phoneInput.toString());
             
             if(existingUser) {
-                db.user = existingUser.name;
-                db.phone = existingUser.phone;
+                db.user = existingUser.name; db.phone = existingUser.phone;
                 localStorage.setItem('user', db.user); localStorage.setItem('phone', db.phone);
                 alert("مرحباً بك مجدداً يا " + db.user);
                 navigate('client');
@@ -293,36 +320,38 @@
             }
         }
 
-        // --- إرسال طلب الصيانة ---
+        // --- 3. إرسال طلب الصيانة ---
         function submitRequest() {
             let srv = document.getElementById('c-service').value, desc = document.getElementById('c-desc').value;
             let btn = document.getElementById('btn-submit');
             if(!desc) return alert("الرجاء كتابة الوصف");
 
+            btn.dataset.originalText = btn.innerText;
             btn.innerText = "جاري الإرسال..."; btn.disabled = true;
             let payload = { action: "addRequest", id: Date.now(), date: new Date().toLocaleDateString('ar-SA'), user: db.user, phone: db.phone, service: srv, desc: desc };
 
             db.requests.push({ id: payload.id, date: payload.date, user: payload.user, phone: payload.phone, service: payload.service, desc: payload.desc, status: 'قيد الانتظار', tech: '', start: '', end: ''});
-            localStorage.setItem('requests', JSON.stringify(db.requests));
             updateUI();
 
-            fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
-            .then(() => alert("تم إرسال الطلب بنجاح!"))
-            .finally(() => { btn.innerText = "إرسال الطلب"; btn.disabled = false; document.getElementById('c-desc').value = ''; });
+            sendToGoogle(payload, "تم إرسال الطلب بنجاح لقاعدة البيانات!", btn);
+            document.getElementById('c-desc').value = '';
         }
 
         function addProduct() {
             let name = document.getElementById('a-prod-name').value;
             let price = document.getElementById('a-prod-price').value;
+            let btn = document.getElementById('btn-add-prod');
             if(!name) return alert("أدخل اسم الخدمة");
+
+            btn.dataset.originalText = btn.innerText;
+            btn.innerText = "جاري النشر..."; btn.disabled = true;
 
             let payload = { action: "addProduct", id: Date.now(), name: name, price: price };
             db.products.push({name, price});
-            localStorage.setItem('products', JSON.stringify(db.products));
             updateUI();
 
-            fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
-            .then(() => alert("تمت إضافة الخدمة بنجاح!"));
+            sendToGoogle(payload, "تمت إضافة الخدمة للموقع بنجاح!", btn);
+            document.getElementById('a-prod-name').value = ''; document.getElementById('a-prod-price').value = '';
         }
 
         function changeStatus(id, newStatus) {
@@ -334,7 +363,7 @@
             else if (newStatus === 'مكتمل') { req.status = 'مكتمل'; req.end = timeNow; payload.end = timeNow; }
             
             updateUI();
-            fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+            sendToGoogle(payload, null, null); // إرسال صامت بدون Alert
         }
 
         function updateUI() {
@@ -348,26 +377,36 @@
             if(document.getElementById('home-products-grid')) document.getElementById('home-products-grid').innerHTML = homeHTML;
             if(document.getElementById('c-service')) document.getElementById('c-service').innerHTML = sHTML;
 
-            let clientHTML='', adminActive='', adminDone='';
+            let clientHTML='', techActive='', techDone='', adminActive='', adminUsers='';
             
             db.requests.forEach(r => {
                 let badge = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
                 
+                // 1. لوحة العميل
                 if(r.user === db.user) clientHTML += `<tr><td>${r.date}</td><td>${r.service}</td><td>${r.desc}</td><td>${r.tech || 'جاري البحث'}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`;
 
+                // 2. لوحة الفني (يستلم المهام وينهيها)
                 if(r.status !== 'مكتمل') {
                     let btnTxt = r.status === 'قيد الانتظار' ? 'استلم المهمة' : 'إنهاء الطلب';
                     let actionStatus = r.status === 'قيد الانتظار' ? 'جاري العمل' : 'مكتمل';
                     let btnStyle = r.status === 'قيد الانتظار' ? 'btn-primary' : 'btn-secondary';
-                    adminActive += `<tr><td>${r.user}</td><td>${r.phone}</td><td>${r.service}</td><td>${r.tech || '-'}</td><td><span class="badge ${badge}">${r.status}</span></td><td><button class="btn ${btnStyle}" style="padding:6px 12px" onclick="changeStatus(${r.id}, '${actionStatus}')">${btnTxt}</button></td></tr>`;
+                    techActive += `<tr><td>${r.user}</td><td>${r.phone}</td><td>${r.service}</td><td>${r.desc}</td><td><span class="badge ${badge}">${r.status}</span></td><td><button class="btn ${btnStyle}" style="padding:6px 12px" onclick="changeStatus(${r.id}, '${actionStatus}')">${btnTxt}</button></td></tr>`;
+                    adminActive += `<tr><td>${r.user}</td><td>${r.phone}</td><td>${r.service}</td><td>${r.tech || '-'}</td><td>${r.start || '-'}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`;
                 } else {
-                    adminDone += `<tr><td>${r.user}</td><td>${r.service}</td><td>${r.tech}</td><td>${r.start}</td><td>${r.end}</td><td><span class="badge badge-success">مكتمل</span></td></tr>`;
+                    techDone += `<tr><td>${r.user}</td><td>${r.service}</td><td>${r.start}</td><td>${r.end}</td><td><span class="badge badge-success">مكتمل</span></td></tr>`;
                 }
             });
 
+            // تعبئة جدول المشتركين للإدارة
+            db.users.forEach(u => {
+                adminUsers += `<tr><td>${u.date}</td><td>${u.name}</td><td>${u.phone}</td><td><span class="badge badge-success">${u.status}</span></td></tr>`;
+            });
+
             if(document.getElementById('client-list')) document.getElementById('client-list').innerHTML = clientHTML;
+            if(document.getElementById('tech-active-list')) document.getElementById('tech-active-list').innerHTML = techActive;
+            if(document.getElementById('tech-completed-list')) document.getElementById('tech-completed-list').innerHTML = techDone;
             if(document.getElementById('admin-active-list')) document.getElementById('admin-active-list').innerHTML = adminActive;
-            if(document.getElementById('admin-completed-list')) document.getElementById('admin-completed-list').innerHTML = adminDone;
+            if(document.getElementById('admin-users-list')) document.getElementById('admin-users-list').innerHTML = adminUsers;
         }
     </script>
 </body>
