@@ -3,320 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة خدمات السباكة والكهرباء</title>
+    <title>منصة صيانة+ | للإدارة والعملاء</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #0056b3;
-            --secondary: #ffc107;
-            --bg-color: #f4f7f6;
-            --text-dark: #333;
+            --primary: #1e3a8a; /* أزرق داكن احترافي */
+            --secondary: #f59e0b; /* برتقالي/ذهبي للتنبيهات والأزرار */
+            --bg: #f3f4f6;
             --white: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --success: #10b981;
+            --danger: #ef4444;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-dark);
-        }
-
-        /* شريط التنقل */
+        /* شريط التنقل العلوي */
         nav {
             background-color: var(--white);
-            padding: 15px 50px;
+            padding: 15px 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: sticky; top: 0; z-index: 100;
         }
+        .logo { font-size: 28px; font-weight: 800; color: var(--primary); }
+        .logo span { color: var(--secondary); }
+        
+        /* أزرار تبديل الصلاحيات (للتجربة) */
+        .role-switcher { display: flex; gap: 10px; background: #e5e7eb; padding: 5px; border-radius: 8px;}
+        .role-btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background: transparent; transition: 0.3s;}
+        .role-btn.active { background: var(--white); box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: var(--primary);}
 
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--primary);
-        }
+        /* الحاويات والبطاقات */
+        .container { padding: 40px 5%; max-width: 1200px; margin: auto; display: none; animation: fadeIn 0.4s ease-in-out; }
+        .active-page { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .nav-links a {
-            margin: 0 15px;
-            text-decoration: none;
-            color: var(--text-dark);
-            font-weight: bold;
-            cursor: pointer;
-        }
+        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); margin-bottom: 20px; }
+        .card-header { font-size: 20px; font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid var(--bg); padding-bottom: 10px;}
 
-        .btn-login {
-            background-color: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            padding: 8px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        /* النماذج والأزرار */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--text-muted); }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; font-size: 15px; transition: 0.3s; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
+        
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; display: inline-block; }
+        .btn-primary { background: var(--primary); color: var(--white); }
+        .btn-primary:hover { background: #152b66; }
+        .btn-secondary { background: var(--secondary); color: var(--white); }
+        
+        /* الجداول (للفني والمدير) */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #e5e7eb; }
+        th { background: var(--bg); color: var(--text-muted); }
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-working { background: #dbeafe; color: #1d4ed8; }
+        .badge-success { background: #d1fae5; color: #059669; }
 
-        /* البانر الرئيسي */
-        .hero {
-            background: linear-gradient(rgba(0, 86, 179, 0.8), rgba(0, 86, 179, 0.8)), url('https://images.unsplash.com/photo-1581094288338-2314dddb7ece?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover;
-            color: var(--white);
-            text-align: center;
-            padding: 100px 20px;
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-
-        .price-tag {
-            font-size: 2rem;
-            color: var(--secondary);
-            font-weight: bold;
-            margin-bottom: 30px;
-        }
-
-        .btn-primary {
-            background-color: var(--secondary);
-            color: var(--text-dark);
-            padding: 15px 40px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-primary:hover {
-            background-color: #e0a800;
-        }
-
-        /* قسم المميزات */
-        .features {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            padding: 50px;
-            flex-wrap: wrap;
-        }
-
-        .feature-card {
-            background: var(--white);
-            padding: 30px;
-            border-radius: 10px;
-            width: 300px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-
-        .feature-card h3 {
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-
-        /* لوحة العميل (مخفية افتراضياً) */
-        #dashboard {
-            display: none;
-            padding: 50px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .dashboard-header {
-            background: var(--white);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .status-active {
-            color: green;
-            font-weight: bold;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        /* الإشعارات الوهمية */
-        .toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 5px;
-            padding: 16px;
-            position: fixed;
-            z-index: 1;
-            left: 20px;
-            bottom: 30px;
-            font-size: 17px;
-        }
-
-        .toast.show {
-            visibility: visible;
-            animation: fadein 0.5s, fadeout 0.5s 4.5s;
-        }
-
-        @keyframes fadein {
-            from {bottom: 0; opacity: 0;}
-            to {bottom: 30px; opacity: 1;}
-        }
-
-        @keyframes fadeout {
-            from {bottom: 30px; opacity: 1;}
-            to {bottom: 0; opacity: 0;}
-        }
-
+        /* شبكة المنتجات */
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .product-card { border: 1px solid #e5e7eb; padding: 20px; border-radius: 10px; text-align: center; }
+        .product-price { font-size: 24px; color: var(--secondary); font-weight: bold; margin: 10px 0; }
     </style>
 </head>
 <body>
 
-    <!-- الإشعار المنبثق -->
-    <div id="toast" class="toast">رسالة الإشعار</div>
-
-    <!-- شريط التنقل -->
+    <!-- شريط التنقل العلوي مع محاكي الصلاحيات -->
     <nav>
-        <div class="logo">صيانة+</div>
-        <div class="nav-links" id="nav-links">
-            <a onclick="showPage('landing')">الرئيسية</a>
-            <a href="#features">المميزات</a>
-            <button class="btn-login" onclick="showPage('dashboard')">تسجيل الدخول</button>
+        <div class="logo">صيانة<span>+</span></div>
+        <div class="role-switcher">
+            <button class="role-btn active" onclick="switchRole('client', this)">لوحة العميل</button>
+            <button class="role-btn" onclick="switchRole('tech', this)">لوحة الفني</button>
+            <button class="role-btn" onclick="switchRole('admin', this)">لوحة الإدارة</button>
         </div>
     </nav>
 
-    <!-- الصفحة الرئيسية -->
-    <div id="landing-page">
-        <header class="hero">
-            <h1>ودّع أعطال المنزل المزعجة</h1>
-            <p style="font-size: 1.2rem; margin-bottom: 10px;">اشترك الآن في خدمات السباكة والكهرباء واستمتع براحة البال طوال العام</p>
-            <div class="price-tag">بـ 500 ريال فقط سنوياً</div>
-            <button class="btn-primary" onclick="simulatePayment()">اشترك الآن</button>
-        </header>
-
-        <section id="features" class="features">
-            <div class="feature-card">
-                <h3>زيارات طوال العام</h3>
-                <p>اطلب الخدمة متى ما احتجت دون دفع رسوم فحص إضافية طوال فترة اشتراكك.</p>
-            </div>
-            <div class="feature-card">
-                <h3>فنيون معتمدون</h3>
-                <p>فريقنا مدرب ومؤهل بأعلى المعايير لضمان جودة وأمان الإصلاحات.</p>
-            </div>
-            <div class="feature-card">
-                <h3>سرعة الاستجابة</h3>
-                <p>نصلك في أسرع وقت داخل المدينة لمعالجة الحالات الطارئة.</p>
-            </div>
-        </section>
-    </div>
-
-    <!-- لوحة العميل (تظهر بعد الاشتراك أو تسجيل الدخول) -->
-    <div id="dashboard">
-        <div class="dashboard-header">
-            <div>
-                <h2>أهلاً بك، عميلنا العزيز</h2>
-                <p>حالة الاشتراك: <span class="status-active">فعّال (ينتهي في 2027)</span></p>
-            </div>
-            <button class="btn-login" style="border-color: red; color: red;" onclick="showPage('landing')">تسجيل الخروج</button>
+    <!-- 1. لوحة العميل (الواجهة الافتراضية) -->
+    <div id="client-page" class="container active-page">
+        <div class="card" style="background: linear-gradient(135deg, var(--primary), #3b82f6); color: white;">
+            <h2>أهلاً بك، محمد! </h2>
+            <p style="margin-top: 10px;">حالة اشتراكك السنوي: <span class="badge badge-success">فعّال</span> | الباقة الشاملة</p>
         </div>
 
-        <div style="background: var(--white); padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <h3 style="margin-bottom: 20px; color: var(--primary);">🔧 طلب خدمة جديدة</h3>
-            
+        <div class="card">
+            <div class="card-header">طلب صيانة جديد</div>
             <div class="form-group">
-                <label>نوع الخدمة المطلوبة:</label>
-                <select id="service-type">
-                    <option value="سباكة">سباكة (تسريب، سخان، خلاطات...)</option>
-                    <option value="كهرباء">كهرباء (أفياش، إنارة، التماس...)</option>
+                <label>نوع الخدمة:</label>
+                <select id="c-service">
+                    <option>سباكة</option>
+                    <option>كهرباء</option>
+                    <option>تكييف</option>
                 </select>
             </div>
-
             <div class="form-group">
-                <label>وصف المشكلة:</label>
-                <textarea id="issue-desc" rows="4" placeholder="اشرح العطل هنا باختصار..."></textarea>
+                <label>وصف المشكلة (الرجاء التوضيح بدقة):</label>
+                <textarea id="c-desc" rows="3"></textarea>
             </div>
+            <button class="btn btn-secondary" onclick="addRequest()">إرسال الطلب الآن</button>
+        </div>
 
-            <button class="btn-primary" onclick="submitRequest()">إرسال الطلب</button>
+        <div class="card">
+            <div class="card-header">طلباتي السابقة</div>
+            <table>
+                <tr><th>التاريخ</th><th>الخدمة</th><th>الوصف</th><th>الحالة</th></tr>
+                <tbody id="client-requests-list">
+                    <!-- سيتم تعبئتها بالجافاسكربت -->
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- أكواد الجافاسكربت للتفاعل -->
+    <!-- 2. لوحة الفني -->
+    <div id="tech-page" class="container">
+        <div class="card">
+            <div class="card-header">الطلبات المسندة إليك (مهام اليوم)</div>
+            <table>
+                <tr><th>العميل</th><th>الخدمة</th><th>التفاصيل</th><th>الحالة</th><th>إجراء</th></tr>
+                <tbody id="tech-requests-list">
+                    <!-- سيتم تعبئتها بالجافاسكربت -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 3. لوحة الإدارة (الآدمن) -->
+    <div id="admin-page" class="container">
+        <div class="card">
+            <div class="card-header">إضافة باقة / منتج جديد</div>
+            <div style="display: flex; gap: 15px;">
+                <div class="form-group" style="flex: 1;"><label>اسم المنتج/الباقة</label><input type="text" id="a-prod-name"></div>
+                <div class="form-group" style="flex: 1;"><label>السعر (ريال)</label><input type="number" id="a-prod-price"></div>
+            </div>
+            <div class="form-group"><label>وصف المزايا</label><input type="text" id="a-prod-desc"></div>
+            <button class="btn btn-primary" onclick="addProduct()">حفظ المنتج</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">المنتجات والباقات الحالية</div>
+            <div class="products-grid" id="products-list">
+                <!-- سيتم تعبئتها بالجافاسكربت -->
+            </div>
+        </div>
+    </div>
+
     <script>
-        // دالة التنقل بين الصفحات
-        function showPage(page) {
-            document.getElementById('landing-page').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'none';
+        // --- محاكاة قاعدة البيانات (Local Storage) ليعمل النظام فوراً ---
+        // ملاحظة: لربط Google Sheets، ستقوم باستبدال الدوال بـ fetch() إلى رابط الـ Web App الخاص بك.
+
+        let requestsDB = JSON.parse(localStorage.getItem('requests')) || [
+            { id: 1, date: '2026-07-17', user: 'محمد', service: 'كهرباء', desc: 'التماس في صالة الجلوس', status: 'قيد الانتظار' }
+        ];
+
+        let productsDB = JSON.parse(localStorage.getItem('products')) || [
+            { name: 'اشتراك السباكة والكهرباء', price: '500', desc: 'زيارات لامحدودة لمدة سنة' }
+        ];
+
+        // 1. التنقل بين الصفحات
+        function switchRole(role, btn) {
+            document.querySelectorAll('.container').forEach(p => p.classList.remove('active-page'));
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(role + '-page').classList.add('active-page');
+            btn.classList.add('active');
+            refreshUI();
+        }
+
+        // 2. إضافة طلب (لوحة العميل)
+        function addRequest() {
+            let service = document.getElementById('c-service').value;
+            let desc = document.getElementById('c-desc').value;
             
-            if(page === 'landing') {
-                document.getElementById('landing-page').style.display = 'block';
-            } else if (page === 'dashboard') {
-                document.getElementById('dashboard').style.display = 'block';
-            }
-            window.scrollTo(0,0);
+            if(!desc) return alert("يرجى كتابة الوصف");
+
+            // هنا تضع كود (fetch) لـ Google Sheets لاحقاً. حالياً سنحفظ محلياً:
+            requestsDB.push({
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                user: 'محمد',
+                service: service,
+                desc: desc,
+                status: 'قيد الانتظار'
+            });
+            localStorage.setItem('requests', JSON.stringify(requestsDB));
+            
+            document.getElementById('c-desc').value = '';
+            alert("تم إرسال طلبك بنجاح!");
+            refreshUI();
         }
 
-        // محاكاة عملية الدفع والاشتراك
-        function simulatePayment() {
-            let confirmSub = confirm("سيتم توجيهك الآن لبوابة الدفع لدفع مبلغ 500 ريال.\nهل ترغب بالمتابعة؟");
-            if(confirmSub) {
-                showToast("✅ تمت عملية الدفع بنجاح! تم تفعيل اشتراكك السنوي.");
-                setTimeout(() => {
-                    showPage('dashboard');
-                }, 2000);
-            }
+        // 3. إضافة منتج (لوحة الإدارة)
+        function addProduct() {
+            let name = document.getElementById('a-prod-name').value;
+            let price = document.getElementById('a-prod-price').value;
+            let desc = document.getElementById('a-prod-desc').value;
+
+            if(!name || !price) return alert("يرجى إدخال الاسم والسعر");
+
+            productsDB.push({ name, price, desc });
+            localStorage.setItem('products', JSON.stringify(productsDB));
+
+            document.getElementById('a-prod-name').value = '';
+            document.getElementById('a-prod-price').value = '';
+            document.getElementById('a-prod-desc').value = '';
+            alert("تم إضافة المنتج بنجاح!");
+            refreshUI();
         }
 
-        // محاكاة إرسال طلب الخدمة واستقبال الإشعار
-        function submitRequest() {
-            let service = document.getElementById('service-type').value;
-            let desc = document.getElementById('issue-desc').value;
-
-            if(desc.trim() === '') {
-                alert("الرجاء كتابة وصف للمشكلة أولاً");
-                return;
-            }
-
-            // محاكاة إشعار الفايربيس (إشعار العميل)
-            showToast("🔔 تم رفع طلب الـ " + service + " بنجاح. جاري البحث عن فني...");
-            document.getElementById('issue-desc').value = ''; // تفريغ الحقل
-
-            // محاكاة إشعار تعيين الفني بعد 4 ثواني
-            setTimeout(() => {
-                showToast("👷‍♂️ الفني 'أحمد' استلم طلبك وهو في الطريق إليك!");
-            }, 4000);
+        // 4. تغيير حالة الطلب (لوحة الفني)
+        function changeStatus(id) {
+            let req = requestsDB.find(r => r.id == id);
+            if(req.status === 'قيد الانتظار') req.status = 'جاري العمل';
+            else if(req.status === 'جاري العمل') req.status = 'مكتمل';
+            
+            localStorage.setItem('requests', JSON.stringify(requestsDB));
+            refreshUI();
         }
 
-        // دالة عرض الإشعارات أسفل الشاشة
-        function showToast(message) {
-            var toast = document.getElementById("toast");
-            toast.innerText = message;
-            toast.className = "toast show";
-            setTimeout(function(){ 
-                toast.className = toast.className.replace("show", ""); 
-            }, 3000);
+        // 5. تحديث الواجهات بالبيانات
+        function refreshUI() {
+            // تحديث جدول العميل
+            let cHtml = '';
+            requestsDB.forEach(r => {
+                let badgeClass = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
+                cHtml += `<tr><td>${r.date}</td><td>${r.service}</td><td>${r.desc}</td><td><span class="badge ${badgeClass}">${r.status}</span></td></tr>`;
+            });
+            document.getElementById('client-requests-list').innerHTML = cHtml;
+
+            // تحديث جدول الفني
+            let tHtml = '';
+            requestsDB.forEach(r => {
+                let badgeClass = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
+                let btnTxt = r.status === 'قيد الانتظار' ? 'ابدأ العمل' : (r.status === 'جاري العمل' ? 'إنهاء الطلب' : 'مغلق');
+                let btnDisabled = r.status === 'مكتمل' ? 'disabled style="background:#ccc"' : '';
+                
+                tHtml += `<tr><td>${r.user}</td><td>${r.service}</td><td>${r.desc}</td>
+                          <td><span class="badge ${badgeClass}">${r.status}</span></td>
+                          <td><button class="btn btn-primary" style="padding: 5px 10px; font-size:12px;" onclick="changeStatus(${r.id})" ${btnDisabled}>${btnTxt}</button></td></tr>`;
+            });
+            document.getElementById('tech-requests-list').innerHTML = tHtml;
+
+            // تحديث منتجات الآدمن
+            let pHtml = '';
+            productsDB.forEach(p => {
+                pHtml += `<div class="product-card">
+                            <h3>${p.name}</h3>
+                            <div class="product-price">${p.price} ر.س</div>
+                            <p style="color:var(--text-muted); font-size:14px;">${p.desc}</p>
+                          </div>`;
+            });
+            document.getElementById('products-list').innerHTML = pHtml;
         }
+
+        // تشغيل التحديث عند فتح الصفحة
+        refreshUI();
     </script>
 </body>
 </html>
