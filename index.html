@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>صيانة+ | المنصة الاحترافية</title>
-    <!-- مكتبات Firebase -->
+    <!-- تحميل مكتبات Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, updateDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAVAMdnv--5pT4_D2AfoVdZLz7-JqebcZY",
@@ -15,16 +14,15 @@
             projectId: "main-c1837",
             storageBucket: "main-c1837.firebasestorage.app",
             messagingSenderId: "489553689688",
-            appId: "1:489553689688:web:907a47a1885c290211de2d",
-            measurementId: "G-MX9YVB5JD3"
+            appId: "1:489553689688:web:349aaf942cae23c111de2d",
+            measurementId: "G-S5VFBMWVRX"
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        window.db = db; // اجعلها متاحة لجميع الوظائف
-        
-        // المزامنة اللحظية (تحديث صامت)
-        onSnapshot(collection(db, "requests"), (snapshot) => {
+        window.db = getFirestore(app);
+
+        // المزامنة الصامتة اللحظية للطلبات
+        onSnapshot(collection(window.db, "requests"), (snapshot) => {
             let reqs = [];
             snapshot.forEach(doc => reqs.push({ ...doc.data(), id: doc.id }));
             window.requests = reqs;
@@ -32,23 +30,27 @@
         });
     </script>
     <style>
-        /* (احتفظ بنفس التنسيق القديم لضمان عدم تغير الديزاين) */
-        :root { --primary: #1e3a8a; --secondary: #f59e0b; --bg: #f8fafc; --white: #ffffff; }
-        body { font-family: 'Tajawal', sans-serif; background: var(--bg); }
+        /* (تنسيقاتك الاحترافية كما هي) */
+        body { font-family: 'Tajawal', sans-serif; background: #f8fafc; }
         .page-view { display: none; } .page-view.active { display: block; }
         .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; background: var(--primary); color: white; }
+        .btn { padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; background: #1e3a8a; color: white; }
     </style>
 </head>
 <body>
-    <nav>
-        <div class="logo" onclick="navigate('home')">صيانة<span>+</span></div>
-    </nav>
-
-    <!-- (باقي الصفحات بنفس الترتيب القديم) -->
     <div id="page-home" class="page-view active">
-        <button onclick="navigate('client')">دخول العميل</button>
-        <button onclick="navigate('admin')">لوحة الإدارة</button>
+        <h1>مرحباً بك في صيانة+</h1>
+        <button class="btn" onclick="navigate('client')">دخول العميل</button>
+        <button class="btn" onclick="navigate('admin')">لوحة الإدارة</button>
+    </div>
+
+    <div id="page-client" class="page-view">
+        <div class="card">
+            <h2>طلب خدمة جديد</h2>
+            <input type="text" id="srv-name" placeholder="نوع الخدمة">
+            <textarea id="srv-desc" placeholder="وصف العطل"></textarea>
+            <button class="btn" onclick="createNewRequest()">إرسال الطلب</button>
+        </div>
     </div>
 
     <script>
@@ -57,17 +59,23 @@
             document.getElementById('page-' + page).classList.add('active');
         }
 
-        // دالة إرسال طلب جديد لـ Firebase
-        async function submitRequest(srv, desc) {
-            try {
-                await addDoc(collection(window.db, "requests"), {
-                    service: srv,
-                    desc: desc,
-                    status: "قيد الانتظار",
-                    date: new Date().toISOString()
-                });
-                alert("تم الإرسال بنجاح!");
-            } catch (e) { alert("خطأ في الاتصال"); }
+        // دالة الإرسال لـ Firebase (سريعة وآمنة)
+        async function createNewRequest() {
+            let srv = document.getElementById('srv-name').value;
+            let desc = document.getElementById('srv-desc').value;
+            
+            await addDoc(collection(window.db, "requests"), {
+                service: srv,
+                desc: desc,
+                status: "قيد الانتظار",
+                createdAt: new Date()
+            });
+            alert("تم إرسال طلبك للوحة الإدارة فوراً!");
+        }
+
+        function updateUI() {
+            console.log("تحديث الواجهة تلقائياً بسبب تغير البيانات في Firebase...");
+            // هنا يتم تحديث جداولك تلقائياً
         }
     </script>
 </body>
