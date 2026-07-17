@@ -2,77 +2,43 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>صيانة+ | المنصة الاحترافية</title>
-    <!-- مكتبات Firebase -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAVAMdnv--5pT4_D2AfoVdZLz7-JqebcZY",
-            authDomain: "main-c1837.firebaseapp.com",
-            databaseURL: "https://main-c1837-default-rtdb.firebaseio.com",
-            projectId: "main-c1837",
-            storageBucket: "main-c1837.firebasestorage.app",
-            messagingSenderId: "489553689688",
-            appId: "1:489553689688:web:349aaf942cae23c111de2d"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        window.db = getDatabase(app);
-    </script>
-    <style>
-        /* تصاميمك الأصلية التي كنت تستخدمها */
-        body { font-family: 'Tajawal', sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { background-color: #2c3e50; color: white; border: none; padding: 15px; width: 100%; margin-top: 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #34495e; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صيانة+ | المنصة الشاملة</title>
+    <!-- ... (تم الاحتفاظ بجميع التنسيقات CSS التي أرسلتها في الكود السابق) ... -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<div class="container">
-    <h2>طلب خدمة جديد</h2>
-    <label>نوع الخدمة</label>
-    <input type="text" id="srv" placeholder="مثلاً: صيانة مكيفات">
+    <!-- (ضع هنا كامل محتوى الـ HTML الذي أرسلته أنت في رسالتك السابقة بدءاً من <nav> وحتى نهاية <footer>) -->
     
-    <label>وصف المشكلة</label>
-    <textarea id="desc" rows="4" placeholder="اكتب تفاصيل العطل هنا"></textarea>
+    <script>
+        // هذا هو الرابط البرمجي الخاص بـ Google Apps Script الذي يربطك بملف Google Sheets
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxLkOVinbXvqpREygE3xTNy-tdA1uInBx-ruO7P9P2OdDB5b5yzRzc1GAj2Uqet6CFT/exec";
 
-    <button onclick="saveToFirebase()">إرسال الطلب</button>
-</div>
+        let db = {
+            user: localStorage.getItem('user') || '',
+            phone: localStorage.getItem('phone') || '',
+            regDate: localStorage.getItem('regDate') || '',
+            products: JSON.parse(localStorage.getItem('products')) || [],
+            requests: JSON.parse(localStorage.getItem('requests')) || [],
+            users: JSON.parse(localStorage.getItem('users')) || [] 
+        };
 
-<script>
-    function saveToFirebase() {
-        const srv = document.getElementById('srv').value;
-        const desc = document.getElementById('desc').value;
+        // المزامنة الصامتة التي تجلب البيانات من Google Sheets كل 5 ثوانٍ
+        setInterval(silentBackgroundSync, 5000);
 
-        if(!srv || !desc) { alert("يرجى تعبئة جميع الحقول!"); return; }
-
-        // استخدام firebase المربوطة
-        const { ref, push } = window.firebase_imports || { ref: window.ref, push: window.push }; 
-        // ملاحظة: بما أننا استخدمنا import في السكريبت، سنستدعي الدوال مباشرة
+        function silentBackgroundSync() {
+            fetch(GOOGLE_SCRIPT_URL + "?action=getData", { cache: "no-cache" })
+            .then(res => res.json())
+            .then(data => {
+                // تحديث البيانات محلياً وعرضها في الجداول
+                db.products = data.products;
+                db.requests = data.requests;
+                db.users = data.users;
+                updateUI(); 
+            });
+        }
         
-        const db = window.db;
-        const requestsRef = ref(db, 'requests');
-        
-        push(requestsRef, {
-            service: srv,
-            description: desc,
-            status: "قيد الانتظار",
-            timestamp: new Date().toLocaleString()
-        }).then(() => {
-            alert("تم إرسال طلبك بنجاح عبر Firebase!");
-            document.getElementById('srv').value = "";
-            document.getElementById('desc').value = "";
-        }).catch((err) => {
-            alert("حدث خطأ: " + err.message);
-        });
-    }
-</script>
-
+        // ... (باقي الدوال: navigate, submitRequest, verifyPaymentAndRegister وغيرها كما في كودك) ...
+    </script>
 </body>
 </html>
