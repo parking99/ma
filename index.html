@@ -3,22 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة صيانة+ | للإدارة والعملاء</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+    <title>صيانة+ | المنصة الشاملة لخدمات الصيانة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1e3a8a; /* أزرق داكن احترافي */
-            --secondary: #f59e0b; /* برتقالي/ذهبي للتنبيهات والأزرار */
-            --bg: #f3f4f6;
+            --primary: #1e3a8a; /* أزرق داكن */
+            --primary-hover: #152b66;
+            --secondary: #f59e0b; /* برتقالي/ذهبي */
+            --secondary-hover: #d97706;
+            --bg: #f8fafc;
             --white: #ffffff;
             --text-main: #1f2937;
             --text-muted: #6b7280;
             --success: #10b981;
-            --danger: #ef4444;
+            --border: #e2e8f0;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { background-color: var(--bg); color: var(--text-main); }
+        body { background-color: var(--bg); color: var(--text-main); line-height: 1.6; }
 
         /* شريط التنقل العلوي */
         nav {
@@ -30,237 +32,372 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             position: sticky; top: 0; z-index: 100;
         }
-        .logo { font-size: 28px; font-weight: 800; color: var(--primary); }
+        .logo { font-size: 28px; font-weight: 800; color: var(--primary); cursor: pointer;}
         .logo span { color: var(--secondary); }
         
-        /* أزرار تبديل الصلاحيات (للتجربة) */
-        .role-switcher { display: flex; gap: 10px; background: #e5e7eb; padding: 5px; border-radius: 8px;}
-        .role-btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background: transparent; transition: 0.3s;}
-        .role-btn.active { background: var(--white); box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: var(--primary);}
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--text-main); font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .nav-links a:hover { color: var(--primary); }
 
-        /* الحاويات والبطاقات */
-        .container { padding: 40px 5%; max-width: 1200px; margin: auto; display: none; animation: fadeIn 0.4s ease-in-out; }
-        .active-page { display: block; }
+        /* أزرار عامة */
+        .btn { padding: 10px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 16px; transition: 0.3s; text-align: center; }
+        .btn-primary { background: var(--primary); color: var(--white); }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-secondary { background: var(--secondary); color: var(--white); }
+        .btn-secondary:hover { background: var(--secondary-hover); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: var(--white); }
+
+        /* حاويات الصفحات (واحدة فقط تظهر في كل مرة) */
+        .page-view { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .page-view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); margin-bottom: 20px; }
-        .card-header { font-size: 20px; font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid var(--bg); padding-bottom: 10px;}
+        /* 1. الصفحة الرئيسية (Hero Section) */
+        .hero {
+            background: linear-gradient(to left, rgba(30, 58, 138, 0.9), rgba(30, 58, 138, 0.7)), url('https://images.unsplash.com/photo-1581094288338-2314dddb7ece?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover;
+            color: var(--white);
+            text-align: center;
+            padding: 100px 20px;
+            min-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .hero h1 { font-size: 3.5rem; margin-bottom: 20px; font-weight: 800; }
+        .hero p { font-size: 1.3rem; margin-bottom: 40px; max-width: 600px; }
+        .features-row { display: flex; gap: 30px; justify-content: center; margin-top: 50px; flex-wrap: wrap; }
+        .feature-box { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; backdrop-filter: blur(5px); width: 250px; }
 
-        /* النماذج والأزرار */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--text-muted); }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; font-size: 15px; transition: 0.3s; }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
+        /* 2. نماذج التسجيل والاشتراك */
+        .auth-container { max-width: 500px; margin: 60px auto; background: var(--white); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        .auth-header h2 { color: var(--primary); font-size: 24px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-main); font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 15px; transition: 0.3s; background: var(--bg); }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: var(--white); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
         
-        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; display: inline-block; }
-        .btn-primary { background: var(--primary); color: var(--white); }
-        .btn-primary:hover { background: #152b66; }
-        .btn-secondary { background: var(--secondary); color: var(--white); }
+        .price-card { background: #fffbeb; border: 2px solid var(--secondary); padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+        .price-card h3 { color: var(--secondary-hover); font-size: 28px; margin: 10px 0; }
+
+        /* 3. لوحات التحكم (العميل، الفني، الإدارة) */
+        .dashboard-container { padding: 40px 5%; max-width: 1200px; margin: auto; }
+        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); margin-bottom: 25px; border: 1px solid var(--border); }
+        .card-header { font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
         
-        /* الجداول (للفني والمدير) */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #e5e7eb; }
-        th { background: var(--bg); color: var(--text-muted); }
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        /* الجداول */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 16px; text-align: right; border-bottom: 1px solid var(--border); }
+        th { background: var(--bg); color: var(--text-muted); font-weight: 700; }
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; }
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-working { background: #dbeafe; color: #1d4ed8; }
         .badge-success { background: #d1fae5; color: #059669; }
 
-        /* شبكة المنتجات */
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .product-card { border: 1px solid #e5e7eb; padding: 20px; border-radius: 10px; text-align: center; }
-        .product-price { font-size: 24px; color: var(--secondary); font-weight: bold; margin: 10px 0; }
+        /* أداة تبديل الصلاحيات (للتجربة فقط) */
+        .dev-tools { position: fixed; bottom: 20px; right: 20px; background: #333; padding: 10px; border-radius: 8px; display: flex; gap: 10px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #555;}
+        .dev-tools button { background: #555; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold;}
+        .dev-tools button:hover { background: var(--secondary); }
     </style>
 </head>
 <body>
 
-    <!-- شريط التنقل العلوي مع محاكي الصلاحيات -->
+    <!-- شريط التنقل العلوي -->
     <nav>
-        <div class="logo">صيانة<span>+</span></div>
-        <div class="role-switcher">
-            <button class="role-btn active" onclick="switchRole('client', this)">لوحة العميل</button>
-            <button class="role-btn" onclick="switchRole('tech', this)">لوحة الفني</button>
-            <button class="role-btn" onclick="switchRole('admin', this)">لوحة الإدارة</button>
+        <div class="logo" onclick="navigate('home')">صيانة<span>+</span></div>
+        <div class="nav-links" id="nav-links-container">
+            <!-- سيتم تغيير الروابط بناءً على حالة تسجيل الدخول -->
+            <a onclick="navigate('home')">الرئيسية</a>
+            <a onclick="navigate('register')">الاشتراك السنوي</a>
+            <button class="btn btn-outline" onclick="navigate('login')">تسجيل الدخول</button>
         </div>
     </nav>
 
-    <!-- 1. لوحة العميل (الواجهة الافتراضية) -->
-    <div id="client-page" class="container active-page">
-        <div class="card" style="background: linear-gradient(135deg, var(--primary), #3b82f6); color: white;">
-            <h2>أهلاً بك، محمد! </h2>
-            <p style="margin-top: 10px;">حالة اشتراكك السنوي: <span class="badge badge-success">فعّال</span> | الباقة الشاملة</p>
-        </div>
-
-        <div class="card">
-            <div class="card-header">طلب صيانة جديد</div>
-            <div class="form-group">
-                <label>نوع الخدمة:</label>
-                <select id="c-service">
-                    <option>سباكة</option>
-                    <option>كهرباء</option>
-                    <option>تكييف</option>
-                </select>
+    <!-- 1. الصفحة الرئيسية (Home Page) -->
+    <div id="page-home" class="page-view active">
+        <section class="hero">
+            <h1>راحة بالك.. طوال العام</h1>
+            <p>اشترك الآن في الباقة السنوية لخدمات السباكة والكهرباء، واطلب الفني متى ما احتجت دون دفع رسوم زيارة إضافية.</p>
+            <button class="btn btn-secondary" style="font-size: 1.5rem; padding: 15px 40px;" onclick="navigate('register')">اشترك بـ 500 ريال فقط</button>
+            
+            <div class="features-row">
+                <div class="feature-box"><h3>🛠️ زيارات غير محدودة</h3><p style="font-size: 14px; margin-top: 10px; margin-bottom: 0;">أجور اليد والفحص مجانية طوال فترة اشتراكك.</p></div>
+                <div class="feature-box"><h3>⚡ استجابة سريعة</h3><p style="font-size: 14px; margin-top: 10px; margin-bottom: 0;">فريق فني جاهز لتلبية طلباتك الطارئة.</p></div>
+                <div class="feature-box"><h3>👨‍🔧 فنيون معتمدون</h3><p style="font-size: 14px; margin-top: 10px; margin-bottom: 0;">ضمان جودة العمل واحترافية عالية.</p></div>
             </div>
-            <div class="form-group">
-                <label>وصف المشكلة (الرجاء التوضيح بدقة):</label>
-                <textarea id="c-desc" rows="3"></textarea>
-            </div>
-            <button class="btn btn-secondary" onclick="addRequest()">إرسال الطلب الآن</button>
-        </div>
+        </section>
+    </div>
 
-        <div class="card">
-            <div class="card-header">طلباتي السابقة</div>
-            <table>
-                <tr><th>التاريخ</th><th>الخدمة</th><th>الوصف</th><th>الحالة</th></tr>
-                <tbody id="client-requests-list">
-                    <!-- سيتم تعبئتها بالجافاسكربت -->
-                </tbody>
-            </table>
+    <!-- 2. صفحة تسجيل حساب جديد (Register) -->
+    <div id="page-register" class="page-view">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h2>إنشاء حساب جديد</h2>
+                <p style="color: var(--text-muted);">الخطوة 1 من 2: إدخال بياناتك</p>
+            </div>
+            <div class="form-group"><label>الاسم الكامل</label><input type="text" id="reg-name" placeholder="مثال: عبدالله محمد"></div>
+            <div class="form-group"><label>رقم الجوال</label><input type="tel" id="reg-phone" placeholder="05XXXXXXXX"></div>
+            <div class="form-group"><label>المدينة / الحي</label><input type="text" id="reg-city" placeholder="الرياض - حي الملقا"></div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="proceedToPayment()">المتابعة للدفع</button>
+            <p style="text-align: center; margin-top: 20px; font-size: 14px;">لديك حساب؟ <a onclick="navigate('login')" style="color: var(--primary); cursor: pointer; font-weight: bold;">تسجيل الدخول</a></p>
         </div>
     </div>
 
-    <!-- 2. لوحة الفني -->
-    <div id="tech-page" class="container">
-        <div class="card">
-            <div class="card-header">الطلبات المسندة إليك (مهام اليوم)</div>
-            <table>
-                <tr><th>العميل</th><th>الخدمة</th><th>التفاصيل</th><th>الحالة</th><th>إجراء</th></tr>
-                <tbody id="tech-requests-list">
-                    <!-- سيتم تعبئتها بالجافاسكربت -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- 3. لوحة الإدارة (الآدمن) -->
-    <div id="admin-page" class="container">
-        <div class="card">
-            <div class="card-header">إضافة باقة / منتج جديد</div>
+    <!-- 3. صفحة الدفع والاشتراك (Payment) -->
+    <div id="page-payment" class="page-view">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h2>إتمام الاشتراك</h2>
+                <p style="color: var(--text-muted);">الخطوة 2 من 2: الدفع الإلكتروني</p>
+            </div>
+            <div class="price-card">
+                <p style="font-weight: bold;">الباقة السنوية الشاملة</p>
+                <h3>500 ر.س</h3>
+                <p style="font-size: 13px; color: var(--text-muted);">تشمل أجور اليد لفحص وصيانة السباكة والكهرباء</p>
+            </div>
+            <div class="form-group"><label>رقم البطاقة</label><input type="text" placeholder="XXXX XXXX XXXX XXXX"></div>
             <div style="display: flex; gap: 15px;">
-                <div class="form-group" style="flex: 1;"><label>اسم المنتج/الباقة</label><input type="text" id="a-prod-name"></div>
-                <div class="form-group" style="flex: 1;"><label>السعر (ريال)</label><input type="number" id="a-prod-price"></div>
+                <div class="form-group" style="flex: 1;"><label>تاريخ الانتهاء</label><input type="text" placeholder="MM/YY"></div>
+                <div class="form-group" style="flex: 1;"><label>رمز الحماية CVV</label><input type="password" placeholder="123"></div>
             </div>
-            <div class="form-group"><label>وصف المزايا</label><input type="text" id="a-prod-desc"></div>
-            <button class="btn btn-primary" onclick="addProduct()">حفظ المنتج</button>
+            <button class="btn btn-secondary" style="width: 100%; font-size: 18px;" onclick="completeSubscription()">ادفع الآن واشترك</button>
         </div>
+    </div>
 
-        <div class="card">
-            <div class="card-header">المنتجات والباقات الحالية</div>
-            <div class="products-grid" id="products-list">
-                <!-- سيتم تعبئتها بالجافاسكربت -->
+    <!-- 4. صفحة تسجيل الدخول (Login) -->
+    <div id="page-login" class="page-view">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h2>تسجيل الدخول</h2>
+                <p style="color: var(--text-muted);">مرحباً بعودتك إلى صيانة+</p>
+            </div>
+            <div class="form-group"><label>رقم الجوال</label><input type="tel" placeholder="05XXXXXXXX"></div>
+            <div class="form-group"><label>رمز التحقق (OTP)</label><input type="text" placeholder="سيصلك في رسالة نصية"></div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="loginUser()">دخول</button>
+        </div>
+    </div>
+
+    <!-- 5. لوحة العميل (Client Dashboard) -->
+    <div id="page-client" class="page-view">
+        <div class="dashboard-container">
+            <div class="card" style="background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; border: none;">
+                <h2 id="client-welcome-name">أهلاً بك!</h2>
+                <p style="margin-top: 10px;">حالة اشتراكك: <span class="badge badge-success">فعّال</span> | ينتهي في 2027</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">طلب خدمة صيانة</div>
+                <div class="form-group">
+                    <label>نوع الخدمة:</label>
+                    <select id="c-service">
+                        <option>سباكة</option>
+                        <option>كهرباء</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>وصف المشكلة بدقة:</label>
+                    <textarea id="c-desc" rows="3" placeholder="مثال: تسريب مياه من السخان في الحمام الرئيسي..."></textarea>
+                </div>
+                <button class="btn btn-secondary" onclick="addRequest()">إرسال الطلب الآن</button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">سجل طلباتي</div>
+                <table>
+                    <tr><th>التاريخ</th><th>الخدمة</th><th>الوصف</th><th>الحالة</th></tr>
+                    <tbody id="client-requests-list"></tbody>
+                </table>
             </div>
         </div>
+    </div>
+
+    <!-- 6. لوحة الفني (Tech Dashboard) -->
+    <div id="page-tech" class="page-view">
+        <div class="dashboard-container">
+            <div class="card">
+                <div class="card-header">الطلبات المسندة إليك (مهام اليوم)</div>
+                <table>
+                    <tr><th>العميل</th><th>الخدمة</th><th>التفاصيل</th><th>الحالة</th><th>إجراء</th></tr>
+                    <tbody id="tech-requests-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. لوحة الإدارة (Admin Dashboard) -->
+    <div id="page-admin" class="page-view">
+        <div class="dashboard-container">
+            <div class="card">
+                <div class="card-header">نظرة عامة (الإحصائيات)</div>
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex:1; background: var(--bg); padding: 20px; border-radius: 10px; text-align: center;">
+                        <h3 style="color: var(--primary); font-size: 30px;" id="stat-subs">0</h3><p>المشتركين</p>
+                    </div>
+                    <div style="flex:1; background: var(--bg); padding: 20px; border-radius: 10px; text-align: center;">
+                        <h3 style="color: var(--secondary); font-size: 30px;" id="stat-reqs">0</h3><p>إجمالي الطلبات</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">إدارة الطلبات الحالية</div>
+                <table>
+                    <tr><th>العميل</th><th>الخدمة</th><th>التفاصيل</th><th>الحالة</th></tr>
+                    <tbody id="admin-requests-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- أدوات المطور (للتجربة السريعة بين اللوحات) -->
+    <div class="dev-tools">
+        <span style="color: white; font-size: 12px; margin-top: 5px;">تبديل الواجهات (أدوات المطور):</span>
+        <button onclick="navigate('home')">رئيسية</button>
+        <button onclick="navigate('client')">عميل</button>
+        <button onclick="navigate('tech')">فني</button>
+        <button onclick="navigate('admin')">إدارة</button>
     </div>
 
     <script>
-        // --- محاكاة قاعدة البيانات (Local Storage) ليعمل النظام فوراً ---
-        // ملاحظة: لربط Google Sheets، ستقوم باستبدال الدوال بـ fetch() إلى رابط الـ Web App الخاص بك.
+        // --- قاعدة البيانات المؤقتة (Local Storage) ---
+        let db = {
+            currentUser: localStorage.getItem('currentUser') || '',
+            users: JSON.parse(localStorage.getItem('users')) || [],
+            requests: JSON.parse(localStorage.getItem('requests')) || [
+                { id: 1, date: '2026-07-17', user: 'أحمد', service: 'كهرباء', desc: 'التماس في المطبخ', status: 'قيد الانتظار' }
+            ]
+        };
 
-        let requestsDB = JSON.parse(localStorage.getItem('requests')) || [
-            { id: 1, date: '2026-07-17', user: 'محمد', service: 'كهرباء', desc: 'التماس في صالة الجلوس', status: 'قيد الانتظار' }
-        ];
-
-        let productsDB = JSON.parse(localStorage.getItem('products')) || [
-            { name: 'اشتراك السباكة والكهرباء', price: '500', desc: 'زيارات لامحدودة لمدة سنة' }
-        ];
-
-        // 1. التنقل بين الصفحات
-        function switchRole(role, btn) {
-            document.querySelectorAll('.container').forEach(p => p.classList.remove('active-page'));
-            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(role + '-page').classList.add('active-page');
-            btn.classList.add('active');
-            refreshUI();
+        // 1. نظام التنقل بين الصفحات
+        function navigate(pageId) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            window.scrollTo(0, 0);
+            updateNavUI(pageId);
+            if(pageId === 'client' || pageId === 'tech' || pageId === 'admin') refreshDashboards();
         }
 
-        // 2. إضافة طلب (لوحة العميل)
+        // تحديث شكل أزرار القائمة العلوية بناءً على تسجيل الدخول
+        function updateNavUI(pageId) {
+            let navContainer = document.getElementById('nav-links-container');
+            if(pageId === 'client' || pageId === 'tech' || pageId === 'admin') {
+                navContainer.innerHTML = `
+                    <span style="font-weight: bold; color: var(--primary);">مرحباً بك</span>
+                    <button class="btn btn-outline" style="border-color: red; color: red;" onclick="logout()">تسجيل خروج</button>
+                `;
+            } else {
+                navContainer.innerHTML = `
+                    <a onclick="navigate('home')">الرئيسية</a>
+                    <a onclick="navigate('register')">الاشتراك السنوي</a>
+                    <button class="btn btn-outline" onclick="navigate('login')">تسجيل الدخول</button>
+                `;
+            }
+        }
+
+        // 2. خطوات التسجيل والاشتراك
+        function proceedToPayment() {
+            let name = document.getElementById('reg-name').value;
+            let phone = document.getElementById('reg-phone').value;
+            if(!name || !phone) return alert("الرجاء إدخال الاسم ورقم الجوال");
+            
+            db.currentUser = name; // حفظ اسم المستخدم مؤقتاً
+            navigate('payment');
+        }
+
+        function completeSubscription() {
+            alert("✅ تمت عملية الدفع بنجاح!\nمرحباً بك في صيانة+، تم تفعيل اشتراكك السنوي.");
+            
+            // حفظ المستخدم في قاعدة البيانات المؤقتة
+            db.users.push({ name: db.currentUser, subActive: true });
+            localStorage.setItem('users', JSON.stringify(db.users));
+            localStorage.setItem('currentUser', db.currentUser);
+            
+            document.getElementById('client-welcome-name').innerText = "أهلاً بك، " + db.currentUser + "!";
+            navigate('client');
+        }
+
+        function loginUser() {
+            // محاكاة تسجيل الدخول (يتجاوز التحقق من الـ OTP للتجربة)
+            db.currentUser = "مستخدم تجريبي";
+            document.getElementById('client-welcome-name').innerText = "أهلاً بك، " + db.currentUser + "!";
+            navigate('client');
+        }
+
+        function logout() {
+            db.currentUser = '';
+            localStorage.removeItem('currentUser');
+            navigate('home');
+        }
+
+        // 3. إدارة الطلبات (لوحة العميل)
         function addRequest() {
             let service = document.getElementById('c-service').value;
             let desc = document.getElementById('c-desc').value;
-            
-            if(!desc) return alert("يرجى كتابة الوصف");
+            if(!desc) return alert("الرجاء كتابة وصف للمشكلة");
 
-            // هنا تضع كود (fetch) لـ Google Sheets لاحقاً. حالياً سنحفظ محلياً:
-            requestsDB.push({
+            db.requests.push({
                 id: Date.now(),
                 date: new Date().toISOString().split('T')[0],
-                user: 'محمد',
+                user: db.currentUser || 'عميل',
                 service: service,
                 desc: desc,
                 status: 'قيد الانتظار'
             });
-            localStorage.setItem('requests', JSON.stringify(requestsDB));
+            localStorage.setItem('requests', JSON.stringify(db.requests));
             
             document.getElementById('c-desc').value = '';
-            alert("تم إرسال طلبك بنجاح!");
-            refreshUI();
-        }
-
-        // 3. إضافة منتج (لوحة الإدارة)
-        function addProduct() {
-            let name = document.getElementById('a-prod-name').value;
-            let price = document.getElementById('a-prod-price').value;
-            let desc = document.getElementById('a-prod-desc').value;
-
-            if(!name || !price) return alert("يرجى إدخال الاسم والسعر");
-
-            productsDB.push({ name, price, desc });
-            localStorage.setItem('products', JSON.stringify(productsDB));
-
-            document.getElementById('a-prod-name').value = '';
-            document.getElementById('a-prod-price').value = '';
-            document.getElementById('a-prod-desc').value = '';
-            alert("تم إضافة المنتج بنجاح!");
-            refreshUI();
+            alert("تم رفع طلبك بنجاح. سيتم تعيين فني قريباً!");
+            refreshDashboards();
         }
 
         // 4. تغيير حالة الطلب (لوحة الفني)
         function changeStatus(id) {
-            let req = requestsDB.find(r => r.id == id);
+            let req = db.requests.find(r => r.id == id);
             if(req.status === 'قيد الانتظار') req.status = 'جاري العمل';
             else if(req.status === 'جاري العمل') req.status = 'مكتمل';
             
-            localStorage.setItem('requests', JSON.stringify(requestsDB));
-            refreshUI();
+            localStorage.setItem('requests', JSON.stringify(db.requests));
+            refreshDashboards();
         }
 
-        // 5. تحديث الواجهات بالبيانات
-        function refreshUI() {
-            // تحديث جدول العميل
-            let cHtml = '';
-            requestsDB.forEach(r => {
+        // 5. تحديث بيانات الجداول في كل اللوحات
+        function refreshDashboards() {
+            let htmlClient = '', htmlTech = '', htmlAdmin = '';
+            
+            db.requests.forEach(r => {
                 let badgeClass = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
-                cHtml += `<tr><td>${r.date}</td><td>${r.service}</td><td>${r.desc}</td><td><span class="badge ${badgeClass}">${r.status}</span></td></tr>`;
-            });
-            document.getElementById('client-requests-list').innerHTML = cHtml;
-
-            // تحديث جدول الفني
-            let tHtml = '';
-            requestsDB.forEach(r => {
-                let badgeClass = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
+                
+                // جدول العميل
+                htmlClient += `<tr><td>${r.date}</td><td>${r.service}</td><td>${r.desc}</td><td><span class="badge ${badgeClass}">${r.status}</span></td></tr>`;
+                
+                // جدول الفني
                 let btnTxt = r.status === 'قيد الانتظار' ? 'ابدأ العمل' : (r.status === 'جاري العمل' ? 'إنهاء الطلب' : 'مغلق');
                 let btnDisabled = r.status === 'مكتمل' ? 'disabled style="background:#ccc"' : '';
+                htmlTech += `<tr><td>${r.user}</td><td>${r.service}</td><td>${r.desc}</td>
+                             <td><span class="badge ${badgeClass}">${r.status}</span></td>
+                             <td><button class="btn btn-primary" style="padding: 6px 12px; font-size:12px;" onclick="changeStatus(${r.id})" ${btnDisabled}>${btnTxt}</button></td></tr>`;
                 
-                tHtml += `<tr><td>${r.user}</td><td>${r.service}</td><td>${r.desc}</td>
-                          <td><span class="badge ${badgeClass}">${r.status}</span></td>
-                          <td><button class="btn btn-primary" style="padding: 5px 10px; font-size:12px;" onclick="changeStatus(${r.id})" ${btnDisabled}>${btnTxt}</button></td></tr>`;
+                // جدول الإدارة
+                htmlAdmin += `<tr><td>${r.user}</td><td>${r.service}</td><td>${r.desc}</td><td><span class="badge ${badgeClass}">${r.status}</span></td></tr>`;
             });
-            document.getElementById('tech-requests-list').innerHTML = tHtml;
 
-            // تحديث منتجات الآدمن
-            let pHtml = '';
-            productsDB.forEach(p => {
-                pHtml += `<div class="product-card">
-                            <h3>${p.name}</h3>
-                            <div class="product-price">${p.price} ر.س</div>
-                            <p style="color:var(--text-muted); font-size:14px;">${p.desc}</p>
-                          </div>`;
-            });
-            document.getElementById('products-list').innerHTML = pHtml;
+            document.getElementById('client-requests-list').innerHTML = htmlClient;
+            document.getElementById('tech-requests-list').innerHTML = htmlTech;
+            document.getElementById('admin-requests-list').innerHTML = htmlAdmin;
+
+            // تحديث إحصائيات الإدارة
+            document.getElementById('stat-reqs').innerText = db.requests.length;
+            document.getElementById('stat-subs').innerText = db.users.length + 1; // +1 للمستخدم الافتراضي
         }
 
-        // تشغيل التحديث عند فتح الصفحة
-        refreshUI();
+        // تشغيل التهيئة الأولية
+        if(db.currentUser) {
+            document.getElementById('client-welcome-name').innerText = "أهلاً بك، " + db.currentUser + "!";
+            navigate('client');
+        } else {
+            navigate('home');
+        }
     </script>
 </body>
 </html>
