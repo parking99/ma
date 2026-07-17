@@ -216,6 +216,9 @@
             </div>
             <div class="form-group">
                 <label>حدد موقع منزلك على الخريطة لتعبئة العنوان الوطني تلقائياً 📍</label>
+                <button type="button" class="btn btn-secondary" style="width: 100%; margin-bottom: 10px; font-size: 14px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: bold;" onclick="locateUser()">
+                    📍 حدد موقعي الحالي تلقائياً
+                </button>
                 <div id="map" style="width: 100%; height: 220px; border-radius: 8px; border: 1px solid var(--border); z-index: 1;"></div>
                 <p style="font-size: 11px; color: #6b7280; margin-top: 4px;">* اسحب الدبوس أو انقر على الخريطة لتحديد الموقع بدقة وسنقوم بتحديث العنوان الوطني تلقائياً.</p>
             </div>
@@ -526,11 +529,13 @@
             
             // تهيئة الخريطة بداخل الحاوية بعد ظهور الصفحة في المتصفح
             setTimeout(() => {
-                map = L.map('map').setView([defaultLat, defaultLng], 12);
+                // إلغاء بادئة Leaflet الافتراضية
+                map = L.map('map', { attributionControl: false }).setView([defaultLat, defaultLng], 12);
+                L.control.attribution({ prefix: false }).addTo(map);
                 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
-                    attribution: '© OpenStreetMap contributors'
+                    attribution: '© خريطة صيانة+'
                 }).addTo(map);
                 
                 // إنشاء دبوس تحديد الموقع قابل للسحب
@@ -551,6 +556,33 @@
                 // جلب العنوان الافتراضي الأولي
                 reverseGeocode(defaultLat, defaultLng);
             }, 200);
+        }
+
+        function locateUser() {
+            if (navigator.geolocation) {
+                let addressInput = document.getElementById('comp-national-address');
+                addressInput.value = "جاري تحديد موقعك الجغرافي تلقائياً...";
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        if (map && marker) {
+                            map.setView([lat, lng], 16); // تكبير مقرب للموقع الحالي
+                            marker.setLatLng([lat, lng]);
+                            reverseGeocode(lat, lng);
+                        }
+                    },
+                    function(error) {
+                        alert("عذراً، فشل تحديد موقعك التلقائي. يرجى سحب الدبوس وتحديد موقع منزلك يدوياً على الخريطة.");
+                        reverseGeocode(24.7136, 46.6753);
+                    },
+                    { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
+                );
+            } else {
+                alert("متصفحك لا يدعم جلب الموقع الجغرافي تلقائياً.");
+            }
         }
 
         function reverseGeocode(lat, lng) {
