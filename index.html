@@ -2,80 +2,73 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>صيانة+ | المنصة الاحترافية</title>
-    <!-- تحميل مكتبات Firebase -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة صيانة+ الاحترافية</title>
+    <!-- مكتبات Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAVAMdnv--5pT4_D2AfoVdZLz7-JqebcZY",
             authDomain: "main-c1837.firebaseapp.com",
+            databaseURL: "https://main-c1837-default-rtdb.firebaseio.com",
             projectId: "main-c1837",
             storageBucket: "main-c1837.firebasestorage.app",
             messagingSenderId: "489553689688",
-            appId: "1:489553689688:web:349aaf942cae23c111de2d",
-            measurementId: "G-S5VFBMWVRX"
+            appId: "1:489553689688:web:349aaf942cae23c111de2d"
         };
 
         const app = initializeApp(firebaseConfig);
-        window.db = getFirestore(app);
+        const db = getDatabase(app);
+        window.db = db;
 
-        // المزامنة الصامتة اللحظية للطلبات
-        onSnapshot(collection(window.db, "requests"), (snapshot) => {
-            let reqs = [];
-            snapshot.forEach(doc => reqs.push({ ...doc.data(), id: doc.id }));
-            window.requests = reqs;
-            updateUI();
+        // تحديث لحظي للطلبات عند وجود أي تغيير في القاعدة
+        onValue(ref(db, 'requests'), (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                console.log("تم استلام طلب جديد/تحديث في القاعدة:", data);
+                // يمكنك هنا استدعاء دالة تحديث الجدول في لوحة الإدارة
+            }
         });
     </script>
     <style>
-        /* (تنسيقاتك الاحترافية كما هي) */
-        body { font-family: 'Tajawal', sans-serif; background: #f8fafc; }
-        .page-view { display: none; } .page-view.active { display: block; }
-        .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn { padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; background: #1e3a8a; color: white; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; text-align: center; }
+        .card { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; margin: 20px auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        button { background: #1e3a8a; color: white; padding: 12px; width: 100%; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
     </style>
 </head>
 <body>
-    <div id="page-home" class="page-view active">
-        <h1>مرحباً بك في صيانة+</h1>
-        <button class="btn" onclick="navigate('client')">دخول العميل</button>
-        <button class="btn" onclick="navigate('admin')">لوحة الإدارة</button>
-    </div>
 
-    <div id="page-client" class="page-view">
-        <div class="card">
-            <h2>طلب خدمة جديد</h2>
-            <input type="text" id="srv-name" placeholder="نوع الخدمة">
-            <textarea id="srv-desc" placeholder="وصف العطل"></textarea>
-            <button class="btn" onclick="createNewRequest()">إرسال الطلب</button>
-        </div>
+    <div class="card">
+        <h1>صيانة+</h1>
+        <input type="text" id="srv" placeholder="نوع الخدمة (مثال: سباكة)">
+        <textarea id="desc" placeholder="وصف العطل بالتفصيل"></textarea>
+        <button onclick="sendData()">إرسال الطلب الآن</button>
     </div>
 
     <script>
-        function navigate(page) {
-            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + page).classList.add('active');
-        }
-
-        // دالة الإرسال لـ Firebase (سريعة وآمنة)
-        async function createNewRequest() {
-            let srv = document.getElementById('srv-name').value;
-            let desc = document.getElementById('srv-desc').value;
+        function sendData() {
+            const srv = document.getElementById('srv').value;
+            const desc = document.getElementById('desc').value;
             
-            await addDoc(collection(window.db, "requests"), {
+            if(!srv || !desc) { alert("يرجى تعبئة كافة الحقول"); return; }
+
+            // إرسال البيانات لقاعدة بيانات Firebase
+            const { getDatabase, ref, push } = window.firebase_imports || {}; // سيتم التعامل معها عبر المكتبة المحملة
+            
+            // استخدام window.db المعرفة في السكريبت أعلاه
+            push(ref(window.db, 'requests'), {
                 service: srv,
                 desc: desc,
                 status: "قيد الانتظار",
-                createdAt: new Date()
+                time: new Date().toLocaleString()
+            }).then(() => {
+                alert("تم إرسال طلبك بنجاح للمدير!");
+                document.getElementById('srv').value = "";
+                document.getElementById('desc').value = "";
             });
-            alert("تم إرسال طلبك للوحة الإدارة فوراً!");
-        }
-
-        function updateUI() {
-            console.log("تحديث الواجهة تلقائياً بسبب تغير البيانات في Firebase...");
-            // هنا يتم تحديث جداولك تلقائياً
         }
     </script>
 </body>
