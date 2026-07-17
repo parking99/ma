@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>صيانة+ | المنصة الشاملة</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Leaflet JS & CSS for Interactive Map --><!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صيانة+ | المنصة الشاملة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <!-- Leaflet JS & CSS for Interactive Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -251,6 +258,870 @@
                         <div class="stat-title">تاريخ الانتهاء</div>
                         <div class="stat-val" id="sub-end-date">-</div>
                     </div>
+                    <div class="stat-box" style="background: rgba(245, 158, 11, 0.8);">
+                        <div class="stat-title">طلباتك السابقة</div>
+                        <div class="stat-val"><span id="sub-req-count">0</span> طلب منفذ</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تفاصيل اشتراك العميل الإضافية -->
+            <div class="card" id="client-sub-details" style="display: none;">
+                <div class="card-header">بيانات اشتراكك المفعلة 🏡</div>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                    <div style="flex: 1; min-width: 250px;">
+                        <p style="margin-bottom: 8px;"><strong>الاسم المشترك:</strong> <span id="client-detail-name">-</span></p>
+                        <p style="margin-bottom: 8px;"><strong>رقم الجوال:</strong> <span id="client-detail-phone">-</span></p>
+                        <p style="margin-bottom: 8px;"><strong>العنوان الوطني السعودي:</strong> <span id="client-detail-address">-</span></p>
+                    </div>
+                    <div style="flex: 1; min-width: 250px; text-align: center;">
+                        <p style="font-weight: bold; margin-bottom: 8px; color: var(--primary);">صورة المنزل المرفقة:</p>
+                        <img id="client-detail-house-img" src="" alt="صورة المنزل" style="max-width: 100%; max-height: 150px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer;" onclick="openImageModal(this.src)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">طلب صيانة جديد 🛠️ <span id="sync-status" style="font-size:12px; color:var(--success); font-weight:normal; display:none;">● متصل بالخادم</span></div>
+                <div class="form-group"><label>الخدمة المطلوبة:</label><select id="c-service"></select></div>
+                <div class="form-group"><label>وصف المشكلة:</label><textarea id="c-desc" rows="3" placeholder="اشرح العطل هنا..."></textarea></div>
+                <div class="form-group">
+                    <label>إرفاق صورة العطل (اختياري):</label>
+                    <input type="file" id="c-image" accept="image/*" onchange="previewImage(this, 'request-preview')">
+                    <img id="request-preview" class="preview-img" alt="معاينة صورة العطل">
+                </div>
+                <button class="btn btn-secondary" id="btn-submit" onclick="submitRequest()">إرسال الطلب</button>
+            </div>
+            <div class="card">
+                <div class="card-header">سجل طلباتي</div>
+                <table>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>الخدمة</th>
+                        <th>الوصف</th>
+                        <th>الصورة</th>
+                        <th>الفني</th>
+                        <th>الحالة</th>
+                    </tr>
+                    <tbody id="client-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. لوحة الفني -->
+    <div id="page-tech" class="page-view">
+        <div class="dashboard-container">
+            <div class="card" style="background: linear-gradient(135deg, var(--secondary), #d97706); color: white; border: none;">
+                <h2>لوحة الفني 👨🔧</h2>
+            </div>
+            <div class="card">
+                <div class="card-header">المهام المسندة</div>
+                <table>
+                    <tr>
+                        <th>العميل</th>
+                        <th>الجوال</th>
+                        <th>الخدمة</th>
+                        <th>التفاصيل</th>
+                        <th>صورة العطل</th>
+                        <th>العنوان الوطني</th>
+                        <th>صورة المنزل</th>
+                        <th>الموقع الجغرافي</th>
+                        <th>الحالة</th>
+                        <th>إجراء</th>
+                    </tr>
+                    <tbody id="tech-active-list"></tbody>
+                </table>
+            </div>
+            <div class="card">
+                <div class="card-header">أعمالك المكتملة 🏅</div>
+                <table>
+                    <tr>
+                        <th>العميل</th>
+                        <th>الخدمة</th>
+                        <th>الصورة</th>
+                        <th>بدء العمل</th>
+                        <th>انتهاء العمل</th>
+                        <th>الحالة</th>
+                    </tr>
+                    <tbody id="tech-completed-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. لوحة الإدارة -->
+    <div id="page-admin" class="page-view">
+        <div class="dashboard-container">
+            <div class="card" style="background: linear-gradient(135deg, #1f2937, #111827); color: white; border: none;">
+                <h2>لوحة الإدارة الشاملة 📊</h2>
+            </div>
+            <div class="card">
+                <div class="card-header">إضافة منتجات للرئيسية ➕</div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex:1"><label>اسم الخدمة</label><input type="text" id="a-prod-name"></div>
+                    <div class="form-group" style="flex:1"><label>السعر</label><input type="text" id="a-prod-price"></div>
+                </div>
+                <button class="btn btn-secondary" id="btn-add-prod" onclick="addProduct()">إضافة ونشر للموقع</button>
+            </div>
+            <div class="card">
+                <div class="card-header">الطلبات النشطة 🔄</div>
+                <table>
+                    <tr>
+                        <th>العميل</th>
+                        <th>الجوال</th>
+                        <th>الخدمة</th>
+                        <th>الوصف</th>
+                        <th>الصورة</th>
+                        <th>الفني الحالي</th>
+                        <th>الحالة</th>
+                    </tr>
+                    <tbody id="admin-active-list"></tbody>
+                </table>
+            </div>
+            <div class="card">
+                <div class="card-header">سجل المشتركين (العملاء) 👥</div>
+                <table>
+                    <tr>
+                        <th>تاريخ التسجيل</th>
+                        <th>اسم العميل</th>
+                        <th>رقم الجوال</th>
+                        <th>العنوان الوطني</th>
+                        <th>صورة المنزل</th>
+                        <th>حالة الاشتراك</th>
+                    </tr>
+                    <tbody id="admin-users-list"></tbody>
+                </table>
+            </div>
+            <!-- كرت الشكاوى والاقتراحات المستلمة -->
+            <div class="card">
+                <div class="card-header">الشكاوى والاقتراحات المستلمة 📬</div>
+                <table>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>الاسم</th>
+                        <th>رقم الجوال</th>
+                        <th>النوع</th>
+                        <th>تفاصيل الرسالة</th>
+                    </tr>
+                    <tbody id="admin-feedbacks-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- أدوات التجربة -->
+    <div class="dev-tools">
+        <button onclick="navigate('home')">الرئيسية</button>
+        <button onclick="navigate('client')">لوحة العميل</button>
+        <button onclick="navigate('tech')">لوحة الفني</button>
+        <button onclick="navigate('admin')">لوحة الإدارة</button>
+    </div>
+
+    <script>
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztr9wKILJqypnVXW_LMmKtVlnWvg23oNQDv3-Fii4DO1Kc1VtyQSx-b1gqvQyRuYMJ/exec";
+
+        let db = {
+            user: localStorage.getItem('user') || '',
+            phone: localStorage.getItem('phone') || '',
+            regDate: localStorage.getItem('regDate') || '',
+            products: JSON.parse(localStorage.getItem('products')) || [],
+            requests: JSON.parse(localStorage.getItem('requests')) || [],
+            users: JSON.parse(localStorage.getItem('users')) || [],
+            feedbacks: JSON.parse(localStorage.getItem('feedbacks')) || []
+        };
+
+        // متغيرات مؤقتة لحفظ الصور بصيغة Base64
+        let tempHouseImageBase64 = "";
+        let tempRequestImageBase64 = "";
+
+        // --- المزامنة الصامتة في الخلفية (Background Sync) ---
+        setInterval(silentBackgroundSync, 5000);
+
+        function silentBackgroundSync() {
+            let syncIndicator = document.getElementById('sync-status');
+            if(syncIndicator) syncIndicator.style.display = 'inline';
+
+            fetch(GOOGLE_SCRIPT_URL + "?action=getData", { cache: "no-cache" })
+            .then(res => res.json())
+            .then(data => {
+                let dataChanged = false;
+                
+                if(JSON.stringify(db.products) !== JSON.stringify(data.products)) { 
+                    db.products = data.products; 
+                    dataChanged = true; 
+                }
+                
+                // دمج دمج الطلبات للحفاظ على الصور المرفوعة محلياً
+                let mergedRequests = data.requests.map(remoteReq => {
+                    let localReq = db.requests.find(r => r.id.toString() === remoteReq.id.toString());
+                    if (localReq) {
+                        return { ...remoteReq, image: remoteReq.image || localReq.image || "" };
+                    }
+                    return remoteReq;
+                });
+                if(JSON.stringify(db.requests) !== JSON.stringify(mergedRequests)) {
+                    db.requests = mergedRequests;
+                    dataChanged = true;
+                }
+                
+                // دمج دمج المستخدمين للحفاظ على العنوان وصورة المنزل محلياً
+                let mergedUsers = data.users.map(remoteUser => {
+                    let localUser = db.users.find(u => u.phone.toString() === remoteUser.phone.toString());
+                    if (localUser) {
+                        return { 
+                            ...remoteUser, 
+                            nationalAddress: remoteUser.nationalAddress || localUser.nationalAddress || "",
+                            houseImage: remoteUser.houseImage || localUser.houseImage || "",
+                            status: remoteUser.status || localUser.status || "فعال"
+                        };
+                    }
+                    return remoteUser;
+                });
+                if(JSON.stringify(db.users) !== JSON.stringify(mergedUsers)) {
+                    db.users = mergedUsers;
+                    dataChanged = true;
+                }
+                
+                if(dataChanged) {
+                    localStorage.setItem('products', JSON.stringify(db.products));
+                    localStorage.setItem('requests', JSON.stringify(db.requests));
+                    localStorage.setItem('users', JSON.stringify(db.users));
+                    updateUI();
+                }
+                if(syncIndicator) setTimeout(() => syncIndicator.style.display = 'none', 1000);
+            }).catch(e => { if(syncIndicator) syncIndicator.style.display = 'none'; });
+        }
+
+        window.onload = function() {
+            silentBackgroundSync();
+            if(db.user) navigate('client'); else navigate('home');
+        };
+
+        function navigate(page) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            window.scrollTo(0,0);
+            
+            let nav = document.getElementById('nav-links-container');
+            if(['client', 'tech', 'admin'].includes(page)) {
+                nav.innerHTML = `<button class="btn btn-outline" style="border-color: red; color: red;" onclick="logout()">تسجيل خروج</button>`;
+            } else if(['register', 'payment', 'complete-reg'].includes(page)) {
+                nav.innerHTML = `<button class="btn btn-outline" onclick="navigate('home')">الرئيسية</button>`;
+            } else {
+                nav.innerHTML = `<button class="btn btn-outline" onclick="navigate('login')">تسجيل الدخول</button>`;
+            }
+            updateUI();
+            if (page === 'complete-reg') {
+                initMap();
+            }
+        }
+
+        // --- تهيئة وإدارة الخريطة التفاعلية وجلب العنوان الجغرافي العكسي ---
+        let map = null;
+        let marker = null;
+
+        function initMap() {
+            // الإحداثيات الافتراضية: الرياض، المملكة العربية السعودية
+            const defaultLat = 24.7136; 
+            const defaultLng = 46.6753;
+            
+            if (map) {
+                // في حال كانت الخريطة مهيأة مسبقاً، نقوم بتحديث حجمها وإعادة تعيين موقعها
+                setTimeout(() => {
+                    map.invalidateSize();
+                    map.setView([defaultLat, defaultLng], 12);
+                    if (marker) marker.setLatLng([defaultLat, defaultLng]);
+                    reverseGeocode(defaultLat, defaultLng);
+                }, 200);
+                return;
+            }
+            
+            // تهيئة الخريطة بداخل الحاوية بعد ظهور الصفحة في المتصفح
+            setTimeout(() => {
+                // إلغاء بادئة Leaflet الافتراضية
+                map = L.map('map', { attributionControl: false }).setView([defaultLat, defaultLng], 12);
+                L.control.attribution({ prefix: false }).addTo(map);
+                
+                // طبقة صور الأقمار الصناعية (Esri Satellite) لتوفر رؤية واضحة للبيوت والأسطح
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: '© خريطة صيانة+'
+                }).addTo(map);
+                
+                // طبقة أسماء الشوارع والحدود الشفافة (Esri Hybrid Labels) لتسهيل القراءة وتحديد أسماء الأحياء
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19
+                }).addTo(map);
+                
+                // إنشاء دبوس تحديد الموقع قابل للسحب
+                marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+                
+                // جلب العنوان عند انتهاء سحب الدبوس
+                marker.on('dragend', function(e) {
+                    let latlng = marker.getLatLng();
+                    reverseGeocode(latlng.lat, latlng.lng);
+                });
+                
+                // جلب العنوان بمجرد النقر على الخريطة ونقل الدبوس إليها
+                map.on('click', function(e) {
+                    marker.setLatLng(e.latlng);
+                    reverseGeocode(e.latlng.lat, e.latlng.lng);
+                });
+                
+                // جلب العنوان الافتراضي الأولي
+                reverseGeocode(defaultLat, defaultLng);
+            }, 200);
+        }
+
+        function locateUser() {
+            if (navigator.geolocation) {
+                let addressInput = document.getElementById('comp-national-address');
+                addressInput.value = "جاري تحديد موقعك الجغرافي تلقائياً...";
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        if (map && marker) {
+                            map.setView([lat, lng], 16); // تكبير مقرب للموقع الحالي
+                            marker.setLatLng([lat, lng]);
+                            reverseGeocode(lat, lng);
+                        }
+                    },
+                    function(error) {
+                        alert("عذراً، فشل تحديد موقعك التلقائي. يرجى سحب الدبوس وتحديد موقع منزلك يدوياً على الخريطة.");
+                        reverseGeocode(24.7136, 46.6753);
+                    },
+                    { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
+                );
+            } else {
+                alert("متصفحك لا يدعم جلب الموقع الجغرافي تلقائياً.");
+            }
+        }
+
+        function reverseGeocode(lat, lng) {
+            let addressInput = document.getElementById('comp-national-address');
+            addressInput.value = "جاري تحديد العنوان الوطني بدقة...";
+            
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=ar`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.address) {
+                    let addr = data.address;
+                    let building = addr.house_number || "";
+                    let road = addr.road || addr.suburb || "";
+                    let neighbourhood = addr.neighbourhood || addr.suburb || "";
+                    let city = addr.city || addr.town || addr.state || "";
+                    let postcode = addr.postcode || "";
+                    
+                    // صياغة تقريبية للعنوان الوطني السعودي (رقم المبنى - الشارع - الحي - المدينة - الرمز البريدي)
+                    let nationalAddrParts = [];
+                    if (building) nationalAddrParts.push(building);
+                    if (road) nationalAddrParts.push(road);
+                    if (neighbourhood && neighbourhood !== road) nationalAddrParts.push(neighbourhood);
+                    if (city) nationalAddrParts.push(city);
+                    if (postcode) nationalAddrParts.push(postcode);
+                    
+                    let formattedAddr = nationalAddrParts.join(' - ');
+                    if (!formattedAddr) {
+                        formattedAddr = data.display_name || "موقع محدد (إحداثيات: " + lat.toFixed(4) + "، " + lng.toFixed(4) + ")";
+                    }
+                    addressInput.value = formattedAddr;
+                } else {
+                    addressInput.value = "موقع محدد (إحداثيات: " + lat.toFixed(4) + "، " + lng.toFixed(4) + ")";
+                }
+            })
+            .catch(err => {
+                addressInput.value = "موقع محدد (إحداثيات: " + lat.toFixed(4) + "، " + lng.toFixed(4) + ")";
+            });
+        }
+
+        function logout() { 
+            db.user = ''; 
+            db.phone = ''; 
+            db.regDate = ''; 
+            localStorage.removeItem('user');
+            localStorage.removeItem('phone');
+            localStorage.removeItem('regDate');
+            navigate('home'); 
+        }
+
+        // --- معالجة رفع ومعاينة الصور وضغطها تلقائياً لتناسب قواعد البيانات ---
+        function previewImage(input, previewId) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        const MAX_WIDTH = 500;
+                        const MAX_HEIGHT = 500;
+                        
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // تصدير بصيغة JPEG مضغوطة لتقليص الحجم وتجنب تجاوز الحدود في المتصفح وقوقل شيت
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                        
+                        const preview = document.getElementById(previewId);
+                        preview.src = compressedBase64;
+                        preview.style.display = 'block';
+                        
+                        if (previewId === 'house-preview') {
+                            tempHouseImageBase64 = compressedBase64;
+                        } else if (previewId === 'request-preview') {
+                            tempRequestImageBase64 = compressedBase64;
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // تفاصيل المودال
+        function openImageModal(src) {
+            if (!src || src === "لا توجد" || src.includes("undefined")) return;
+            document.getElementById('modal-viewer-img').src = src;
+            document.getElementById('image-modal').style.display = 'flex';
+        }
+        function closeImageModal() {
+            document.getElementById('image-modal').style.display = 'none';
+        }
+
+        // --- التسجيل والدفع ---
+        let tempUser = "", tempPhone = "";
+        function proceedToPayment() { 
+            tempUser = document.getElementById('reg-name').value.trim();
+            tempPhone = document.getElementById('reg-phone').value.trim();
+            if(!tempUser || !tempPhone) return alert("الرجاء إدخال بياناتك كاملة!");
+            navigate('payment'); 
+        }
+
+        function switchPayment(method) {
+            document.querySelectorAll('.payment-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.payment-form').forEach(f => f.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('form-' + method).classList.add('active');
+        }
+
+        function showOTP() { document.getElementById('otp-modal').style.display = 'flex'; }
+        function moveToNext(curr, nextId) { if(curr.value.length === 1) document.getElementById(nextId).focus(); }
+        
+        function verifyPaymentAndRegister() { 
+            document.getElementById('otp-modal').style.display = 'none'; 
+            
+            // تهيئة بيانات صفحة إكمال التفعيل
+            document.getElementById('comp-name').value = tempUser;
+            document.getElementById('comp-phone').value = tempPhone;
+            document.getElementById('comp-national-address').value = "";
+            document.getElementById('comp-house-image').value = "";
+            document.getElementById('house-preview').style.display = "none";
+            tempHouseImageBase64 = "";
+
+            // توجيه المستخدم لصفحة إدخال العنوان وصورة المنزل
+            navigate('complete-reg');
+        }
+
+        function saveCompleteRegistration() {
+            let nationalAddress = document.getElementById('comp-national-address').value.trim();
+            let btn = document.getElementById('btn-save-complete-reg');
+            
+            if(!nationalAddress) return alert("الرجاء إدخال العنوان الوطني السعودي!");
+            if(!tempHouseImageBase64) return alert("الرجاء إرفاق صورة المنزل لتفعيل الاشتراك!");
+
+            btn.innerText = "جاري تفعيل الاشتراك...";
+            btn.disabled = true;
+
+            // الحصول على إحداثيات الموقع الدقيقة من الخريطة لحفظها
+            let latVal = "";
+            let lngVal = "";
+            if (marker) {
+                let latlng = marker.getLatLng();
+                latVal = latlng.lat.toString();
+                lngVal = latlng.lng.toString();
+            }
+
+            let exactISO = new Date().toISOString(); 
+            let payload = { 
+                action: "registerUser", 
+                date: exactISO, 
+                user: tempUser, 
+                phone: tempPhone,
+                nationalAddress: nationalAddress,
+                houseImage: tempHouseImageBase64,
+                lat: latVal,
+                lng: lngVal
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, { 
+                method: "POST", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                body: JSON.stringify(payload) 
+            }).then(() => {
+                db.user = tempUser; db.phone = tempPhone; db.regDate = exactISO;
+                
+                db.users.push({
+                    date: exactISO, 
+                    name: tempUser, 
+                    phone: tempPhone, 
+                    status: 'فعال',
+                    nationalAddress: nationalAddress,
+                    houseImage: tempHouseImageBase64,
+                    lat: latVal,
+                    lng: lngVal
+                });
+                
+                localStorage.setItem('user', db.user); 
+                localStorage.setItem('phone', db.phone); 
+                localStorage.setItem('regDate', db.regDate);
+                localStorage.setItem('users', JSON.stringify(db.users));
+                
+                alert("✅ تم الاشتراك بنجاح وتفعيل الباقة لمدة 12 شهر!"); 
+                btn.innerText = "حفظ وتفعيل الاشتراك"; btn.disabled = false;
+                navigate('client'); 
+            }).catch(() => {
+                // حفظ البيانات محلياً في حال فشل الاتصال بالسيرفر
+                db.user = tempUser; db.phone = tempPhone; db.regDate = exactISO;
+                db.users.push({
+                    date: exactISO, 
+                    name: tempUser, 
+                    phone: tempPhone, 
+                    status: 'فعال',
+                    nationalAddress: nationalAddress,
+                    houseImage: tempHouseImageBase64,
+                    lat: latVal,
+                    lng: lngVal
+                });
+                localStorage.setItem('user', db.user); 
+                localStorage.setItem('phone', db.phone); 
+                localStorage.setItem('regDate', db.regDate);
+                localStorage.setItem('users', JSON.stringify(db.users));
+
+                alert("✅ تم تفعيل اشتراكك وحفظ البيانات محلياً!"); 
+                btn.innerText = "حفظ وتفعيل الاشتراك"; btn.disabled = false;
+                navigate('client');
+            });
+        }
+
+        function loginUser() {
+            let phoneInput = document.getElementById('login-phone').value.trim();
+            if(!phoneInput) return alert("أدخل رقم جوالك");
+
+            let existingUser = db.users.find(u => u.phone.toString() === phoneInput.toString());
+            if(existingUser) {
+                db.user = existingUser.name; 
+                db.phone = existingUser.phone; 
+                db.regDate = existingUser.date;
+                localStorage.setItem('user', db.user); 
+                localStorage.setItem('phone', db.phone); 
+                localStorage.setItem('regDate', db.regDate);
+                navigate('client');
+            } else {
+                alert("رقم الجوال غير مسجل! نرجو الاشتراك أولاً.");
+                navigate('register');
+            }
+        }
+
+        // --- الشكاوى والاقتراحات ---
+        function submitFeedback() {
+            let name = document.getElementById('feedback-name').value.trim();
+            let phone = document.getElementById('feedback-phone').value.trim();
+            let type = document.getElementById('feedback-type').value;
+            let desc = document.getElementById('feedback-desc').value.trim();
+
+            if(!name || !phone || !desc) {
+                return alert("الرجاء تعبئة الاسم والجوال وتفاصيل الرسالة لإتمام الإرسال");
+            }
+
+            let feedback = {
+                id: Date.now(),
+                date: new Date().toLocaleDateString('ar-SA'),
+                name: name,
+                phone: phone,
+                type: type,
+                desc: desc
+            };
+
+            db.feedbacks.push(feedback);
+            localStorage.setItem('feedbacks', JSON.stringify(db.feedbacks));
+
+            alert("✅ شكرًا لك! تم إرسال رسالتك بنجاح وسيتواصل معك فريق الدعم قريباً.");
+            
+            document.getElementById('feedback-name').value = '';
+            document.getElementById('feedback-phone').value = '';
+            document.getElementById('feedback-desc').value = '';
+
+            updateUI();
+        }
+
+        // --- إرسال طلب جديد مع الصورة ---
+        function submitRequest() {
+            let srv = document.getElementById('c-service').value, desc = document.getElementById('c-desc').value;
+            let btn = document.getElementById('btn-submit');
+            if(!desc) return alert("الرجاء كتابة وصف العطل");
+
+            btn.innerText = "جاري الإرسال..."; btn.disabled = true;
+            let reqId = Date.now();
+            let reqDate = new Date().toLocaleDateString('ar-SA');
+            
+            let payload = { 
+                action: "addRequest", 
+                id: reqId, 
+                date: reqDate, 
+                user: db.user, 
+                phone: db.phone, 
+                service: srv, 
+                desc: desc,
+                image: tempRequestImageBase64
+            };
+
+            db.requests.push({ 
+                id: reqId, 
+                date: reqDate, 
+                user: db.user, 
+                phone: db.phone, 
+                service: srv, 
+                desc: desc, 
+                status: 'قيد الانتظار', 
+                tech: '', 
+                start: '', 
+                end: '',
+                image: tempRequestImageBase64
+            });
+            
+            // تصفير حقل الصورة ومعاينتها
+            tempRequestImageBase64 = "";
+            document.getElementById('c-image').value = "";
+            document.getElementById('request-preview').style.display = "none";
+
+            updateUI(); 
+
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
+            .then(() => { btn.innerText = "إرسال الطلب"; btn.disabled = false; document.getElementById('c-desc').value = ''; })
+            .catch(() => { btn.innerText = "إرسال الطلب"; btn.disabled = false; document.getElementById('c-desc').value = ''; });
+        }
+
+        function addProduct() {
+            let name = document.getElementById('a-prod-name').value;
+            let price = document.getElementById('a-prod-price').value;
+            let btn = document.getElementById('btn-add-prod');
+            if(!name) return alert("أدخل الخدمة");
+
+            btn.innerText = "جاري النشر..."; btn.disabled = true;
+            let payload = { action: "addProduct", id: Date.now(), name: name, price: price };
+            
+            db.products.push({name, price});
+            updateUI();
+
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
+            .then(() => { btn.innerText = "إضافة ونشر للموقع"; btn.disabled = false; document.getElementById('a-prod-name').value = ''; document.getElementById('a-prod-price').value = ''; });
+        }
+
+        function changeStatus(id, newStatus) {
+            let req = db.requests.find(r => r.id == id);
+            if (!req) return;
+            let timeNow = new Date().toLocaleTimeString('ar-SA');
+            let payload = { action: "updateStatus", id: id, status: newStatus };
+
+            if(newStatus === 'جاري العمل') { 
+                req.status = 'جاري العمل'; 
+                req.tech = db.user; 
+                req.start = timeNow; 
+                payload.tech = db.user; 
+                payload.start = timeNow; 
+            }
+            else if (newStatus === 'مكتمل') { 
+                req.status = 'مكتمل'; 
+                req.end = timeNow; 
+                payload.end = timeNow; 
+            }
+            
+            updateUI();
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        }
+
+        // --- التحديث الشامل وحساب الاشتراكات ---
+        function updateUI() {
+            // 1. حساب تاريخ الانتهاء (12 شهر)
+            if(db.regDate && document.getElementById('sub-end-date')) {
+                try {
+                    let startDate = new Date(db.regDate);
+                    let endDate = new Date(startDate);
+                    endDate.setFullYear(endDate.getFullYear() + 1);
+                    
+                    let diffDays = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
+                    let displayTxt = endDate.toLocaleDateString('en-GB') + ` (باقي ${diffDays} يوم)`;
+                    
+                    if(document.getElementById('sub-end-date').innerHTML !== displayTxt) {
+                        document.getElementById('sub-end-date').innerHTML = displayTxt;
+                    }
+                } catch(e) {}
+            }
+
+            if(document.getElementById('welcome-msg') && db.user) document.getElementById('welcome-msg').innerText = "أهلاً بك يا " + db.user + "!";
+
+            // عرض تفاصيل الاشتراك المفصلة للعميل المسجل
+            let currentUserRecord = db.users.find(u => u.phone.toString() === db.phone.toString());
+            if(currentUserRecord && document.getElementById('client-sub-details')) {
+                document.getElementById('client-sub-details').style.display = 'block';
+                document.getElementById('client-detail-name').innerText = currentUserRecord.name;
+                document.getElementById('client-detail-phone').innerText = currentUserRecord.phone;
+                document.getElementById('client-detail-address').innerText = currentUserRecord.nationalAddress || 'غير محدد';
+                if(currentUserRecord.houseImage) {
+                    document.getElementById('client-detail-house-img').src = currentUserRecord.houseImage;
+                    document.getElementById('client-detail-house-img').style.display = 'block';
+                } else {
+                    document.getElementById('client-detail-house-img').style.display = 'none';
+                }
+            } else if(document.getElementById('client-sub-details')) {
+                document.getElementById('client-sub-details').style.display = 'none';
+            }
+
+            let homeHTML = '', sHTML = '';
+            db.products.forEach(p => {
+                homeHTML += `<div class="service-card"><h3>${p.name}</h3><div class="price">${p.price}</div></div>`;
+                sHTML += `<option value="${p.name}">${p.name} (${p.price})</option>`;
+            });
+            if(document.getElementById('home-products-grid') && document.getElementById('home-products-grid').innerHTML !== homeHTML) document.getElementById('home-products-grid').innerHTML = homeHTML;
+            if(document.getElementById('c-service') && document.getElementById('c-service').innerHTML !== sHTML) document.getElementById('c-service').innerHTML = sHTML;
+
+            let clientHTML='', techActive='', techDone='', adminActive='', adminUsers='';
+            let myRequestsCount = 0;
+            
+            db.requests.forEach(r => {
+                let badge = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
+                let imgHtml = r.image ? `<img src="${r.image}" style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; cursor: pointer; border:1px solid var(--border);" onclick="openImageModal('${r.image}')">` : 'لا توجد';
+
+                if(r.phone && db.phone && r.phone.toString() === db.phone.toString()) {
+                    myRequestsCount++; 
+                    clientHTML += `<tr>
+                        <td>${r.date}</td>
+                        <td>${r.service}</td>
+                        <td>${r.desc}</td>
+                        <td>${imgHtml}</td>
+                        <td>${r.tech || 'جاري البحث'}</td>
+                        <td><span class="badge ${badge}">${r.status}</span></td>
+                    </tr>`;
+                }
+
+                if(r.status !== 'مكتمل') {
+                    let btnTxt = r.status === 'قيد الانتظار' ? 'استلم المهمة' : 'إنهاء الطلب';
+                    let actionStatus = r.status === 'قيد الانتظار' ? 'جاري العمل' : 'مكتمل';
+                    let btnStyle = r.status === 'قيد الانتظار' ? 'btn-primary' : 'btn-secondary';
+                    
+                    // استخراج تفاصيل المشترك لتبسيط وصول الفني للعنوان وصورة المنزل والموقع
+                    let clientUser = db.users.find(u => u.phone.toString() === r.phone.toString());
+                    let clientAddress = clientUser ? clientUser.nationalAddress : 'غير متوفر';
+                    let clientHouseImg = clientUser && clientUser.houseImage ? `<img src="${clientUser.houseImage}" style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; cursor: pointer; border:1px solid var(--border);" onclick="openImageModal('${clientUser.houseImage}')">` : 'لا توجد';
+                    
+                    // تكوين رابط الاتجاهات بخرائط جوجل (إما إحداثيات مباشرة أو العنوان الوطني نصياً)
+                    let mapsUrl = "https://www.google.com/maps/search/?api=1&query=";
+                    if (clientUser && clientUser.lat && clientUser.lng) {
+                        mapsUrl += `${clientUser.lat},${clientUser.lng}`;
+                    } else {
+                        mapsUrl += encodeURIComponent(clientAddress);
+                    }
+                    
+                    let directionsBtn = `<a href="${mapsUrl}" target="_blank" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">🗺️ فتح الخريطة</a>`;
+                    
+                    techActive += `<tr>
+                        <td>${r.user}</td>
+                        <td>${r.phone}</td>
+                        <td>${r.service}</td>
+                        <td>${r.desc}</td>
+                        <td>${imgHtml}</td>
+                        <td>${clientAddress}</td>
+                        <td>${clientHouseImg}</td>
+                        <td>${directionsBtn}</td>
+                        <td><span class="badge ${badge}">${r.status}</span></td>
+                        <td><button class="btn ${btnStyle}" style="padding:6px 12px" onclick="changeStatus(${r.id}, '${actionStatus}')">${btnTxt}</button></td>
+                    </tr>`;
+                    
+                    adminActive += `<tr>
+                        <td>${r.user}</td>
+                        <td>${r.phone}</td>
+                        <td>${r.service}</td>
+                        <td>${r.desc}</td>
+                        <td>${imgHtml}</td>
+                        <td>${r.tech || '-'}</td>
+                        <td><span class="badge ${badge}">${r.status}</span></td>
+                    </tr>`;
+                } else {
+                    techDone += `<tr>
+                        <td>${r.user}</td>
+                        <td>${r.service}</td>
+                        <td>${imgHtml}</td>
+                        <td>${r.start}</td>
+                        <td>${r.end}</td>
+                        <td><span class="badge badge-success">مكتمل</span></td>
+                    </tr>`;
+                }
+            });
+
+            if(document.getElementById('sub-req-count') && document.getElementById('sub-req-count').innerText != myRequestsCount) {
+                document.getElementById('sub-req-count').innerText = myRequestsCount;
+            }
+
+            db.users.forEach(u => {
+                let humanDate = new Date(u.date).toLocaleDateString('ar-SA') || u.date;
+                let address = u.nationalAddress || 'غير محدد';
+                let houseImgHtml = u.houseImage ? `<img src="${u.houseImage}" style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; cursor: pointer; border:1px solid var(--border);" onclick="openImageModal('${u.houseImage}')">` : 'لا توجد';
+                
+                adminUsers += `<tr>
+                    <td>${humanDate}</td>
+                    <td>${u.name}</td>
+                    <td>${u.phone}</td>
+                    <td>${address}</td>
+                    <td>${houseImgHtml}</td>
+                    <td><span class="badge badge-success">${u.status || 'فعال'}</span></td>
+                </tr>`;
+            });
+
+            // عرض الشكاوى والاقتراحات في لوحة التحكم
+            let feedbackHTML = '';
+            db.feedbacks.forEach(f => {
+                let fBadge = f.type === 'شكوى' ? 'badge-pending' : 'badge-working';
+                feedbackHTML += `<tr>
+                    <td>${f.date}</td>
+                    <td>${f.name}</td>
+                    <td>${f.phone}</td>
+                    <td><span class="badge ${fBadge}">${f.type}</span></td>
+                    <td>${f.desc}</td>
+                </tr>`;
+            });
+
+            if(document.getElementById('client-list') && document.getElementById('client-list').innerHTML !== clientHTML) document.getElementById('client-list').innerHTML = clientHTML;
+            if(document.getElementById('tech-active-list') && document.getElementById('tech-active-list').innerHTML !== techActive) document.getElementById('tech-active-list').innerHTML = techActive;
+            if(document.getElementById('tech-completed-list') && document.getElementById('tech-completed-list').innerHTML !== techDone) document.getElementById('tech-completed-list').innerHTML = techDone;
+            if(document.getElementById('admin-active-list') && document.getElementById('admin-active-list').innerHTML !== adminActive) document.getElementById('admin-active-list').innerHTML = adminActive;
+            if(document.getElementById('admin-users-list') && document.getElementById('admin-users-list').innerHTML !== adminUsers) document.getElementById('admin-users-list').innerHTML = adminUsers;
+            if(document.getElementById('admin-feedbacks-list') && document.getElementById('admin-feedbacks-list').innerHTML !== feedbackHTML) document.getElementById('admin-feedbacks-list').innerHTML = feedbackHTML;
+        }
+    </script>
+</body>
+</html>
+
                     <div class="stat-box" style="background: rgba(245, 158, 11, 0.8);">
                         <div class="stat-title">طلباتك السابقة</div>
                         <div class="stat-val"><span id="sub-req-count">0</span> طلب منفذ</div>
