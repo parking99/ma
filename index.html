@@ -9,11 +9,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
-    <!-- Firebase Compat SDKs (v9 compat) for Secure Cloud & SMS OTP -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <!-- Supabase JS Client SDK for Free Cloud Database, Storage & Email OTP -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #1e3a8a; --secondary: #f59e0b; --bg: #f8fafc; --white: #ffffff; --text-main: #1f2937; --border: #e2e8f0; --success: #10b981; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
@@ -112,7 +109,7 @@
     <div id="otp-modal" class="modal-overlay">
         <div class="modal-content">
             <h3 style="color: var(--primary);">التحقق بخطوتين 🔒</h3>
-            <p style="font-size: 13px; color: #6b7280; margin-top: 5px;">يرجى إدخال رمز التحقق المكون من 6 أرقام المرسل لجوالك</p>
+            <p style="font-size: 13px; color: #6b7280; margin-top: 5px;">يرجى إدخال رمز التحقق المكون من 6 أرقام المرسل لبريدك الإلكتروني</p>
             <div class="otp-inputs">
                 <input type="text" maxlength="1" id="otp1" onkeyup="moveToNext(this, 'otp2')">
                 <input type="text" maxlength="1" id="otp2" onkeyup="moveToNext(this, 'otp3')">
@@ -125,9 +122,6 @@
             <button class="btn" style="background: transparent; margin-top: 10px; width: 100%;" onclick="document.getElementById('otp-modal').style.display='none'">إلغاء</button>
         </div>
     </div>
-
-    <!-- حاوية غير مرئية لـ Firebase Recaptcha -->
-    <div id="recaptcha-container" style="display: none;"></div>
 
     <!-- القائمة العلوية -->
     <nav>
@@ -179,6 +173,7 @@
             <h2 style="text-align: center; margin-bottom: 20px; color: var(--primary);">تسجيل المشترك الجديد</h2>
             <div class="form-group"><label>الاسم الكامل</label><input type="text" id="reg-name" placeholder="مثال: عبدالله محمد"></div>
             <div class="form-group"><label>رقم الجوال</label><input type="tel" id="reg-phone" placeholder="05XXXXXXXX"></div>
+            <div class="form-group"><label>البريد الإلكتروني للتحقق سحابياً ✉️</label><input type="email" id="reg-email" placeholder="example@mail.com"></div>
             <button class="btn btn-primary" style="width: 100%;" onclick="proceedToPayment()">المتابعة للدفع</button>
             <p style="text-align: center; margin-top: 20px; font-size: 14px;">مشترك حالي؟ <a style="color:var(--primary); cursor:pointer; font-weight:bold;" onclick="navigate('login')">تسجيل الدخول هنا</a></p>
         </div>
@@ -188,9 +183,9 @@
     <div id="page-login" class="page-view">
         <div class="auth-container">
             <h2 style="text-align: center; margin-bottom: 20px; color: var(--primary);">تسجيل الدخول للمشتركين</h2>
-            <p style="text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 20px;">أدخل رقم جوالك المسجل للدخول للوحة التحكم</p>
-            <div class="form-group"><label>رقم الجوال المسجل</label><input type="tel" id="login-phone" placeholder="05XXXXXXXX"></div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="loginUser()">دخول</button>
+            <p style="text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 20px;">أدخل بريدك الإلكتروني المسجل لتلقي رمز التحقق السحابي المكون من 6 أرقام</p>
+            <div class="form-group"><label>البريد الإلكتروني المسجل</label><input type="email" id="login-email" placeholder="example@mail.com"></div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="loginUser()">طلب رمز الدخول ✉️</button>
         </div>
     </div>
 
@@ -424,23 +419,17 @@
     </div>
 
     <script>
-        // تكوين مشروع فايربيس (Firebase) الخاص بك للاستخدام الفعلي
-        // بعد إنشاء مشروعك في منصة Firebase Console، انسخ قيم التكوين وضعها هنا
-        const firebaseConfig = {
-            apiKey: "AIzaSyAVAMdnv--5pT4_D2AfoVdZLz7-JqebcZY",
-            authDomain: "main-c1837.firebaseapp.com",
-            databaseURL: "https://main-c1837-default-rtdb.firebaseio.com",
-            projectId: "main-c1837",
-            storageBucket: "main-c1837.firebasestorage.app",
-            messagingSenderId: "489553689688",
-            appId: "1:489553689688:web:349aaf942cae23c111de2d",
-            measurementId: "G-S5VFBMWVRX"
+        // تكوين مشروع سوبابيز (Supabase) الخاص بك للاستخدام الفعلي السحابي والمجاني 100%
+        // بعد إنشاء مشروعك في منصة Supabase Console، انسخ قيم التكوين وضعها هنا
+        const supabaseConfig = {
+            supabaseUrl: "https://chfdcejecmuxyxwtklep.supabase.co",
+            supabaseKey: "sb_publishable_3Z2JjiNijyu_vwn3HAAoLg_q5B00qxC"
         };
 
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztr9wKILJqypnVXW_LMmKtVlnWvg23oNQDv3-Fii4DO1Kc1VtyQSx-b1gqvQyRuYMJ/exec";
 
-        // التحقق مما إذا كان فايربيس مهيأً للاستخدام الفعلي أو يعمل بنظام المحاكاة المحلي
-        const isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
+        // التحقق مما إذا كان سوبابيز مهيأً للاستخدام الفعلي أو يعمل بنظام المحاكاة المحلي
+        const isSupabaseConfigured = supabaseConfig.supabaseUrl !== "YOUR_SUPABASE_URL";
 
         let db = {
             user: localStorage.getItem('user') || '',
@@ -456,20 +445,19 @@
         let tempHouseImageBase64 = "";
         let tempRequestImageBase64 = "";
         
-        // متغيرات فايربيس
-        let auth, dbFS, storage;
-        let confirmationResultGlobal = null;
-        let recaptchaVerifier = null;
+        // متغير سوبابيز كلينت
+        let supabaseClient = null;
         let otpFlowType = 'register'; // register or login
+        let tempEmail = "";
 
         // --- المزامنة الصامتة في الخلفية (Background Sync) ---
-        // تعمل فقط في حال عدم تهيئة فايربيس (Local Mode)، لأن فايربيس يحدث البيانات تلقائياً وبسرعة فائقة (Real-time)
-        if (!isFirebaseConfigured) {
+        // تعمل فقط في حال عدم تهيئة سوبابيز (Local Mode)
+        if (!isSupabaseConfigured) {
             setInterval(silentBackgroundSync, 5000);
         }
 
         function silentBackgroundSync() {
-            if (isFirebaseConfigured) return;
+            if (isSupabaseConfigured) return;
             let syncIndicator = document.getElementById('sync-status');
             if(syncIndicator) syncIndicator.style.display = 'inline';
 
@@ -524,62 +512,62 @@
             }).catch(e => { if(syncIndicator) syncIndicator.style.display = 'none'; });
         }
 
-        // --- تهيئة فايربيس والمستمعين الفوريين للبيانات (Realtime Listeners) ---
-        if (isFirebaseConfigured) {
+        // --- تهيئة سوبابيز والمستمعين الفوريين للبيانات (Realtime Listeners) ---
+        if (isSupabaseConfigured) {
             try {
-                firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                dbFS = firebase.firestore();
-                storage = firebase.storage();
-                initFirebaseListeners();
-                console.log("Firebase Mode Active.");
+                supabaseClient = supabase.createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseKey);
+                initSupabaseData();
+                initSupabaseListeners();
+                console.log("Supabase Mode Active.");
             } catch (e) {
-                console.error("Firebase initialization failed:", e);
+                console.error("Supabase initialization failed:", e);
             }
         }
 
-        function initFirebaseListeners() {
-            // الاستماع الفوري لقائمة المنتجات
-            dbFS.collection("products").onSnapshot(snapshot => {
-                let products = [];
-                snapshot.forEach(doc => { products.push(doc.data()); });
+        async function initSupabaseData() {
+            // جلب المنتجات
+            let { data: products } = await supabaseClient.from('products').select('*');
+            if (products) {
                 db.products = products;
                 localStorage.setItem('products', JSON.stringify(db.products));
-                updateUI();
-            });
-
-            // الاستماع الفوري لطلبات الصيانة
-            dbFS.collection("requests").onSnapshot(snapshot => {
-                let requests = [];
-                snapshot.forEach(doc => { requests.push(doc.data()); });
-                requests.sort((a, b) => b.id - a.id);
-                db.requests = requests;
+            }
+            
+            // جلب طلبات الصيانة
+            let { data: requests } = await supabaseClient.from('requests').select('*');
+            if (requests) {
+                db.requests = requests.sort((a, b) => b.id - a.id);
                 localStorage.setItem('requests', JSON.stringify(db.requests));
-                updateUI();
-            });
+            }
 
-            // الاستماع الفوري لسجل المشتركين
-            dbFS.collection("users").onSnapshot(snapshot => {
-                let users = [];
-                snapshot.forEach(doc => { users.push(doc.data()); });
+            // جلب المستخدمين
+            let { data: users } = await supabaseClient.from('users').select('*');
+            if (users) {
                 db.users = users;
                 localStorage.setItem('users', JSON.stringify(db.users));
-                updateUI();
-            });
+            }
 
-            // الاستماع الفوري للشكاوى والاقتراحات
-            dbFS.collection("feedbacks").onSnapshot(snapshot => {
-                let feedbacks = [];
-                snapshot.forEach(doc => { feedbacks.push(doc.data()); });
+            // جلب المقترحات والشكاوى
+            let { data: feedbacks } = await supabaseClient.from('feedbacks').select('*');
+            if (feedbacks) {
                 db.feedbacks = feedbacks;
                 localStorage.setItem('feedbacks', JSON.stringify(db.feedbacks));
-                updateUI();
-            });
+            }
+            updateUI();
+        }
+
+        function initSupabaseListeners() {
+            // الاستماع الفوري لقاعدة البيانات لتحديث الواجهات لحظياً
+            supabaseClient.channel('custom-all-channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, () => { initSupabaseData(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => { initSupabaseData(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => { initSupabaseData(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'feedbacks' }, () => { initSupabaseData(); })
+            .subscribe();
         }
 
         window.onload = function() {
-            // إظهار تنبيه إذا كان التطبيق يعمل محلياً وغير مربوط بـ Firebase
-            if (!isFirebaseConfigured) {
+            // إظهار تنبيه إذا كان التطبيق يعمل محلياً وغير مربوط بـ Supabase
+            if (!isSupabaseConfigured) {
                 let banner = document.createElement('div');
                 banner.style.background = '#fef3c7';
                 banner.style.color = '#d97706';
@@ -588,10 +576,21 @@
                 banner.style.fontWeight = 'bold';
                 banner.style.borderBottom = '2px solid #fbbf24';
                 banner.style.fontSize = '14px';
-                banner.innerHTML = "⚠️ تنبيه: التطبيق يعمل بنظام الحفظ المحلي المؤقت. لتفعيل قاعدة البيانات السحابية الآمنة والتحقق الثنائي OTP بـ SMS، يرجى ملء تكوين FirebaseConfig في سطر 429 من الكود.";
+                banner.innerHTML = "⚠️ تنبيه: التطبيق يعمل بنظام الحفظ المحلي المؤقت. لتفعيل قاعدة البيانات السحابية الآمنة والتحقق الثنائي OTP بـ البريد الإلكتروني، يرجى ملء تكوين SupabaseConfig في سطر 429 من الكود.";
                 document.body.insertBefore(banner, document.body.firstChild);
                 
                 silentBackgroundSync();
+            } else {
+                let banner = document.createElement('div');
+                banner.style.background = '#d1fae5';
+                banner.style.color = '#065f46';
+                banner.style.padding = '12px';
+                banner.style.textAlign = 'center';
+                banner.style.fontWeight = 'bold';
+                banner.style.borderBottom = '2px solid #34d399';
+                banner.style.fontSize = '14px';
+                banner.innerHTML = "✅ متصل سحابياً بـ Supabase بنجاح. (تحقق البريد الإلكتروني OTP نشط ومجاني 100%).";
+                document.body.insertBefore(banner, document.body.firstChild);
             }
             
             if(db.user) navigate('client'); else navigate('home');
@@ -616,15 +615,15 @@
             }
         }
 
-        function logout() { 
+        async function logout() { 
             db.user = ''; 
             db.phone = ''; 
             db.regDate = ''; 
             localStorage.removeItem('user');
             localStorage.removeItem('phone');
             localStorage.removeItem('regDate');
-            if (isFirebaseConfigured) {
-                auth.signOut();
+            if (isSupabaseConfigured) {
+                await supabaseClient.auth.signOut();
             }
             navigate('home'); 
         }
@@ -677,11 +676,6 @@
                 };
                 reader.readAsDataURL(file);
             }
-        }
-
-        // تم تعديل الدالة لتمرير صورة base64 مباشرة إلى Firestore لتفادي متطلبات باقة الدفع لـ Firebase Storage
-        function uploadImageToFirebase(base64Data, path, callback) {
-            callback(base64Data || "");
         }
 
         // تفاصيل المودال لمعاينة الصور
@@ -804,26 +798,25 @@
             });
         }
 
-        // --- التسجيل والدفع والـ SMS OTP ---
+        // --- التسجيل والدفع والـ Email OTP ---
         let tempUser = "", tempPhone = "";
         
-        function proceedToPayment() { 
+        async function proceedToPayment() { 
             tempUser = document.getElementById('reg-name').value.trim();
             tempPhone = document.getElementById('reg-phone').value.trim();
-            if(!tempUser || !tempPhone) return alert("الرجاء إدخال بياناتك كاملة!");
+            tempEmail = document.getElementById('reg-email').value.trim();
             
-            if (isFirebaseConfigured) {
-                // التحقق المسبق من عدم تسجيل الجوال
-                dbFS.collection("users").where("phone", "==", tempPhone).get().then(snapshot => {
-                    if (!snapshot.empty) {
-                        alert("رقم الجوال مسجل مسبقاً! يرجى تسجيل الدخول.");
-                        navigate('login');
-                    } else {
-                        navigate('payment');
-                    }
-                }).catch(e => {
-                    alert("خطأ في التحقق من البيانات: " + e.message);
-                });
+            if(!tempUser || !tempPhone || !tempEmail) return alert("الرجاء إدخال بياناتك كاملة!");
+            
+            if (isSupabaseConfigured) {
+                // التحقق المسبق من عدم تسجيل البريد أو الجوال
+                let { data: existingUser } = await supabaseClient.from('users').select('id').or(`phone.eq.${tempPhone},email.eq.${tempEmail}`).maybeSingle();
+                if (existingUser) {
+                    alert("رقم الجوال أو البريد الإلكتروني مسجل مسبقاً! يرجى تسجيل الدخول.");
+                    navigate('login');
+                } else {
+                    navigate('payment');
+                }
             } else {
                 navigate('payment'); 
             }
@@ -836,22 +829,11 @@
             document.getElementById('form-' + method).classList.add('active');
         }
 
-        function showOTP() { 
+        async function showOTP() { 
             clearOTPInputs();
             
-            if (isFirebaseConfigured) {
-                // تهيئة الرقم الدولي للمملكة (+966)
-                let formattedPhone = tempPhone;
-                if (!formattedPhone.startsWith("+")) {
-                    if (formattedPhone.startsWith("05")) {
-                        formattedPhone = "+966" + formattedPhone.substring(1);
-                    } else if (formattedPhone.startsWith("5")) {
-                        formattedPhone = "+966" + formattedPhone;
-                    } else {
-                        formattedPhone = "+966" + formattedPhone;
-                    }
-                }
-                sendSMSOTP(formattedPhone, 'register');
+            if (isSupabaseConfigured) {
+                sendEmailOTP(tempEmail, 'register');
             } else {
                 document.getElementById('otp-modal').style.display = 'flex'; 
             }
@@ -877,48 +859,54 @@
             return code;
         }
 
-        // إرسال رمز OTP بخطوتين بالـ SMS باستخدام Firebase Auth
-        function sendSMSOTP(phoneNumber, flowType) {
+        // إرسال رمز OTP بخطوتين بالبريد الإلكتروني مجاناً 100% وبدون فيزا
+        async function sendEmailOTP(email, flowType) {
             otpFlowType = flowType;
-            
-            if (!recaptchaVerifier) {
-                recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                    'size': 'invisible'
-                });
-            }
             
             document.getElementById('otp-modal').style.display = 'flex';
             let btnVerify = document.getElementById('btn-verify-otp');
-            btnVerify.innerText = "جاري إرسال الرمز...";
+            btnVerify.innerText = "جاري إرسال الرمز ✉️...";
             btnVerify.disabled = true;
 
-            auth.signInWithPhoneNumber(phoneNumber, recaptchaVerifier)
-                .then((confirmationResult) => {
-                    confirmationResultGlobal = confirmationResult;
-                    btnVerify.innerText = otpFlowType === 'register' ? "تأكيد الدفع والاشتراك" : "تأكيد تسجيل الدخول";
-                    btnVerify.disabled = false;
-                }).catch((error) => {
-                    document.getElementById('otp-modal').style.display = 'none';
-                    alert("فشل إرسال الرمز: " + error.message);
-                    btnVerify.disabled = false;
-                });
+            let { error } = await supabaseClient.auth.signInWithOtp({
+                email: email,
+                options: {
+                    shouldCreateUser: flowType === 'register'
+                }
+            });
+
+            if (!error) {
+                btnVerify.innerText = otpFlowType === 'register' ? "تأكيد الدفع والاشتراك" : "تأكيد تسجيل الدخول";
+                btnVerify.disabled = false;
+            } else {
+                document.getElementById('otp-modal').style.display = 'none';
+                alert("فشل إرسال الرمز: " + error.message);
+                btnVerify.disabled = false;
+            }
         }
 
-        function verifyPaymentAndRegister() { 
+        async function verifyPaymentAndRegister() { 
             let code = getOTPCode();
-            if (code.length < 4) return alert("الرجاء إدخال رمز التحقق كاملاً!");
+            if (code.length < 6) return alert("الرجاء إدخال الرمز المكون من 6 أرقام كاملاً!");
 
             let btnVerify = document.getElementById('btn-verify-otp');
             btnVerify.innerText = "جاري التحقق...";
             btnVerify.disabled = true;
 
-            if (isFirebaseConfigured) {
-                confirmationResultGlobal.confirm(code).then((result) => {
+            if (isSupabaseConfigured) {
+                let verifyEmail = otpFlowType === 'register' ? tempEmail : tempEmail;
+                let { data, error } = await supabaseClient.auth.verifyOtp({
+                    email: verifyEmail,
+                    token: code,
+                    type: 'email'
+                });
+
+                if (!error) {
                     document.getElementById('otp-modal').style.display = 'none'; 
                     btnVerify.innerText = "تأكيد";
                     btnVerify.disabled = false;
                     
-                    const user = result.user;
+                    const user = data.user;
                     if (otpFlowType === 'register') {
                         // الانتقال لصفحة إكمال البيانات
                         document.getElementById('comp-name').value = tempUser;
@@ -929,30 +917,28 @@
                         tempHouseImageBase64 = "";
                         navigate('complete-reg');
                     } else {
-                        // تسجيل دخول المستخدم الحالي
-                        dbFS.collection("users").doc(user.uid).get().then(doc => {
-                            if (doc.exists) {
-                                let userData = doc.data();
-                                db.user = userData.name;
-                                db.phone = userData.phone;
-                                db.regDate = userData.date;
-                                localStorage.setItem('user', db.user);
-                                localStorage.setItem('phone', db.phone);
-                                localStorage.setItem('regDate', db.regDate);
-                                navigate('client');
-                            } else {
-                                alert("لم يتم العثور على ملف المستخدم!");
-                                navigate('register');
-                            }
-                        });
+                        // تسجيل دخول المستخدم الحالي وجلب بياناته من جدول users
+                        let { data: userData } = await supabaseClient.from('users').select('*').eq('id', user.id).maybeSingle();
+                        if (userData) {
+                            db.user = userData.name;
+                            db.phone = userData.phone;
+                            db.regDate = userData.date;
+                            localStorage.setItem('user', db.user);
+                            localStorage.setItem('phone', db.phone);
+                            localStorage.setItem('regDate', db.regDate);
+                            navigate('client');
+                        } else {
+                            alert("لم يتم العثور على ملف المشترك، الرجاء التسجيل أولاً.");
+                            navigate('register');
+                        }
                     }
-                }).catch((error) => {
-                    alert("الرمز المدخل غير صحيح: " + error.message);
+                } else {
+                    alert("الرمز المدخل غير صحيح أو انتهت صلاحيته: " + error.message);
                     btnVerify.innerText = otpFlowType === 'register' ? "تأكيد الدفع والاشتراك" : "تأكيد تسجيل الدخول";
                     btnVerify.disabled = false;
-                });
+                }
             } else {
-                // الوضع المحلي
+                // الوضع المحلي البسيط
                 document.getElementById('otp-modal').style.display = 'none'; 
                 btnVerify.innerText = "تأكيد الدفع والاشتراك";
                 btnVerify.disabled = false;
@@ -968,7 +954,7 @@
             }
         }
 
-        function saveCompleteRegistration() {
+        async function saveCompleteRegistration() {
             let nationalAddress = document.getElementById('comp-national-address').value.trim();
             let btn = document.getElementById('btn-save-complete-reg');
             
@@ -988,53 +974,45 @@
 
             let exactISO = new Date().toISOString(); 
 
-            if (isFirebaseConfigured) {
-                const currentUser = auth.currentUser;
-                if (!currentUser) {
-                    alert("عذراً، لم نتمكن من العثور على جلسة التحقق النشطة.");
+            if (isSupabaseConfigured) {
+                // جلب الجلسة الحالية
+                let { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    alert("عذراً، لم نتمكن من العثور على جلسة تفعيل نشطة.");
                     btn.disabled = false;
                     btn.innerText = "حفظ وتفعيل الاشتراك";
                     return;
                 }
                 
-                // 1. رفع صورة المنزل سحابياً
-                let imagePath = `houses/${currentUser.uid}_${Date.now()}.jpg`;
-                uploadImageToFirebase(tempHouseImageBase64, imagePath, function(downloadURL) {
-                    if (!downloadURL) {
-                        alert("فشل رفع صورة المنزل سحابياً. يرجى المحاولة لاحقاً.");
-                        btn.disabled = false;
-                        btn.innerText = "حفظ وتفعيل الاشتراك";
-                        return;
-                    }
+                // تخزين ملف المشترك في جدول users بقاعدة البيانات السحابية
+                let userData = {
+                    id: user.id,
+                    date: exactISO,
+                    name: tempUser,
+                    phone: tempPhone,
+                    email: tempEmail,
+                    status: 'فعال',
+                    nationalAddress: nationalAddress,
+                    houseImage: tempHouseImageBase64, // يتم تخزينها كـ base64 مضغوطة بشكل متوافق وسريع
+                    lat: latVal,
+                    lng: lngVal
+                };
+                
+                let { error } = await supabaseClient.from('users').upsert([userData]);
+                if (!error) {
+                    db.user = tempUser; db.phone = tempPhone; db.regDate = exactISO;
+                    localStorage.setItem('user', db.user); 
+                    localStorage.setItem('phone', db.phone); 
+                    localStorage.setItem('regDate', db.regDate);
                     
-                    // 2. تخزين وثيقة المشترك في Firestore
-                    let userData = {
-                        date: exactISO,
-                        name: tempUser,
-                        phone: tempPhone,
-                        status: 'فعال',
-                        nationalAddress: nationalAddress,
-                        houseImage: downloadURL,
-                        lat: latVal,
-                        lng: lngVal
-                    };
-                    
-                    dbFS.collection("users").doc(currentUser.uid).set(userData)
-                    .then(() => {
-                        db.user = tempUser; db.phone = tempPhone; db.regDate = exactISO;
-                        localStorage.setItem('user', db.user); 
-                        localStorage.setItem('phone', db.phone); 
-                        localStorage.setItem('regDate', db.regDate);
-                        
-                        alert("✅ تم تفعيل باقة الاشتراك سحابياً بنجاح لمدة 12 شهر!"); 
-                        btn.innerText = "حفظ وتفعيل الاشتراك"; btn.disabled = false;
-                        navigate('client'); 
-                    }).catch(e => {
-                        alert("خطأ في تخزين البيانات سحابياً: " + e.message);
-                        btn.disabled = false;
-                        btn.innerText = "حفظ وتفعيل الاشتراك";
-                    });
-                });
+                    alert("✅ تم تفعيل باقة الاشتراك سحابياً بنجاح لمدة 12 شهر!"); 
+                    btn.innerText = "حفظ وتفعيل الاشتراك"; btn.disabled = false;
+                    navigate('client'); 
+                } else {
+                    alert("خطأ في تخزين البيانات سحابياً: " + error.message);
+                    btn.disabled = false;
+                    btn.innerText = "حفظ وتفعيل الاشتراك";
+                }
             } else {
                 // الوضع المحلي والربط مع قوقل شيت
                 let payload = { 
@@ -1098,36 +1076,23 @@
             }
         }
 
-        function loginUser() {
-            let phoneInput = document.getElementById('login-phone').value.trim();
-            if(!phoneInput) return alert("أدخل رقم جوالك");
+        async function loginUser() {
+            let emailInput = document.getElementById('login-email').value.trim();
+            if(!emailInput) return alert("أدخل بريدك الإلكتروني المسجل");
+            tempEmail = emailInput;
 
-            if (isFirebaseConfigured) {
-                // صياغة الرقم بالترميز الدولي للـ SMS
-                let formattedPhone = phoneInput;
-                if (!formattedPhone.startsWith("+")) {
-                    if (formattedPhone.startsWith("05")) {
-                        formattedPhone = "+966" + formattedPhone.substring(1);
-                    } else if (formattedPhone.startsWith("5")) {
-                        formattedPhone = "+966" + formattedPhone;
-                    } else {
-                        formattedPhone = "+966" + formattedPhone;
-                    }
+            if (isSupabaseConfigured) {
+                // التحقق أولاً من وجود العميل في قاعدة بيانات المشتركين
+                let { data: userData, error } = await supabaseClient.from('users').select('*').eq('email', emailInput).maybeSingle();
+                if (!userData) {
+                    alert("البريد الإلكتروني المدخل غير مسجل كشريك! يرجى الاشتراك أولاً.");
+                    navigate('register');
+                    return;
                 }
-                
-                // التحقق أولاً من وجود العميل في السجلات
-                dbFS.collection("users").where("phone", "==", phoneInput).get().then(snapshot => {
-                    if (snapshot.empty) {
-                        alert("رقم الجوال غير مسجل كشريك! يرجى الاشتراك أولاً.");
-                        navigate('register');
-                        return;
-                    }
-                    sendSMSOTP(formattedPhone, 'login');
-                }).catch(e => {
-                    alert("خطأ في التحقق من الحساب: " + e.message);
-                });
+                sendEmailOTP(emailInput, 'login');
             } else {
-                let existingUser = db.users.find(u => u.phone.toString() === phoneInput.toString());
+                // الوضع المحلي البسيط
+                let existingUser = db.users.find(u => u.email === emailInput || u.phone === emailInput);
                 if(existingUser) {
                     db.user = existingUser.name; 
                     db.phone = existingUser.phone; 
@@ -1137,14 +1102,14 @@
                     localStorage.setItem('regDate', db.regDate);
                     navigate('client');
                 } else {
-                    alert("رقم الجوال غير مسجل! نرجو الاشتراك أولاً.");
+                    alert("رقم الجوال أو البريد غير مسجل! نرجو الاشتراك أولاً.");
                     navigate('register');
                 }
             }
         }
 
         // --- الشكاوى والاقتراحات ---
-        function submitFeedback() {
+        async function submitFeedback() {
             let name = document.getElementById('feedback-name').value.trim();
             let phone = document.getElementById('feedback-phone').value.trim();
             let type = document.getElementById('feedback-type').value;
@@ -1163,16 +1128,16 @@
                 desc: desc
             };
 
-            if (isFirebaseConfigured) {
-                dbFS.collection("feedbacks").add(feedback)
-                .then(() => {
+            if (isSupabaseConfigured) {
+                let { error } = await supabaseClient.from('feedbacks').insert([feedback]);
+                if (!error) {
                     alert("✅ شكرًا لك! تم إرسال رسالتك سحابياً بنجاح وسنتواصل معك قريباً.");
                     document.getElementById('feedback-name').value = '';
                     document.getElementById('feedback-phone').value = '';
                     document.getElementById('feedback-desc').value = '';
-                }).catch(e => {
-                    alert("فشل إرسال الرسالة سحابياً: " + e.message);
-                });
+                } else {
+                    alert("فشل إرسال الرسالة سحابياً: " + error.message);
+                }
             } else {
                 db.feedbacks.push(feedback);
                 localStorage.setItem('feedbacks', JSON.stringify(db.feedbacks));
@@ -1186,7 +1151,7 @@
         }
 
         // --- إرسال طلب جديد مع الصورة ---
-        function submitRequest() {
+        async function submitRequest() {
             let srv = document.getElementById('c-service').value, desc = document.getElementById('c-desc').value;
             let btn = document.getElementById('btn-submit');
             if(!desc) return alert("الرجاء كتابة وصف العطل");
@@ -1195,38 +1160,31 @@
             let reqId = Date.now();
             let reqDate = new Date().toLocaleDateString('ar-SA');
 
-            if (isFirebaseConfigured) {
-                const currentUser = auth.currentUser;
-                let path = `requests/${reqId}_${currentUser ? currentUser.uid : 'anon'}.jpg`;
+            if (isSupabaseConfigured) {
+                let reqData = {
+                    id: reqId,
+                    date: reqDate,
+                    user: db.user,
+                    phone: db.phone,
+                    service: srv,
+                    desc: desc,
+                    image: tempRequestImageBase64 || "", // يتم حفظها في حقول قاعدة البيانات مضغوطة بشكل سريع
+                    status: 'قيد الانتظار',
+                    tech: '',
+                    start: '',
+                    end: ''
+                };
                 
-                // 1. رفع صورة العطل لـ Storage أولاً
-                uploadImageToFirebase(tempRequestImageBase64, path, function(downloadURL) {
-                    let reqData = {
-                        id: reqId,
-                        date: reqDate,
-                        user: db.user,
-                        phone: db.phone,
-                        service: srv,
-                        desc: desc,
-                        image: downloadURL || "",
-                        status: 'قيد الانتظار',
-                        tech: '',
-                        start: '',
-                        end: ''
-                    };
-                    
-                    // 2. إدخال الطلب في Firestore
-                    dbFS.collection("requests").add(reqData)
-                    .then(() => {
-                        btn.innerText = "إرسال الطلب"; btn.disabled = false; document.getElementById('c-desc').value = '';
-                        tempRequestImageBase64 = "";
-                        document.getElementById('c-image').value = "";
-                        document.getElementById('request-preview').style.display = "none";
-                    }).catch(e => {
-                        alert("فشل إرسال طلب الصيانة: " + e.message);
-                        btn.innerText = "إرسال الطلب"; btn.disabled = false;
-                    });
-                });
+                let { error } = await supabaseClient.from('requests').insert([reqData]);
+                if (!error) {
+                    btn.innerText = "إرسال الطلب"; btn.disabled = false; document.getElementById('c-desc').value = '';
+                    tempRequestImageBase64 = "";
+                    document.getElementById('c-image').value = "";
+                    document.getElementById('request-preview').style.display = "none";
+                } else {
+                    alert("فشل إرسال طلب الصيانة: " + error.message);
+                    btn.innerText = "إرسال الطلب"; btn.disabled = false;
+                }
             } else {
                 // الوضع المحلي
                 let payload = { 
@@ -1266,7 +1224,7 @@
             }
         }
 
-        function addProduct() {
+        async function addProduct() {
             let name = document.getElementById('a-prod-name').value;
             let price = document.getElementById('a-prod-price').value;
             let btn = document.getElementById('btn-add-prod');
@@ -1274,16 +1232,16 @@
 
             btn.innerText = "جاري النشر..."; btn.disabled = true;
 
-            if (isFirebaseConfigured) {
-                dbFS.collection("products").add({ name: name, price: price })
-                .then(() => {
+            if (isSupabaseConfigured) {
+                let { error } = await supabaseClient.from('products').insert([{ id: Date.now(), name: name, price: price }]);
+                if (!error) {
                     btn.innerText = "إضافة ونشر للموقع"; btn.disabled = false; 
                     document.getElementById('a-prod-name').value = ''; 
                     document.getElementById('a-prod-price').value = '';
-                }).catch(e => {
-                    alert("خطأ في النشر: " + e.message);
+                } else {
+                    alert("خطأ في النشر: " + error.message);
                     btn.innerText = "إضافة ونشر للموقع"; btn.disabled = false;
-                });
+                }
             } else {
                 let payload = { action: "addProduct", id: Date.now(), name: name, price: price };
                 db.products.push({name, price});
@@ -1294,27 +1252,24 @@
             }
         }
 
-        function changeStatus(id, newStatus) {
+        async function changeStatus(id, newStatus) {
             let req = db.requests.find(r => r.id == id);
             if (!req) return;
             let timeNow = new Date().toLocaleTimeString('ar-SA');
 
-            if (isFirebaseConfigured) {
-                dbFS.collection("requests").where("id", "==", id).get().then(snapshot => {
-                    if (!snapshot.empty) {
-                        let docId = snapshot.docs[0].id;
-                        let updates = { status: newStatus };
-                        if (newStatus === 'جاري العمل') {
-                            updates.tech = db.user;
-                            updates.start = timeNow;
-                        } else if (newStatus === 'مكتمل') {
-                            updates.end = timeNow;
-                        }
-                        dbFS.collection("requests").doc(docId).update(updates);
-                    }
-                }).catch(e => {
-                    console.error("Error updating status in Firebase:", e);
-                });
+            if (isSupabaseConfigured) {
+                let updates = { status: newStatus };
+                if (newStatus === 'جاري العمل') {
+                    updates.tech = db.user;
+                    updates.start = timeNow;
+                } else if (newStatus === 'مكتمل') {
+                    updates.end = timeNow;
+                }
+                
+                let { error } = await supabaseClient.from('requests').update(updates).eq('id', id);
+                if (error) {
+                    console.error("Error updating status in Supabase:", error);
+                }
             } else {
                 let payload = { action: "updateStatus", id: id, status: newStatus };
 
@@ -1355,7 +1310,7 @@
 
             if(document.getElementById('welcome-msg') && db.user) document.getElementById('welcome-msg').innerText = "أهلاً بك يا " + db.user + "!";
 
-            let currentUserRecord = db.users.find(u => u.phone.toString() === db.phone.toString());
+            let currentUserRecord = db.users.find(u => u.phone.toString() === db.phone.toString() || (u.email && u.email.toString() === db.phone.toString()));
             if(currentUserRecord && document.getElementById('client-sub-details')) {
                 document.getElementById('client-sub-details').style.display = 'block';
                 document.getElementById('client-detail-name').innerText = currentUserRecord.name;
@@ -1469,7 +1424,6 @@
                 </tr>`;
             });
 
-            // عرض الشكاوى والاقتراحات في لوحة التحكم
             let feedbackHTML = '';
             db.feedbacks.forEach(f => {
                 let fBadge = f.type === 'شكوى' ? 'badge-pending' : 'badge-working';
