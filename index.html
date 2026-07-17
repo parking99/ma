@@ -316,7 +316,10 @@
                         <th>الجوال</th>
                         <th>الخدمة</th>
                         <th>التفاصيل</th>
-                        <th>الصورة</th>
+                        <th>صورة العطل</th>
+                        <th>العنوان الوطني</th>
+                        <th>صورة المنزل</th>
+                        <th>الموقع الجغرافي</th>
                         <th>الحالة</th>
                         <th>إجراء</th>
                     </tr>
@@ -743,6 +746,15 @@
             btn.innerText = "جاري تفعيل الاشتراك...";
             btn.disabled = true;
 
+            // الحصول على إحداثيات الموقع الدقيقة من الخريطة لحفظها
+            let latVal = "";
+            let lngVal = "";
+            if (marker) {
+                let latlng = marker.getLatLng();
+                latVal = latlng.lat.toString();
+                lngVal = latlng.lng.toString();
+            }
+
             let exactISO = new Date().toISOString(); 
             let payload = { 
                 action: "registerUser", 
@@ -750,7 +762,9 @@
                 user: tempUser, 
                 phone: tempPhone,
                 nationalAddress: nationalAddress,
-                houseImage: tempHouseImageBase64
+                houseImage: tempHouseImageBase64,
+                lat: latVal,
+                lng: lngVal
             };
 
             fetch(GOOGLE_SCRIPT_URL, { 
@@ -766,7 +780,9 @@
                     phone: tempPhone, 
                     status: 'فعال',
                     nationalAddress: nationalAddress,
-                    houseImage: tempHouseImageBase64
+                    houseImage: tempHouseImageBase64,
+                    lat: latVal,
+                    lng: lngVal
                 });
                 
                 localStorage.setItem('user', db.user); 
@@ -786,7 +802,9 @@
                     phone: tempPhone, 
                     status: 'فعال',
                     nationalAddress: nationalAddress,
-                    houseImage: tempHouseImageBase64
+                    houseImage: tempHouseImageBase64,
+                    lat: latVal,
+                    lng: lngVal
                 });
                 localStorage.setItem('user', db.user); 
                 localStorage.setItem('phone', db.phone); 
@@ -1005,12 +1023,30 @@
                     let actionStatus = r.status === 'قيد الانتظار' ? 'جاري العمل' : 'مكتمل';
                     let btnStyle = r.status === 'قيد الانتظار' ? 'btn-primary' : 'btn-secondary';
                     
+                    // استخراج تفاصيل المشترك لتبسيط وصول الفني للعنوان وصورة المنزل والموقع
+                    let clientUser = db.users.find(u => u.phone.toString() === r.phone.toString());
+                    let clientAddress = clientUser ? clientUser.nationalAddress : 'غير متوفر';
+                    let clientHouseImg = clientUser && clientUser.houseImage ? `<img src="${clientUser.houseImage}" style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; cursor: pointer; border:1px solid var(--border);" onclick="openImageModal('${clientUser.houseImage}')">` : 'لا توجد';
+                    
+                    // تكوين رابط الاتجاهات بخرائط جوجل (إما إحداثيات مباشرة أو العنوان الوطني نصياً)
+                    let mapsUrl = "https://www.google.com/maps/search/?api=1&query=";
+                    if (clientUser && clientUser.lat && clientUser.lng) {
+                        mapsUrl += `${clientUser.lat},${clientUser.lng}`;
+                    } else {
+                        mapsUrl += encodeURIComponent(clientAddress);
+                    }
+                    
+                    let directionsBtn = `<a href="${mapsUrl}" target="_blank" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">🗺️ فتح الخريطة</a>`;
+                    
                     techActive += `<tr>
                         <td>${r.user}</td>
                         <td>${r.phone}</td>
                         <td>${r.service}</td>
                         <td>${r.desc}</td>
                         <td>${imgHtml}</td>
+                        <td>${clientAddress}</td>
+                        <td>${clientHouseImg}</td>
+                        <td>${directionsBtn}</td>
                         <td><span class="badge ${badge}">${r.status}</span></td>
                         <td><button class="btn ${btnStyle}" style="padding:6px 12px" onclick="changeStatus(${r.id}, '${actionStatus}')">${btnTxt}</button></td>
                     </tr>`;
