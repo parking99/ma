@@ -2,529 +2,321 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام إدارة الإخلاء — لوحة التحكم</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة خدمات السباكة والكهرباء</title>
     <style>
         :root {
-            --bg-sidebar: #0f172a; --bg-main: #0b1120; --bg-card: #1e293b; --border: #334155;
-            --text-main: #f8fafc; --text-muted: #94a3b8; --accent-orange: #f97316;
-            --accent-green: #10b981; --accent-red: #ef4444; --accent-yellow: #eab308;
-            --font-family: 'Tajawal', sans-serif; --transition: all 0.2s ease;
+            --primary: #0056b3;
+            --secondary: #ffc107;
+            --bg-color: #f4f7f6;
+            --text-dark: #333;
+            --white: #ffffff;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
         body {
-            font-family: var(--font-family); background-color: var(--bg-main);
-            color: var(--text-main); display: flex; height: 100vh; overflow: hidden; font-size: 14px;
-            overscroll-behavior-y: none;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
         }
 
-        .sidebar {
-            width: 250px; background-color: var(--bg-sidebar); border-left: 1px solid var(--border);
-            display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; z-index: 100;
+        /* شريط التنقل */
+        nav {
+            background-color: var(--white);
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        .sidebar-header {
-            padding: 24px; display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800;
-            color: var(--accent-orange); border-bottom: 1px solid var(--border); margin-bottom: 16px;
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
         }
 
-        .nav-items { display: flex; flex-direction: column; padding: 0 12px; gap: 4px; }
-        .nav-item {
-            display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: var(--text-muted);
-            border-radius: 8px; cursor: pointer; transition: var(--transition); font-weight: 600; border: 1px solid transparent;
+        .nav-links a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: bold;
+            cursor: pointer;
         }
-        .nav-item:hover { background-color: rgba(30, 41, 59, 0.5); color: var(--text-main); }
-        .nav-item.active { background-color: rgba(30, 41, 59, 0.8); color: var(--accent-orange); border-color: rgba(249, 115, 22, 0.2); }
 
-        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 32px 40px; }
-        .page { display: none; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-        .page-header h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
-        .page-header p { color: var(--text-muted); font-size: 14px; }
-
-        .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-        .btn {
-            display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 8px; font-weight: 700;
-            cursor: pointer; border: none; transition: var(--transition); font-family: var(--font-family); font-size: 13px;
+        .btn-login {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
         }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-        .btn-outline:hover { background: var(--bg-card); }
-        .btn-red { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.2); }
-        .btn-red:hover { background: rgba(239, 68, 68, 0.2); }
-        .btn-orange { background: var(--accent-orange); color: white; }
 
-        .input-styled {
-            background: var(--bg-card); border: 1px solid var(--border); color: white;
-            padding: 10px 16px; border-radius: 8px; outline: none; font-family: var(--font-family);
+        /* البانر الرئيسي */
+        .hero {
+            background: linear-gradient(rgba(0, 86, 179, 0.8), rgba(0, 86, 179, 0.8)), url('https://images.unsplash.com/photo-1581094288338-2314dddb7ece?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover;
+            color: var(--white);
+            text-align: center;
+            padding: 100px 20px;
         }
-        
-        .rfid-box {
-            background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
-            padding: 48px; width: 100%; max-width: 450px; text-align: center; margin: 40px auto;
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
         }
-        .rfid-icon {
-            width: 80px; height: 80px; border-radius: 50%; background: var(--bg-main); border: 2px solid var(--accent-orange);
-            display: flex; align-items: center; justify-content: center; color: var(--accent-orange); margin: 0 auto 24px;
+
+        .price-tag {
+            font-size: 2rem;
+            color: var(--secondary);
+            font-weight: bold;
+            margin-bottom: 30px;
         }
-        .scan-feedback { margin-top: 14px; padding: 14px 18px; border-radius: 8px; font-weight: 700; font-size: 16px; display: none; }
 
-        .table-wrapper { width: 100%; overflow-x: auto; background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; }
-        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 600px; }
-        th { background-color: rgba(15, 23, 42, 0.6); color: var(--text-muted); padding: 16px; font-weight: 700; font-size: 13px; white-space: nowrap; }
-        td { padding: 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        tr:hover td { background-color: rgba(255,255,255,0.02); }
-        
-        .row-safe td:first-child { border-right: 3px solid var(--accent-green); }
-        .row-missing td:first-child { border-right: 3px solid var(--accent-red); }
-
-        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
-        .status-badge.safe { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); }
-        .status-badge.missing { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); }
-
-        .action-btn-small { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; font-family: var(--font-family); white-space: nowrap;}
-        .action-btn-small.safe { background: var(--accent-green); color: black; }
-        .action-btn-small.undo { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-        
-        .points-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .point-card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-        .stat-card.red-glow { border-color: rgba(239, 68, 68, 0.3); background-color: rgba(239, 68, 68, 0.02); }
-        
-        .charts-container { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .chart-box { background-color: var(--bg-card); padding: 24px; border-radius: 12px; border: 1px solid var(--border); width: 100%; }
-        .chart-wrapper-bar { position: relative; height: 220px; width: 100%; }
-        .chart-wrapper-donut { position: relative; height: 220px; width: 100%; display: flex; justify-content: center; align-items: center; }
-
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; height: 65px; flex-direction: row; border-left: none; border-top: 1px solid var(--border); position: fixed; bottom: 0; z-index: 999; }
-            .sidebar-header { display: none; }
-            .nav-items { flex-direction: row; justify-content: space-around; width: 100%; padding: 0; align-items: center; height: 100%; }
-            .nav-item { flex-direction: column; padding: 6px; gap: 4px; border-radius: 8px; font-size: 10px; flex: 1; text-align: center; }
-            .nav-item i { width: 20px; height: 20px; }
-            .nav-item span { display: block; font-size: 9px; }
-            .main-content { padding: 16px; margin-bottom: 65px; }
-            .page-header h1 { font-size: 20px; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            .charts-container { grid-template-columns: 1fr; }
-            .points-grid { grid-template-columns: 1fr; }
-            .header-actions { width: 100%; flex-direction: column; align-items: stretch; }
-            .input-styled, .btn { width: 100%; }
-            #searchBox { width: 100% !important; }
-            .rfid-box { padding: 32px 16px; }
+        .btn-primary {
+            background-color: var(--secondary);
+            color: var(--text-dark);
+            padding: 15px 40px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
         }
+
+        .btn-primary:hover {
+            background-color: #e0a800;
+        }
+
+        /* قسم المميزات */
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 50px;
+            flex-wrap: wrap;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .feature-card h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        /* لوحة العميل (مخفية افتراضياً) */
+        #dashboard {
+            display: none;
+            padding: 50px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-active {
+            color: green;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        /* الإشعارات الوهمية */
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 20px;
+            bottom: 30px;
+            font-size: 17px;
+        }
+
+        .toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 4.5s;
+        }
+
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
-        <div>
-            <div class="sidebar-header"><i data-lucide="siren" style="color: var(--accent-red);"></i><span>نظام الإخلاء</span></div>
-            <div class="nav-items">
-                <div class="nav-item active" onclick="switchPage('dashboard', this)"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></div>
-                <div class="nav-item" onclick="switchPage('rfid', this)"><i data-lucide="scan-line"></i><span>مسح RFID</span></div>
-                <div class="nav-item" onclick="switchPage('employees', this)"><i data-lucide="users"></i><span>الموظفون</span></div>
-                <div class="nav-item" onclick="switchPage('points', this)"><i data-lucide="map-pin"></i><span>نقاط التجمع</span></div>
-                <div class="nav-item" onclick="switchPage('sync', this)"><i data-lucide="cloud-cog"></i><span>المزامنة</span></div>
-            </div>
-        </div>
-    </aside>
+    <!-- الإشعار المنبثق -->
+    <div id="toast" class="toast">رسالة الإشعار</div>
 
-    <main class="main-content">
-        
-        <div id="page-dashboard" class="page active">
-            <div class="page-header">
-                <div><h1>لوحة التحكم</h1><p>مراقبة حية لحالة الإخلاء</p></div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px; font-size: 12px;">إجمالي الموظفين</div>
-                    <div class="stat-value" id="statTotal" style="font-size: 28px; font-weight: 800;">0</div>
-                </div>
-                <div class="stat-card" style="border-color: rgba(16, 185, 129, 0.3);">
-                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px; font-size: 12px;">متواجدون بأمان</div>
-                    <div class="stat-value" id="statSafe" style="font-size: 28px; font-weight: 800; color: var(--accent-green);">0</div>
-                </div>
-                <div class="stat-card red-glow">
-                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px; font-size: 12px;">المفقودون</div>
-                    <div class="stat-value" id="statMissing" style="font-size: 28px; font-weight: 800; color: var(--accent-red);">0</div>
-                </div>
-                <div class="stat-card">
-                    <div style="color: var(--text-muted); font-weight: 600; margin-bottom: 12px; font-size: 12px;">الاكتمال</div>
-                    <div class="stat-value" id="statRatio" style="font-size: 28px; font-weight: 800; color: var(--accent-yellow);">0%</div>
-                </div>
-            </div>
-            <div class="charts-container">
-                <div class="chart-box">
-                    <h3 style="margin-bottom: 20px; font-size: 14px;">الحضور حسب التجمع</h3>
-                    <div class="chart-wrapper-bar"><canvas id="barChart"></canvas></div>
-                </div>
-                <div class="chart-box">
-                    <h3 style="margin-bottom: 20px; text-align:center; font-size: 14px;">الحالة العامة</h3>
-                    <div class="chart-wrapper-donut"><canvas id="donutChart"></canvas></div>
-                </div>
-            </div>
+    <!-- شريط التنقل -->
+    <nav>
+        <div class="logo">صيانة+</div>
+        <div class="nav-links" id="nav-links">
+            <a onclick="showPage('landing')">الرئيسية</a>
+            <a href="#features">المميزات</a>
+            <button class="btn-login" onclick="showPage('dashboard')">تسجيل الدخول</button>
         </div>
+    </nav>
 
-        <div id="page-rfid" class="page">
-            <div class="page-header" style="justify-content: center; text-align: center;">
-                <div><h1>مسح البطاقات (RFID)</h1><p>قم بتمرير البطاقة للتسجيل</p></div>
+    <!-- الصفحة الرئيسية -->
+    <div id="landing-page">
+        <header class="hero">
+            <h1>ودّع أعطال المنزل المزعجة</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 10px;">اشترك الآن في خدمات السباكة والكهرباء واستمتع براحة البال طوال العام</p>
+            <div class="price-tag">بـ 500 ريال فقط سنوياً</div>
+            <button class="btn-primary" onclick="simulatePayment()">اشترك الآن</button>
+        </header>
+
+        <section id="features" class="features">
+            <div class="feature-card">
+                <h3>زيارات طوال العام</h3>
+                <p>اطلب الخدمة متى ما احتجت دون دفع رسوم فحص إضافية طوال فترة اشتراكك.</p>
             </div>
-            <div class="rfid-box">
-                <div class="rfid-icon"><i data-lucide="scan-face" style="width: 40px; height: 40px;"></i></div>
-                <input type="text" id="scanInput" class="input-styled" style="width: 100%; text-align: center; font-size: 18px;" placeholder="في انتظار المسح..." autocomplete="off">
-                <div id="scanFeedback" class="scan-feedback"></div>
+            <div class="feature-card">
+                <h3>فنيون معتمدون</h3>
+                <p>فريقنا مدرب ومؤهل بأعلى المعايير لضمان جودة وأمان الإصلاحات.</p>
             </div>
+            <div class="feature-card">
+                <h3>سرعة الاستجابة</h3>
+                <p>نصلك في أسرع وقت داخل المدينة لمعالجة الحالات الطارئة.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- لوحة العميل (تظهر بعد الاشتراك أو تسجيل الدخول) -->
+    <div id="dashboard">
+        <div class="dashboard-header">
+            <div>
+                <h2>أهلاً بك، عميلنا العزيز</h2>
+                <p>حالة الاشتراك: <span class="status-active">فعّال (ينتهي في 2027)</span></p>
+            </div>
+            <button class="btn-login" style="border-color: red; color: red;" onclick="showPage('landing')">تسجيل الخروج</button>
         </div>
 
-        <div id="page-employees" class="page">
-            <div class="page-header">
-                <div><h1>إدارة الموظفين</h1><p>قائمة الموظفين وحالاتهم</p></div>
-                <div class="header-actions" style="flex-direction: row; width: auto;">
-                    <button class="btn btn-red" id="btnResetAll"><i data-lucide="rotate-ccw" style="width: 16px;"></i> تصفير</button>
-                    <button class="btn btn-outline" id="btnMarkAllSafe"><i data-lucide="shield-check" style="width: 16px;"></i> الكل آمن</button>
-                </div>
-            </div>
-            <div class="header-actions" style="margin-bottom: 16px;">
-                <input type="text" id="searchBox" class="input-styled" placeholder="بحث بالاسم أو الرقم...">
-                <select id="locationFilter" class="input-styled"><option value="">جميع النقاط</option></select>
-                <select id="statusFilter" class="input-styled">
-                    <option value="">كل الحالات</option><option value="safe">آمن</option><option value="missing">مفقود</option>
+        <div style="background: var(--white); padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <h3 style="margin-bottom: 20px; color: var(--primary);">🔧 طلب خدمة جديدة</h3>
+            
+            <div class="form-group">
+                <label>نوع الخدمة المطلوبة:</label>
+                <select id="service-type">
+                    <option value="سباكة">سباكة (تسريب، سخان، خلاطات...)</option>
+                    <option value="كهرباء">كهرباء (أفياش، إنارة، التماس...)</option>
                 </select>
             </div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr><th>الحالة</th><th>الاسم / RFID</th><th>الرقم الوظيفي</th><th>القسم</th><th>نقطة التجمع</th><th>إجراءات</th></tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
+
+            <div class="form-group">
+                <label>وصف المشكلة:</label>
+                <textarea id="issue-desc" rows="4" placeholder="اشرح العطل هنا باختصار..."></textarea>
             </div>
+
+            <button class="btn-primary" onclick="submitRequest()">إرسال الطلب</button>
         </div>
+    </div>
 
-        <div id="page-points" class="page">
-            <div class="page-header">
-                <div><h1>نقاط التجمع</h1><p>الطاقة الاستيعابية للإخلاء</p></div>
-            </div>
-            <div class="points-grid" id="locationsGrid"></div>
-        </div>
-
-        <div id="page-sync" class="page">
-            <div class="page-header">
-                <div><h1>المزامنة والإعدادات</h1><p>لربط الأجهزة مع بعضها البعض ومع Google Sheets</p></div>
-            </div>
-            
-            <div style="background-color: var(--bg-card); padding: 24px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border);">
-                <h3 style="margin-bottom: 12px; color: var(--accent-orange);">ربط الأجهزة والجوال (Google Sheets)</h3>
-                <div class="header-actions">
-                    <input type="url" id="syncUrlInput" class="input-styled" style="flex-grow: 1;" placeholder="الصق الرابط هنا...">
-                    <button class="btn btn-orange" id="btnConnectSync">تفعيل الربط والمزامنة</button>
-                </div>
-                <p id="syncStatusLabel" style="margin-top: 16px; font-weight: bold; font-size: 13px; color: var(--text-muted); padding: 10px; background: rgba(0,0,0,0.2); border-radius: 6px;">
-                    🔴 غير متصل — البيانات الحالية محفوظة محلياً.
-                </p>
-            </div>
-
-            <div style="background-color: var(--bg-card); padding: 24px; border-radius: 12px; border: 1px solid var(--border);">
-                <h3 style="margin-bottom: 12px;">استيراد الأسماء (ملف Excel)</h3>
-                <input type="file" id="excelFile" accept=".xlsx,.xls" class="input-styled">
-            </div>
-        </div>
-    </main>
-
+    <!-- أكواد الجافاسكربت للتفاعل -->
     <script>
-        lucide.createIcons();
-
-        // بيانات تجريبية 
-        let records = [
-            { name: "محمد عبدالله الأحمد", rfid: "12345", id: "EMP-001", dept: "تقنية المعلومات", location: "نقطة تجمع A", safe: true, lastModified: Date.now() },
-            { name: "نورة سلطان المنصور", rfid: "67890", id: "EMP-004", dept: "العمليات", location: "نقطة تجمع B", safe: true, lastModified: Date.now() },
-            { name: "خالد عبدالرحمن الزهراني", rfid: "11223", id: "EMP-005", dept: "تقنية المعلومات", location: "نقطة تجمع C", safe: false, lastModified: Date.now() },
-            { name: "سارة محمد القحطاني", rfid: "44556", id: "EMP-006", dept: "التسويق", location: "نقطة تجمع C", safe: true, lastModified: Date.now() },
-            { name: "هند سعد الدوسري", rfid: "99001", id: "EMP-008", dept: "المالية", location: "نقطة تجمع D", safe: true, lastModified: Date.now() }
-        ];
-
-        let syncUrl = localStorage.getItem('evac-sync-url') || '';
-        let myBarChart = null, myDonutChart = null, syncInFlight = false;
-
-        function switchPage(pageId, element) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            element.classList.add('active');
-            if(pageId === 'rfid') { setTimeout(() => document.getElementById('scanInput').focus(), 100); }
-        }
-
-        function updateStatsAndCharts() {
-            const total = records.length;
-            const safe = records.filter(r => r.safe).length;
-            const missing = total - safe;
-            const ratio = total ? Math.round((safe / total) * 100) : 0;
-
-            document.getElementById('statTotal').textContent = total;
-            document.getElementById('statSafe').textContent = safe;
-            document.getElementById('statMissing').textContent = missing;
-            document.getElementById('statRatio').textContent = ratio + '%';
-
-            const locs = [...new Set(records.map(r => r.location).filter(Boolean))];
-            const safeData = locs.map(loc => records.filter(r => r.location === loc && r.safe).length);
-            const missingData = locs.map(loc => records.filter(r => r.location === loc && !r.safe).length);
-
-            if (myBarChart) myBarChart.destroy();
-            if (myDonutChart) myDonutChart.destroy();
-
-            myBarChart = new Chart(document.getElementById('barChart').getContext('2d'), {
-                type: 'bar',
-                data: { labels: locs, datasets: [
-                    { label: 'مفقود', data: missingData, backgroundColor: '#ef4444', borderRadius: 4, barThickness: window.innerWidth < 768 ? 15 : 25 },
-                    { label: 'آمن', data: safeData, backgroundColor: '#10b981', borderRadius: 4, barThickness: window.innerWidth < 768 ? 15 : 25 }
-                ]},
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#334155' }, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
-            });
-
-            myDonutChart = new Chart(document.getElementById('donutChart').getContext('2d'), {
-                type: 'doughnut',
-                data: { labels: ['آمن', 'مفقود'], datasets: [{ data: [safe, missing], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0, cutout: '75%' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            buildLocationsGrid(locs, safeData, missingData);
-        }
-
-        function buildLocationsGrid(locs, safeData, missingData) {
-            const grid = document.getElementById('locationsGrid');
-            grid.innerHTML = '';
-            locs.forEach((loc, index) => {
-                const s = safeData[index], m = missingData[index], total = s + m;
-                const ratio = total ? Math.round((s / total) * 100) : 0;
-                grid.innerHTML += `
-                    <div class="point-card">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                            <h3 style="font-size:16px; font-weight:800;">${loc}</h3><i data-lucide="map-pin" style="color:var(--accent-yellow); width:20px;"></i>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px; color:var(--text-muted);">
-                            <span>العدد الحالي: ${s} من ${total}</span><span>${ratio}%</span>
-                        </div>
-                        <div style="background:var(--bg-main); height:8px; border-radius:4px; overflow:hidden;">
-                            <div style="background:var(--accent-green); height:100%; width:${ratio}%;"></div>
-                        </div>
-                    </div>`;
-            });
-            lucide.createIcons();
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('tableBody');
-            const searchVal = document.getElementById('searchBox').value.toLowerCase();
-            const filterLoc = document.getElementById('locationFilter').value;
-            const filterStatus = document.getElementById('statusFilter').value;
-
-            const filtered = records.filter(r => {
-                if (filterLoc && r.location !== filterLoc) return false;
-                if (filterStatus === 'safe' && !r.safe) return false;
-                if (filterStatus === 'missing' && r.safe) return false;
-                if (searchVal && !(r.name + ' ' + r.id + ' ' + r.rfid).toLowerCase().includes(searchVal)) return false;
-                return true;
-            });
-
-            tbody.innerHTML = '';
-            filtered.forEach(rec => {
-                const isSafe = rec.safe;
-                const tr = document.createElement('tr');
-                tr.className = isSafe ? 'row-safe' : 'row-missing';
-                tr.innerHTML = `
-                    <td><span class="status-badge ${isSafe ? 'safe' : 'missing'}">${isSafe ? 'آمن' : 'مفقود'}</span></td>
-                    <td><div style="font-weight: 700; color: white;">${rec.name}</div><div style="font-size: 11px; color: var(--text-muted);">${rec.rfid}</div></td>
-                    <td style="color: var(--text-muted);">${rec.id}</td><td>${rec.dept}</td><td>${rec.location || 'غير محدد'}</td>
-                `;
-                const tdAction = document.createElement('td');
-                const btn = document.createElement('button');
-                btn.className = `action-btn-small ${isSafe ? 'undo' : 'safe'}`;
-                btn.textContent = isSafe ? 'إلغاء' : 'تسجيل آمن';
-                
-                // --- إصلاح التأخير: تحديث المتغير المحلي والتاريخ قبل الإرسال ---
-                btn.onclick = () => {
-                    rec.safe = !rec.safe; 
-                    rec.lastModified = Date.now(); // لحماية النقر من المزامنة العكسية
-                    renderTable(); updateStatsAndCharts();
-                    if (syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: rec.safe });
-                };
-                tdAction.appendChild(btn); tr.appendChild(tdAction); tbody.appendChild(tr);
-            });
-        }
-
-        function updateLocationFilter() {
-            const sel = document.getElementById('locationFilter');
-            const current = sel.value;
-            const locs = [...new Set(records.map(r => r.location).filter(Boolean))].sort();
-            sel.innerHTML = '<option value="">جميع النقاط</option>' + locs.map(l => `<option value="${l}">${l}</option>`).join('');
-            sel.value = locs.includes(current) ? current : '';
-        }
-
-        // مسح RFID
-        let globalBuffer = '', globalLastTime = 0;
-        function processScanCode(rawCode) {
-            const code = String(rawCode).trim().toLowerCase();
-            if (!code) return;
-            const rec = records.find(r => String(r.rfid).toLowerCase() === code || String(r.id).toLowerCase() === code);
-            const feedback = document.getElementById('scanFeedback');
-            feedback.style.display = 'block';
-
-            if (!rec) {
-                feedback.style.background = 'rgba(239, 68, 68, 0.1)'; feedback.style.color = 'var(--accent-red)';
-                feedback.innerHTML = `البطاقة غير مسجلة: <b>${rawCode}</b>`;
-                setTimeout(() => feedback.style.display = 'none', 3000); return;
+        // دالة التنقل بين الصفحات
+        function showPage(page) {
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'none';
+            
+            if(page === 'landing') {
+                document.getElementById('landing-page').style.display = 'block';
+            } else if (page === 'dashboard') {
+                document.getElementById('dashboard').style.display = 'block';
             }
-
-            rec.safe = true; 
-            rec.lastModified = Date.now(); // حماية السجل من التجاوز العكسي أثناء المزامنة
-            feedback.style.background = 'rgba(16, 185, 129, 0.1)'; feedback.style.color = 'var(--accent-green)';
-            feedback.innerHTML = `تم تحضير الموظف بنجاح: <b>${rec.name}</b>`;
-            setTimeout(() => feedback.style.display = 'none', 3000);
-
-            updateStatsAndCharts(); renderTable();
-            if (syncUrl) postToSync('checkin', { rfid: rec.rfid, id: rec.id, safe: true });
+            window.scrollTo(0,0);
         }
 
-        document.getElementById('scanInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); processScanCode(e.target.value); e.target.value = ''; }
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-            const now = Date.now();
-            if (now - globalLastTime > 200) globalBuffer = ''; 
-            globalLastTime = now;
-            if (e.key === 'Enter') { processScanCode(globalBuffer); globalBuffer = ''; } 
-            else if (e.key.length === 1) { globalBuffer += e.key; }
-        });
-
-        // المزامنة
-        function setSyncUI(connected) {
-            const label = document.getElementById('syncStatusLabel');
-            if(connected) {
-                label.innerHTML = '🟢 متصل - يتم المزامنة حياً مع Google Sheets';
-                label.style.color = 'var(--accent-green)';
-            } else {
-                label.innerHTML = '🔴 غير متصل - البيانات محفوظة في هذا الجهاز فقط';
-                label.style.color = 'var(--accent-red)';
+        // محاكاة عملية الدفع والاشتراك
+        function simulatePayment() {
+            let confirmSub = confirm("سيتم توجيهك الآن لبوابة الدفع لدفع مبلغ 500 ريال.\nهل ترغب بالمتابعة؟");
+            if(confirmSub) {
+                showToast("✅ تمت عملية الدفع بنجاح! تم تفعيل اشتراكك السنوي.");
+                setTimeout(() => {
+                    showPage('dashboard');
+                }, 2000);
             }
         }
 
-        // إرسال البيانات (Fire and Forget) لمنع التعليق
-        function postToSync(action, payload) {
-            if (!syncUrl) return;
-            fetch(syncUrl, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(Object.assign({ action }, payload)) 
-            }).catch(e => console.error('Sync Error:', e));
-        }
+        // محاكاة إرسال طلب الخدمة واستقبال الإشعار
+        function submitRequest() {
+            let service = document.getElementById('service-type').value;
+            let desc = document.getElementById('issue-desc').value;
 
-        // جلب البيانات بشكل دوري
-        async function pullFromSync() {
-            if (!syncUrl || syncInFlight) return;
-            syncInFlight = true;
-            try {
-                const res = await fetch(syncUrl + '?t=' + Date.now());
-                const data = await res.json();
-                syncInFlight = false;
-                
-                if (data && data.records) {
-                    let changed = false;
-                    data.records.forEach(remote => {
-                        const match = records.find(r => r.id === remote.id || r.rfid === remote.rfid);
-                        const isRemoteSafe = remote.safe === true || String(remote.safe).toLowerCase() === 'true';
-                        
-                        if (match) {
-                            // --- إصلاح التأخير: حماية التعديل المحلي لمدة 6 ثوانٍ ---
-                            const isRecentlyModified = match.lastModified && (Date.now() - match.lastModified < 6000);
-                            if (match.safe !== isRemoteSafe && !isRecentlyModified) {
-                                match.safe = isRemoteSafe;
-                                changed = true;
-                            }
-                        } else {
-                            records.push({...remote, safe: isRemoteSafe, lastModified: Date.now()});
-                            changed = true;
-                        }
-                    });
-                    if (changed) { updateStatsAndCharts(); renderTable(); updateLocationFilter(); }
-                    setSyncUI(true);
-                }
-            } catch { syncInFlight = false; setSyncUI(false); }
-        }
-
-        document.getElementById('btnConnectSync').addEventListener('click', () => {
-            const url = document.getElementById('syncUrlInput').value.trim();
-            if (url) {
-                syncUrl = url; localStorage.setItem('evac-sync-url', url);
-                setSyncUI(true); pullFromSync(); setInterval(pullFromSync, 4000);
+            if(desc.trim() === '') {
+                alert("الرجاء كتابة وصف للمشكلة أولاً");
+                return;
             }
-        });
 
-        if (syncUrl) {
-            document.getElementById('syncUrlInput').value = syncUrl;
-            setSyncUI(true); pullFromSync(); setInterval(pullFromSync, 4000);
+            // محاكاة إشعار الفايربيس (إشعار العميل)
+            showToast("🔔 تم رفع طلب الـ " + service + " بنجاح. جاري البحث عن فني...");
+            document.getElementById('issue-desc').value = ''; // تفريغ الحقل
+
+            // محاكاة إشعار تعيين الفني بعد 4 ثواني
+            setTimeout(() => {
+                showToast("👷‍♂️ الفني 'أحمد' استلم طلبك وهو في الطريق إليك!");
+            }, 4000);
         }
 
-        // الأزرار والتفاعلات
-        document.getElementById('searchBox').addEventListener('input', renderTable);
-        document.getElementById('locationFilter').addEventListener('change', renderTable);
-        document.getElementById('statusFilter').addEventListener('change', renderTable);
-
-        document.getElementById('btnMarkAllSafe').addEventListener('click', () => {
-            records.forEach(r => { r.safe = true; r.lastModified = Date.now(); }); 
-            updateStatsAndCharts(); renderTable();
-            if (syncUrl) postToSync('checkin_all', { safe: true });
-        });
-
-        // --- إصلاح التصفير: تم إرجاع 'reset' بدلاً من 'checkin_all' ليعمل مع قوقل شيت ---
-        document.getElementById('btnResetAll').addEventListener('click', () => {
-            if(confirm('هل أنت متأكد من تصفير الحضور للجميع؟')) {
-                records.forEach(r => { r.safe = false; r.lastModified = Date.now(); }); 
-                updateStatsAndCharts(); renderTable();
-                if (syncUrl) postToSync('reset', {}); // الأمر 'reset' الخاص بـ Google Apps Script
-            }
-        });
-
-        document.getElementById('excelFile').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                const wb = XLSX.read(evt.target.result, { type: 'array' });
-                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-                if (rows.length > 1) {
-                    records = rows.slice(1).map(r => ({
-                        name: r[0] || 'غير معروف', rfid: r[1] || r[2] || '', id: r[2] || '',
-                        dept: r[3] || 'إدارة عامة', location: r[4] || 'غير محدد', safe: false, lastModified: Date.now()
-                    })).filter(x => x.name !== 'غير معروف');
-                    updateStatsAndCharts(); renderTable(); updateLocationFilter();
-                    if (syncUrl) postToSync('import', { records });
-                    alert(`تم استيراد ${records.length} موظف بنجاح!`);
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        });
-
-        window.onload = function() {
-            Chart.defaults.color = '#94a3b8';
-            Chart.defaults.font.family = 'Tajawal';
-            updateStatsAndCharts(); renderTable(); updateLocationFilter();
-        };
+        // دالة عرض الإشعارات أسفل الشاشة
+        function showToast(message) {
+            var toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast show";
+            setTimeout(function(){ 
+                toast.className = toast.className.replace("show", ""); 
+            }, 3000);
+        }
     </script>
 </body>
 </html>
