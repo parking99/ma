@@ -3,93 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صيانة+ | المنصة الشاملة</title>
+    <title>صيانة+ | النظام الإداري الشامل</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1e3a8a; --secondary: #f59e0b; --bg: #f8fafc; --white: #ffffff; --text-main: #1f2937; --text-muted: #6b7280; --border: #e2e8f0; }
+        :root { --primary: #1e3a8a; --secondary: #f59e0b; --bg: #f8fafc; --white: #ffffff; --text-main: #1f2937; --text-muted: #6b7280; --border: #e2e8f0; --success: #10b981; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
         body { background-color: var(--bg); color: var(--text-main); line-height: 1.6; }
-        
-        /* Navigation */
         nav { background-color: var(--white); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .logo { font-size: 28px; font-weight: 800; color: var(--primary); cursor: pointer;}
         .logo span { color: var(--secondary); }
         .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { text-decoration: none; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        
-        /* Buttons */
-        .btn { padding: 10px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 16px; transition: 0.3s; }
+        .btn { padding: 10px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; transition: 0.3s; }
         .btn-primary { background: var(--primary); color: var(--white); }
         .btn-secondary { background: var(--secondary); color: var(--white); }
-        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-        
-        /* Pages */
         .page-view { display: none; animation: fadeIn 0.4s ease-in-out; }
         .page-view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Hero */
         .hero { background: linear-gradient(to left, rgba(30, 58, 138, 0.9), rgba(30, 58, 138, 0.7)), url('https://images.unsplash.com/photo-1581094288338-2314dddb7ece?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover; color: var(--white); text-align: center; padding: 100px 20px; min-height: 70vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .hero h1 { font-size: 3.5rem; margin-bottom: 20px; }
-        
-        /* Auth & Forms */
         .auth-container { max-width: 500px; margin: 60px auto; background: var(--white); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 14px; }
-        input, select, textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
-        
-        /* Payment */
-        .payment-methods { display: flex; gap: 10px; margin-bottom: 20px; }
-        .payment-tab { flex: 1; padding: 10px; text-align: center; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .payment-tab.active { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
-        .payment-form { display: none; }
-        .payment-form.active { display: block; }
-        .btn-apple-pay { background: #000; color: #fff; width: 100%; padding: 15px; border-radius: 8px; font-size: 18px; cursor: pointer; border: none; margin-bottom: 15px;}
-        
-        /* OTP Modal */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px);}
-        .modal-content { background: var(--white); padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; text-align: center; }
-        .otp-inputs { display: flex; gap: 10px; justify-content: center; margin: 20px 0; direction: ltr; }
-        .otp-inputs input { width: 50px; height: 50px; text-align: center; font-size: 24px; font-weight: bold; border: 2px solid var(--border); border-radius: 8px;}
-        
-        /* Dashboards */
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
         .dashboard-container { padding: 40px 5%; max-width: 1200px; margin: auto; }
-        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid var(--border); }
-        .card-header { font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 15px; text-align: right; border-bottom: 1px solid var(--border); }
+        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid var(--border); overflow-x: auto;}
+        .card-header { font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; display: flex; justify-content: space-between;}
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; min-width: 800px;}
+        th, td { padding: 15px 10px; text-align: right; border-bottom: 1px solid var(--border); }
         th { background: var(--bg); color: var(--text-muted); }
         .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-working { background: #dbeafe; color: #1d4ed8; }
-        .badge-success { background: #d1fae5; color: #059669; }
-
-        /* Dev Tools (Bottom Bar) */
+        .badge-success { background: #d1fae5; color: var(--success); }
         .dev-tools { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; padding: 10px 20px; border-radius: 30px; display: flex; gap: 10px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .dev-tools span { color: #fff; font-size: 14px; margin-left: 10px; align-self: center; font-weight: bold;}
-        .dev-tools button { background: #4b5563; color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s;}
+        .dev-tools button { background: #4b5563; color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: bold;}
         .dev-tools button:hover { background: var(--secondary); color: #000; }
+        .sync-btn { background: #10b981; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; border: none; cursor: pointer; display: flex; align-items: center; gap: 5px;}
     </style>
 </head>
 <body>
 
-    <!-- نافذة التحقق بخطوتين (OTP) -->
-    <div id="otp-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 style="color: var(--primary);">التحقق من الدفع 🔒</h3>
-            <p style="color: var(--text-muted); font-size: 14px; margin-top: 10px;">أدخل الرمز المرسل لجوالك لتأكيد الاشتراك.</p>
-            <div class="otp-inputs">
-                <input type="text" maxlength="1" onkeyup="moveToNext(this, 'otp2')">
-                <input type="text" maxlength="1" id="otp2" onkeyup="moveToNext(this, 'otp3')">
-                <input type="text" maxlength="1" id="otp3" onkeyup="moveToNext(this, 'otp4')">
-                <input type="text" maxlength="1" id="otp4">
-            </div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="verifyPayment()">تأكيد الدفع</button>
-            <button class="btn" style="background: transparent; margin-top: 10px; width: 100%;" onclick="document.getElementById('otp-modal').style.display='none'">إلغاء</button>
-        </div>
-    </div>
-
-    <!-- شريط التنقل -->
     <nav>
         <div class="logo" onclick="navigate('home')">صيانة<span>+</span></div>
         <div class="nav-links" id="nav-links-container"></div>
@@ -98,108 +50,99 @@
     <!-- 1. الرئيسية -->
     <div id="page-home" class="page-view active">
         <section class="hero">
-            <h1>راحة بالك.. طوال العام</h1>
-            <p style="font-size: 1.2rem; margin-bottom: 30px;">اشترك الآن في الباقة السنوية لخدمات السباكة والكهرباء</p>
-            <button class="btn btn-secondary" style="padding: 15px 40px; font-size: 1.2rem;" onclick="navigate('register')">اشترك بـ 500 ريال فقط</button>
+            <h1 style="font-size: 3rem; margin-bottom: 20px;">النظام الذكي لإدارة الصيانة</h1>
+            <button class="btn btn-secondary" style="padding: 15px 40px; font-size: 1.2rem;" onclick="navigate('register')">تسجيل مستخدم جديد</button>
         </section>
     </div>
 
     <!-- 2. التسجيل -->
     <div id="page-register" class="page-view">
         <div class="auth-container">
-            <div style="text-align: center; margin-bottom: 20px;"><h2>إنشاء حساب جديد</h2></div>
-            <div class="form-group"><label>الاسم الكامل</label><input type="text" id="reg-name" placeholder="مثال: عبدالله محمد"></div>
+            <h2 style="text-align: center; margin-bottom: 20px;">بيانات العميل أو الفني</h2>
+            <div class="form-group"><label>الاسم</label><input type="text" id="reg-name" placeholder="محمد أحمد"></div>
             <div class="form-group"><label>رقم الجوال</label><input type="tel" id="reg-phone" placeholder="05XXXXXXXX"></div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="proceedToPayment()">المتابعة للدفع</button>
+            <button class="btn btn-primary" style="width: 100%;" onclick="loginUser()">دخول للنظام</button>
         </div>
     </div>
 
-    <!-- 3. الدفع -->
-    <div id="page-payment" class="page-view">
-        <div class="auth-container">
-            <div style="text-align: center; margin-bottom: 20px;"><h2>إتمام الاشتراك (500 ر.س)</h2></div>
-            <div class="payment-methods">
-                <div class="payment-tab active" onclick="switchPayment('card')">البطاقة / مدى</div>
-                <div class="payment-tab" onclick="switchPayment('apple')">Apple Pay</div>
-            </div>
-            <div id="form-card" class="payment-form active">
-                <div class="form-group"><label>رقم البطاقة</label><input type="text" placeholder="XXXX XXXX XXXX XXXX"></div>
-                <button class="btn btn-primary" style="width: 100%;" onclick="showOTP()">دفع الآن</button>
-            </div>
-            <div id="form-apple" class="payment-form">
-                <button class="btn-apple-pay" onclick="showOTP()"> Pay</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. تسجيل الدخول -->
-    <div id="page-login" class="page-view">
-        <div class="auth-container">
-            <div style="text-align: center; margin-bottom: 20px;"><h2>تسجيل الدخول</h2></div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="loginUser()">دخول سريع للوحة العميل</button>
-        </div>
-    </div>
-
-    <!-- 5. لوحة العميل (Dashboard) -->
+    <!-- 3. لوحة العميل -->
     <div id="page-client" class="page-view">
         <div class="dashboard-container">
             <div class="card" style="background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; border: none;">
                 <h2 id="welcome-msg">أهلاً بك!</h2>
-                <p>حالة الاشتراك: <span class="badge badge-success">فعّال</span></p>
             </div>
             <div class="card">
-                <div class="card-header">طلب خدمة صيانة 🛠️</div>
-                <div class="form-group"><label>الخدمة:</label><select id="c-service"><option>سباكة</option><option>كهرباء</option></select></div>
-                <div class="form-group"><label>وصف المشكلة:</label><textarea id="c-desc" rows="3" placeholder="اشرح العطل هنا..."></textarea></div>
-                <div class="form-group"><label>إرفاق صورة (اختياري، يتم ضغطها تلقائياً للسرعة):</label><input type="file" id="c-image" accept="image/*"></div>
-                <button class="btn btn-secondary" id="btn-submit" onclick="submitRequest()">إرسال الطلب لقاعدة البيانات</button>
+                <div class="card-header">طلب خدمة 🛠️ <button class="sync-btn" onclick="syncData()">🔄 تحديث القائمة</button></div>
+                <div class="form-group"><label>الخدمة المطلوبة (يتم جلبها من الإدارة):</label><select id="c-service"></select></div>
+                <div class="form-group"><label>التفاصيل:</label><textarea id="c-desc" rows="3"></textarea></div>
+                <div class="form-group"><label>مرفق (يتم ضغطه تلقائياً):</label><input type="file" id="c-image" accept="image/*"></div>
+                <button class="btn btn-secondary" id="btn-submit" onclick="submitRequest()">إرسال الطلب</button>
             </div>
             <div class="card">
-                <div class="card-header">طلباتي السابقة</div>
-                <table><tr><th>التاريخ</th><th>الخدمة</th><th>الوصف</th><th>المرفق</th><th>الحالة</th></tr><tbody id="client-list"></tbody></table>
+                <div class="card-header">طلباتي الحالية</div>
+                <table><tr><th>التاريخ</th><th>الخدمة</th><th>الوصف</th><th>المرفق</th><th>الفني</th><th>الحالة</th></tr><tbody id="client-list"></tbody></table>
             </div>
         </div>
     </div>
 
-    <!-- 6. لوحة الفني (Tech) -->
+    <!-- 4. لوحة الفني -->
     <div id="page-tech" class="page-view">
         <div class="dashboard-container">
             <div class="card">
-                <div class="card-header">لوحة الفني - المهام المسندة إليك 👨‍🔧</div>
-                <table><tr><th>العميل</th><th>الخدمة</th><th>التفاصيل</th><th>المرفق</th><th>الحالة</th><th>إجراء</th></tr><tbody id="tech-list"></tbody></table>
+                <div class="card-header">المهام المسندة (قيد الانتظار وجاري العمل) <button class="sync-btn" onclick="syncData()">🔄 تحديث</button></div>
+                <table><tr><th>العميل</th><th>الجوال</th><th>الخدمة</th><th>التفاصيل</th><th>المرفق</th><th>الحالة</th><th>إجراء</th></tr><tbody id="tech-active-list"></tbody></table>
+            </div>
+            <div class="card">
+                <div class="card-header">سجل أعمالك المكتملة 🏅</div>
+                <table><tr><th>العميل</th><th>الخدمة</th><th>بدء العمل</th><th>انتهاء العمل</th><th>الحالة</th></tr><tbody id="tech-completed-list"></tbody></table>
             </div>
         </div>
     </div>
 
-    <!-- 7. لوحة الإدارة (Admin) -->
+    <!-- 5. لوحة الإدارة -->
     <div id="page-admin" class="page-view">
         <div class="dashboard-container">
             <div class="card">
-                <div class="card-header">لوحة الإدارة - متابعة كافة الطلبات 📊</div>
-                <table><tr><th>العميل</th><th>الخدمة</th><th>التفاصيل</th><th>المرفق</th><th>الحالة</th></tr><tbody id="admin-list"></tbody></table>
+                <div class="card-header">إضافة خدمات / منتجات للمنصة ➕</div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex:1"><label>اسم الخدمة</label><input type="text" id="a-prod-name"></div>
+                    <div class="form-group" style="flex:1"><label>السعر / الوصف</label><input type="text" id="a-prod-price"></div>
+                </div>
+                <button class="btn btn-secondary" onclick="addProduct()" id="btn-add-prod">إضافة وإرسال لجميع الأجهزة</button>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">الطلبات النشطة (العملاء بانتظار الخدمة) <button class="sync-btn" onclick="syncData()">🔄 مزامنة البيانات</button></div>
+                <table><tr><th>العميل</th><th>الجوال</th><th>الخدمة</th><th>المرفق</th><th>وقت البدء</th><th>الفني الحالي</th><th>الحالة</th></tr><tbody id="admin-active-list"></tbody></table>
+            </div>
+
+            <div class="card">
+                <div class="card-header">أرشيف الطلبات المكتملة 📁</div>
+                <table><tr><th>العميل</th><th>الخدمة</th><th>الفني</th><th>وقت البدء</th><th>وقت الانتهاء</th><th>الحالة</th></tr><tbody id="admin-completed-list"></tbody></table>
             </div>
         </div>
     </div>
 
-    <!-- شريط أدوات المطور للتنقل السريع -->
     <div class="dev-tools">
-        <span>تبديل الواجهات:</span>
-        <button onclick="navigate('home')">الرئيسية</button>
-        <button onclick="navigate('client')">العميل</button>
-        <button onclick="navigate('tech')">الفني</button>
-        <button onclick="navigate('admin')">الإدارة</button>
+        <span style="color:white; font-size:12px; align-self:center;">تنقل (أدوات المطور):</span>
+        <button onclick="navigate('home')">خروج</button>
+        <button onclick="navigate('client')">لوحة العميل</button>
+        <button onclick="navigate('tech')">لوحة الفني</button>
+        <button onclick="navigate('admin')">لوحة الإدارة</button>
     </div>
 
     <script>
-        // ✅ هذا هو رابطك الجديد تم وضعه بنجاح
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzT0MnXb3M5tLaLiLQ00gD1HIpFRq9nCn8IYpcpztIbPdRDCw1Vyf3rAmo5nkSWoNAT/exec";
+        // 🔴 الرابط الخاص بك
+        const GOOGLE_SCRIPT_URL = https://script.google.com/macros/s/AKfycbzT0MnXb3M5tLaLiLQ00gD1HIpFRq9nCn8IYpcpztIbPdRDCw1Vyf3rAmo5nkSWoNAT/exec";
 
         let db = {
-            currentUser: localStorage.getItem('currentUser') || '',
+            user: localStorage.getItem('user') || '',
+            phone: localStorage.getItem('phone') || '',
+            products: JSON.parse(localStorage.getItem('products')) || [{name: "سباكة", price: "مشمول"}, {name: "كهرباء", price: "مشمول"}],
             requests: JSON.parse(localStorage.getItem('requests')) || []
         };
 
-        // --- التوجيه والواجهات ---
+        // --- التوجيه ---
         function navigate(page) {
             document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
@@ -207,129 +150,169 @@
             
             let nav = document.getElementById('nav-links-container');
             if(['client', 'tech', 'admin'].includes(page)) {
-                nav.innerHTML = `<button class="btn btn-outline" style="border-color: red; color: red;" onclick="logout()">خروج</button>`;
+                nav.innerHTML = `<button class="btn btn-primary" style="background:red" onclick="logout()">خروج</button>`;
+                syncData(); // المزامنة التلقائية عند دخول أي لوحة
             } else {
-                nav.innerHTML = `<a onclick="navigate('home')">الرئيسية</a><button class="btn btn-outline" onclick="navigate('login')">دخول</button>`;
+                nav.innerHTML = `<button class="btn btn-outline" onclick="navigate('register')">تسجيل دخول</button>`;
             }
-            refreshTables();
         }
 
-        function loginUser() { db.currentUser = "محمد (تجربة)"; localStorage.setItem('currentUser', db.currentUser); navigate('client'); }
-        function logout() { db.currentUser = ''; localStorage.removeItem('currentUser'); navigate('home'); }
-        
-        // --- الدفع ---
-        function proceedToPayment() { db.currentUser = document.getElementById('reg-name').value || 'عميل جديد'; navigate('payment'); }
-        function switchPayment(method) {
-            document.querySelectorAll('.payment-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.payment-form').forEach(f => f.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('form-' + method).classList.add('active');
-        }
-        function showOTP() { document.getElementById('otp-modal').style.display = 'flex'; }
-        function moveToNext(curr, nextId) { if(curr.value.length === 1) document.getElementById(nextId).focus(); }
-        function verifyPayment() { 
-            document.getElementById('otp-modal').style.display = 'none'; 
-            alert("✅ تم الاشتراك بنجاح!"); 
-            localStorage.setItem('currentUser', db.currentUser); 
+        function loginUser() { 
+            let n = document.getElementById('reg-name').value;
+            let p = document.getElementById('reg-phone').value;
+            if(!n || !p) return alert("أدخل بياناتك!");
+            db.user = n; db.phone = p;
+            localStorage.setItem('user', n); localStorage.setItem('phone', p);
             navigate('client'); 
         }
+        function logout() { db.user = ''; db.phone = ''; localStorage.clear(); navigate('home'); }
 
-        // --- ضغط الصور للسرعة ---
-        function compressImage(file, callback) {
-            var reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = function(e) {
-                var img = new Image();
-                img.src = e.target.result;
+        // --- المزامنة من قوقل شيت (تحدث لجميع الأجهزة) ---
+        function syncData() {
+            let btns = document.querySelectorAll('.sync-btn');
+            btns.forEach(b => b.innerText = "جاري الجلب...");
+            
+            fetch(GOOGLE_SCRIPT_URL + "?action=getData")
+            .then(res => res.json())
+            .then(data => {
+                if(data.products && data.products.length > 0) db.products = data.products;
+                if(data.requests) db.requests = data.requests;
+                localStorage.setItem('products', JSON.stringify(db.products));
+                localStorage.setItem('requests', JSON.stringify(db.requests));
+                updateUI();
+                btns.forEach(b => b.innerText = "🔄 تم التحديث");
+                setTimeout(()=> btns.forEach(b => b.innerText = "🔄 تحديث"), 2000);
+            })
+            .catch(err => {
+                console.log("لم يتم الجلب، يتم عرض البيانات المحلية", err);
+                btns.forEach(b => b.innerText = "🔄 تحديث");
+                updateUI();
+            });
+        }
+
+        // --- إضافة منتج من الإدارة ---
+        function addProduct() {
+            let name = document.getElementById('a-prod-name').value;
+            let price = document.getElementById('a-prod-price').value;
+            let btn = document.getElementById('btn-add-prod');
+            if(!name) return alert("أدخل اسم الخدمة");
+
+            btn.innerText = "جاري الإضافة...";
+            let payload = { action: "addProduct", id: Date.now(), name: name, price: price };
+            
+            // تحديث محلي فوراً
+            db.products.push({name, price});
+            localStorage.setItem('products', JSON.stringify(db.products));
+            updateUI();
+
+            // إرسال لقوقل
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
+            .then(() => { alert("تم إضافة الخدمة ونشرها لجميع الأجهزة بنجاح!"); })
+            .finally(() => { btn.innerText = "إضافة وإرسال لجميع الأجهزة"; document.getElementById('a-prod-name').value = ''; });
+        }
+
+        // --- إرسال طلب صيانة ---
+        function compressImage(file, cb) {
+            var r = new FileReader(); r.readAsDataURL(file);
+            r.onload = function(e) {
+                var img = new Image(); img.src = e.target.result;
                 img.onload = function() {
-                    var canvas = document.createElement("canvas");
-                    var max_size = 500; 
-                    var w = img.width, h = img.height;
-                    if(w > h && w > max_size) { h *= max_size / w; w = max_size; }
-                    else if (h > max_size) { w *= max_size / h; h = max_size; }
-                    canvas.width = w; canvas.height = h;
-                    var ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0, w, h);
-                    var base64 = canvas.toDataURL("image/jpeg", 0.5).split(',')[1];
-                    callback(base64, "image/jpeg");
+                    var cvs = document.createElement("canvas"), ctx = cvs.getContext("2d");
+                    var w = img.width, h = img.height, max = 500;
+                    if(w > h && w > max){ h *= max/w; w = max; } else if(h > max){ w *= max/h; h = max; }
+                    cvs.width = w; cvs.height = h; ctx.drawImage(img, 0, 0, w, h);
+                    cb(cvs.toDataURL("image/jpeg", 0.5).split(',')[1], "image/jpeg");
                 }
             }
         }
 
-        // --- الإرسال لقوقل شيت ---
         function submitRequest() {
-            let service = document.getElementById('c-service').value;
-            let desc = document.getElementById('c-desc').value;
-            let fileInput = document.getElementById('c-image');
-            let btn = document.getElementById('btn-submit');
+            let srv = document.getElementById('c-service').value, desc = document.getElementById('c-desc').value;
+            let file = document.getElementById('c-image'), btn = document.getElementById('btn-submit');
+            if(!desc) return alert("الرجاء كتابة الوصف");
 
-            if(!desc) return alert("الرجاء كتابة الوصف!");
+            btn.innerText = "جاري الحفظ..."; btn.disabled = true;
+            let reqId = Date.now();
+            let dateToday = new Date().toLocaleDateString('ar-SA');
+            let payload = { action: "addRequest", id: reqId, date: dateToday, user: db.user, phone: db.phone, service: srv, desc: desc, imageBase64: "", imageMimeType: "" };
 
-            btn.innerText = "جاري الإرسال لقوقل شيت...";
-            btn.disabled = true;
-
-            let payload = { action: "addRequest", user: db.currentUser, service: service, desc: desc, imageBase64: "", imageMimeType: "" };
-
-            if(fileInput.files.length > 0) {
-                compressImage(fileInput.files[0], function(base64, mime) {
-                    payload.imageBase64 = base64; payload.imageMimeType = mime;
-                    sendData(payload, btn);
-                });
-            } else {
-                sendData(payload, btn);
-            }
+            if(file.files.length > 0) {
+                compressImage(file.files[0], function(b64, mime) { payload.imageBase64 = b64; payload.imageMimeType = mime; sendReq(payload, btn); });
+            } else { sendReq(payload, btn); }
         }
 
-        function sendData(payload, btn) {
-            db.requests.push({ id: Date.now(), date: new Date().toISOString().split('T')[0], user: payload.user, service: payload.service, desc: payload.desc, status: 'قيد الانتظار' });
+        function sendReq(payload, btn) {
+            // حفظ محلي مبدئي
+            db.requests.push({ id: payload.id, date: payload.date, user: payload.user, phone: payload.phone, service: payload.service, desc: payload.desc, status: 'قيد الانتظار', tech: '', start: '', end: ''});
             localStorage.setItem('requests', JSON.stringify(db.requests));
-            refreshTables();
+            updateUI();
 
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                redirect: "follow", 
-                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                body: JSON.stringify(payload)
-            }).then(res => res.text()).then(res => {
-                console.log("رد قوقل:", res);
-                alert("تم تسجيل الطلب في قوقل شيت بنجاح!");
-            }).catch(err => {
-                console.error("خطأ:", err);
-                alert("عذراً، حدث خطأ أثناء الاتصال.");
-            }).finally(() => {
-                document.getElementById('c-desc').value = ''; document.getElementById('c-image').value = '';
-                btn.innerText = "إرسال الطلب لقاعدة البيانات"; btn.disabled = false;
-            });
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
+            .then(() => alert("تم تسجيل الطلب في الإدارة بنجاح!"))
+            .finally(() => { btn.innerText = "إرسال الطلب"; btn.disabled = false; document.getElementById('c-desc').value = ''; });
         }
 
-        function changeStatus(id) {
+        // --- تحديث حالة الفني (تسجيل الأوقات) ---
+        function changeStatus(id, newStatus) {
             let req = db.requests.find(r => r.id == id);
-            if(req.status === 'قيد الانتظار') req.status = 'جاري العمل';
-            else if(req.status === 'جاري العمل') req.status = 'مكتمل';
-            localStorage.setItem('requests', JSON.stringify(db.requests));
-            refreshTables();
+            let timeNow = new Date().toLocaleTimeString('ar-SA');
+            
+            let payload = { action: "updateStatus", id: id, status: newStatus };
+
+            if(newStatus === 'جاري العمل') {
+                req.status = 'جاري العمل'; req.tech = db.user; req.start = timeNow;
+                payload.tech = db.user; payload.start = timeNow;
+            } else if (newStatus === 'مكتمل') {
+                req.status = 'مكتمل'; req.end = timeNow;
+                payload.end = timeNow;
+            }
+            
+            updateUI();
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
         }
 
-        function refreshTables() {
-            let cHtml='', tHtml='', aHtml='';
+        // --- تحديث الواجهة والجداول والتصنيفات ---
+        function updateUI() {
+            // تحديث قائمة الخدمات
+            let sHTML = '';
+            db.products.forEach(p => sHTML += `<option value="${p.name}">${p.name} (${p.price})</option>`);
+            if(document.getElementById('c-service')) document.getElementById('c-service').innerHTML = sHTML;
+            if(document.getElementById('welcome-msg') && db.user) document.getElementById('welcome-msg').innerText = "أهلاً بك، " + db.user;
+
+            // تفريغ الجداول
+            let clientHTML='', techActive='', techDone='', adminActive='', adminDone='';
+            
             db.requests.forEach(r => {
                 let badge = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
-                let img = `<span style="color:#ccc; font-size:12px;">بدون</span>`; 
+                let img = r.image && r.image !== "بدون مرفق" ? `<a href="${r.image}" target="_blank" style="color:var(--primary); font-weight:bold">🖼️ فتح</a>` : `<span style="color:#ccc">بدون</span>`;
                 
-                cHtml += `<tr><td>${r.date}</td><td>${r.service}</td><td>${r.desc}</td><td>${img}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`;
-                aHtml += `<tr><td>${r.user}</td><td>${r.service}</td><td>${r.desc}</td><td>${img}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`;
-                
-                let btnTxt = r.status === 'قيد الانتظار' ? 'ابدأ العمل' : (r.status === 'جاري العمل' ? 'إنهاء' : 'مغلق');
-                let btnDis = r.status === 'مكتمل' ? 'disabled style="background:#ccc"' : '';
-                tHtml += `<tr><td>${r.user}</td><td>${r.service}</td><td>${r.desc}</td><td>${img}</td><td><span class="badge ${badge}">${r.status}</span></td><td><button class="btn btn-primary" style="padding: 5px 10px; font-size:12px;" onclick="changeStatus(${r.id})" ${btnDis}>${btnTxt}</button></td></tr>`;
+                // 1. لوحة العميل (يرى فقط طلباته الحالية)
+                if(r.user === db.user && r.status !== 'مكتمل') {
+                    clientHTML += `<tr><td>${r.date}</td><td>${r.service}</td><td>${r.desc}</td><td>${img}</td><td>${r.tech || 'جاري البحث'}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`;
+                }
+
+                // 2. تقسيم مهام الفني
+                if(r.status !== 'مكتمل') {
+                    let btnTxt = r.status === 'قيد الانتظار' ? 'ابدأ العمل' : 'إنهاء المهمة';
+                    let actionStatus = r.status === 'قيد الانتظار' ? 'جاري العمل' : 'مكتمل';
+                    let btnStyle = r.status === 'قيد الانتظار' ? 'btn-primary' : 'btn-secondary';
+                    techActive += `<tr><td>${r.user}</td><td>${r.phone}</td><td>${r.service}</td><td>${r.desc}</td><td>${img}</td><td><span class="badge ${badge}">${r.status}</span></td><td><button class="btn ${btnStyle}" style="padding:6px 12px" onclick="changeStatus(${r.id}, '${actionStatus}')">${btnTxt}</button></td></tr>`;
+                    
+                    adminActive += `<tr><td>${r.user}</td><td>${r.phone}</td><td>${r.service}</td><td>${img}</td><td>${r.start || '-'}</td><td>${r.tech || '-'}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`;
+                } else {
+                    techDone += `<tr><td>${r.user}</td><td>${r.service}</td><td>${r.start}</td><td>${r.end}</td><td><span class="badge badge-success">مكتمل</span></td></tr>`;
+                    adminDone += `<tr><td>${r.user}</td><td>${r.service}</td><td>${r.tech}</td><td>${r.start}</td><td>${r.end}</td><td><span class="badge badge-success">مكتمل</span></td></tr>`;
+                }
             });
-            if(document.getElementById('client-list')) document.getElementById('client-list').innerHTML = cHtml;
-            if(document.getElementById('tech-list')) document.getElementById('tech-list').innerHTML = tHtml;
-            if(document.getElementById('admin-list')) document.getElementById('admin-list').innerHTML = aHtml;
-            if(document.getElementById('welcome-msg') && db.currentUser) document.getElementById('welcome-msg').innerText = "أهلاً بك، " + db.currentUser + "!";
+
+            if(document.getElementById('client-list')) document.getElementById('client-list').innerHTML = clientHTML;
+            if(document.getElementById('tech-active-list')) document.getElementById('tech-active-list').innerHTML = techActive;
+            if(document.getElementById('tech-completed-list')) document.getElementById('tech-completed-list').innerHTML = techDone;
+            if(document.getElementById('admin-active-list')) document.getElementById('admin-active-list').innerHTML = adminActive;
+            if(document.getElementById('admin-completed-list')) document.getElementById('admin-completed-list').innerHTML = adminDone;
         }
 
-        if(db.currentUser) navigate('client'); else navigate('home');
+        if(db.user) navigate('client'); else navigate('home');
     </script>
 </body>
 </html>
