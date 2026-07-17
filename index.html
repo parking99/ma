@@ -588,7 +588,7 @@
                 banner.style.fontWeight = 'bold';
                 banner.style.borderBottom = '2px solid #fbbf24';
                 banner.style.fontSize = '14px';
-                banner.innerHTML = "⚠️ تنبيه: التطبيق يعمل بنظام الحفظ المحلي المؤقت. لتفعيل قاعدة البيانات السحابية الآمنة والتحقق الثنائي OTP بـ SMS، يرجى ملء تكوين FirebaseConfig في سطر 415 من الكود.";
+                banner.innerHTML = "⚠️ تنبيه: التطبيق يعمل بنظام الحفظ المحلي المؤقت. لتفعيل قاعدة البيانات السحابية الآمنة والتحقق الثنائي OTP بـ SMS، يرجى ملء تكوين FirebaseConfig في سطر 429 من الكود.";
                 document.body.insertBefore(banner, document.body.firstChild);
                 
                 silentBackgroundSync();
@@ -679,35 +679,9 @@
             }
         }
 
-        // تحويل صورة base64 ورفعها سحابياً لـ Firebase Storage والحصول على رابط التحميل
+        // تم تعديل الدالة لتمرير صورة base64 مباشرة إلى Firestore لتفادي متطلبات باقة الدفع لـ Firebase Storage
         function uploadImageToFirebase(base64Data, path, callback) {
-            if (!base64Data) {
-                callback("");
-                return;
-            }
-            try {
-                const byteString = atob(base64Data.split(',')[1]);
-                const mimeString = base64Data.split(',')[0].split(':')[1].split(';')[0];
-                const ab = new ArrayBuffer(byteString.length);
-                const ia = new Uint8Array(ab);
-                for (let i = 0; i < byteString.length; i++) {
-                    ia[i] = byteString.charCodeAt(i);
-                }
-                const blob = new Blob([ab], {type: mimeString});
-                
-                const storageRef = storage.ref().child(path);
-                storageRef.put(blob).then(snapshot => {
-                    snapshot.ref.getDownloadURL().then(downloadURL => {
-                        callback(downloadURL);
-                    });
-                }).catch(error => {
-                    console.error("Storage upload error:", error);
-                    callback("");
-                });
-            } catch(e) {
-                console.error("Blob conversion error:", e);
-                callback("");
-            }
+            callback(base64Data || "");
         }
 
         // تفاصيل المودال لمعاينة الصور
