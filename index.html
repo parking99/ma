@@ -73,7 +73,7 @@
         </div>
     </div>
 
-    <!-- نافذة منبثقة إضافية مخصصة لعمليات الدفع الفوري عند طلب الخدمات غير المشمولة -->
+    <!-- نافذة الدفع للخدمات المضافة -->
     <div id="service-payment-modal" class="modal-overlay" style="z-index: 1100;">
         <div class="modal-content" style="background: var(--white); padding: 35px; border-radius: 16px; width: 90%; max-width: 420px; text-align: right;">
             <h3 style="color: var(--primary); text-align: center; margin-bottom: 15px;">بوابة الدفع الفوري للخدمات 💳</h3>
@@ -194,7 +194,6 @@
                     <select id="c-service" onchange="checkSelectedServiceCost()"></select>
                 </div>
                 
-                <!-- صندوق تفاصيل التكلفة والدفع المباشر للخدمات غير المشمولة -->
                 <div id="additional-service-cost-notice" style="display:none; padding:15px; background:#fff7ed; border:1px solid #ffedd5; border-radius:8px; margin-bottom:20px;">
                     <p style="color:#c2410c; font-weight:bold; font-size:14px;">
                         ⚠️ تنبيه: هذه الخدمة خارج نطاق باقة اشتراكك الحالية وتتطلب دفعاً إضافياً.
@@ -340,7 +339,6 @@
             else alert("الجوال غير مسجل");
         }
 
-        // دالة الفحص اللحظي لنوع الخدمة المختارة وتحديد ما إذا كانت مشمولة أو إضافية مدفوعة الثمن
         function checkSelectedServiceCost() {
             let selectElement = document.getElementById('c-service');
             let selectedOption = selectElement.options[selectElement.selectedIndex];
@@ -367,7 +365,6 @@
             document.getElementById('service-payment-modal').style.display = 'none';
         }
 
-        // معالجة تأكيد عملية الدفع الفوري للخدمات الإضافية المدفوعة وحفظها للعميل
         async function processServiceInstantOTP() {
             document.getElementById('service-payment-modal').style.display = 'none';
             alert("✅ تم قبول عملية الدفع بنجاح! جاري إرسال البلاغ الفني...");
@@ -384,7 +381,6 @@
             let isFree = selectedOption.getAttribute('data-mshmool') === "true";
             let price = selectedOption.getAttribute('data-price') || "";
 
-            // إذا كانت الخدمة إضافية وغير مشمولة، نوجهه أولاً لبوابة الدفع قبل الحفظ
             if (!isFree && price && price !== "0") {
                 document.getElementById('service-payment-amount-display').innerText = price + " ر.س";
                 document.getElementById('service-payment-modal').style.display = 'flex';
@@ -393,7 +389,6 @@
             }
         }
 
-        // دالة الحفظ الفعلي للبلاغ داخل قاعدة بيانات Supabase
         async function executeFinalRequestInsertion() {
             let srv = document.getElementById('c-service').value, desc = document.getElementById('c-desc').value;
             let payload = { date: new Date().toLocaleDateString('ar-SA'), "user": db.user, phone: db.phone, service: srv, "desc": desc, image: tempRequestImageBase64, status: 'قيد الانتظار' };
@@ -428,7 +423,6 @@
 
         function logout() { localStorage.clear(); location.reload(); }
 
-        // --- المزامنة المتقدمة وفلترة وتوضيح الخدمات مشمولة/إضافية تَبَعاً لاشتراك العميل الحالي ---
         function updateUI() {
             let regDateVal = db.regDate;
             let currentUserRecord = (db.users || []).find(u => u.phone && db.phone && u.phone.toString() === db.phone.toString());
@@ -465,10 +459,10 @@
                         h += `<div class="service-card"><h3>${p.name}</h3><div class="price">${p.price || ''}</div></div>`; 
                         packagesExist = true;
                     }
-                    // بناء القائمة الموحدة وتوضيح المشمول والخدمة الإضافية المدفوعة للعميل فوراً
                     else if (p.type && p.type.toString().trim() === 'service') {
-                        let belongsTo = p.belongs_to_package || 'باقة السباكة والكهرباء';
-                        let isMshmool = belongsTo.toString().trim() === currentPackage.toString().trim();
+                        let belongsTo = p.belongs_to_package;
+                        // تصحيح فحص التغطية: إذا كان الحقل فارغاً لا يتم ربطه تلقائياً بباقة المستخدم الافتراضية
+                        let isMshmool = belongsTo && belongsTo.toString().trim() === currentPackage.toString().trim();
                         
                         if (isMshmool) {
                             s += `<option value="${p.name}" data-mshmool="true" data-price="0">${p.name} (مشمول في الاشتراك) ✅</option>`;
@@ -505,7 +499,6 @@
                 if (previouslySelectedValue && serviceSelectElement.querySelector(`option[value="${previouslySelectedValue}"]`)) {
                     serviceSelectElement.value = previouslySelectedValue;
                 }
-                // تفعيل الفحص التلقائي بعد بناء الخيارات لأول مرة لضبط حالة الأزرار والتنبيهات السعرية
                 checkSelectedServiceCost();
             }
             
