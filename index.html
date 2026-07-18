@@ -73,20 +73,22 @@
         </div>
     </div>
 
-    <!-- نافذة الدفع للخدمات المضافة -->
+    <!-- نافذة بوابة دفع حية مدمجة مع نظام ميسر (Moyasar API) لخدمات الصيانة الإضافية -->
     <div id="service-payment-modal" class="modal-overlay" style="z-index: 1100;">
         <div class="modal-content" style="background: var(--white); padding: 35px; border-radius: 16px; width: 90%; max-width: 420px; text-align: right;">
-            <h3 style="color: var(--primary); text-align: center; margin-bottom: 15px;">بوابة الدفع الفوري للخدمات 💳</h3>
+            <h3 style="color: var(--primary); text-align: center; margin-bottom: 15px;">بوابة الدفع الفوري ميسر 💳</h3>
             <p style="font-size: 14px; margin-bottom: 20px; text-align: center; color: var(--text-main);">
                 أنت بصدد طلب خدمة إضافية غير مشمولة في باقتك الحالية.<br>
                 <strong style="color: var(--secondary); font-size: 18px;" id="service-payment-amount-display">0 ر.س</strong>
             </p>
-            <div class="form-group"><label>رقم بطاقة الدفع (مدى / فيزا)</label><input type="text" placeholder="XXXX XXXX XXXX XXXX"></div>
+            <div class="form-group"><label>اسم حامل البطاقة</label><input type="text" id="moyasar-card-name" placeholder="الاسم كما هو مكتوب على البطاقة"></div>
+            <div class="form-group"><label>رقم بطاقة الدفع (مدى / فيزا)</label><input type="text" id="moyasar-card-number" placeholder="XXXX XXXX XXXX XXXX"></div>
             <div style="display:flex; gap:10px;">
-                <div class="form-group" style="flex:1;"><label>تاريخ الانتهاء</label><input type="text" placeholder="MM/YY"></div>
-                <div class="form-group" style="flex:1;"><label>الرمز السري CVV</label><input type="password" placeholder="***"></div>
+                <div class="form-group" style="flex:1;"><label>شهر الانتهاء (MM)</label><input type="text" id="moyasar-card-month" placeholder="12"></div>
+                <div class="form-group" style="flex:1;"><label>سنة الانتهاء (YY)</label><input type="text" id="moyasar-card-year" placeholder="28"></div>
+                <div class="form-group" style="flex:1;"><label>الرمز السري CVV</label><input type="password" id="moyasar-card-cvv" placeholder="***"></div>
             </div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="processServiceInstantOTP()">تأكيد الدفع الآمن</button>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="btn-moyasar-submit" onclick="executeMoyasarLivePayment()">تأكيد ودفع الفاتورة حياً</button>
             <button class="btn" style="width: 100%; margin-top: 10px; background:#e2e8f0; color: #475569;" onclick="closeServicePaymentModal()">إلغاء الطلب</button>
         </div>
     </div>
@@ -223,6 +225,9 @@
     </div>
 
     <script>
+        // دمج مفاتيح بوابة ميسر (Moyasar API Keys) الحية للاختبار والتجربة الفورية الآمنة
+        const MOYASAR_SECRET_KEY = "sk_test_8LTsBBC5g2qaLBnm9T2yUBJeTzXpYtYNB6JBvseg";
+
         const SUPABASE_URL = "https://jgknbvifcgajutbxccsc.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable__poVHB0UNhHJfqxUiXHB4g_EiVA_bD3"; 
         const headers = { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json" };
@@ -365,10 +370,66 @@
             document.getElementById('service-payment-modal').style.display = 'none';
         }
 
-        async function processServiceInstantOTP() {
-            document.getElementById('service-payment-modal').style.display = 'none';
-            alert("✅ تم قبول عملية الدفع بنجاح! جاري إرسال البلاغ الفني...");
-            await executeFinalRequestInsertion();
+        // 💳 [ربط ميسر حقيقي]: الاتصال ببوابة ميسر لخصم الفاتورة حياً عبر الـ API الرسمي قبل رفع البيانات
+        async function executeMoyasarLivePayment() {
+            let selectElement = document.getElementById('c-service');
+            let selectedOption = selectElement.options[selectElement.selectedIndex];
+            let priceRaw = selectedOption.getAttribute('data-price') || "150";
+            
+            // ميسر يتعامل بالهللة، لذلك نضرب السعر في 100 (مثال: 222 ريال تصبح 22200 هللة)
+            let amountInHalalas = parseInt(priceRaw) * 100;
+
+            let cardName = document.getElementById('moyasar-card-name').value.trim();
+            let cardNumber = document.getElementById('moyasar-card-number').value.replace(/\s+/g, '');
+            let cardMonth = document.getElementById('moyasar-card-month').value.trim();
+            let cardYear = document.getElementById('moyasar-card-year').value.trim();
+            let cardCvv = document.getElementById('moyasar-card-cvv').value.trim();
+
+            if(!cardName || !cardNumber || !cardMonth || !cardYear || !cardCvv) {
+                return alert("⚠️ يرجى ملء كافة بيانات بطاقة الدفع بشكل صحيح!");
+            }
+
+            let submitBtn = document.getElementById('btn-moyasar-submit');
+            submitBtn.innerText = "جاري معالجة الدفع الآمن حياً... 🔒"; submitBtn.disabled = true;
+
+            try {
+                let moyasarUrl = "https://api.moyasar.com/v1/payments";
+                let authHeader = "Basic " + btoa(MOYASAR_SECRET_KEY + ":");
+
+                let paymentPayload = {
+                    amount: amountInHalalas,
+                    currency: "SAR",
+                    description: `طلب خدمة إضافية صيانة+: ${selectedOption.value}`,
+                    source: {
+                        type: "creditcard",
+                        name: cardName,
+                        number: cardNumber,
+                        month: cardMonth,
+                        year: cardYear,
+                        cvc: cardCvv
+                    }
+                };
+
+                let response = await fetch(moyasarUrl, {
+                    method: "POST",
+                    headers: { "Authorization": authHeader, "Content-Type": "application/json" },
+                    body: JSON.stringify(paymentPayload)
+                });
+
+                let result = await response.json();
+
+                if (response.ok && (result.status === "initiated" || result.status === "paid" || result.status === "captured")) {
+                    document.getElementById('service-payment-modal').style.display = 'none';
+                    alert(`✅ تم قبول الدفع بنجاح عبر ميسر! رقم العملية: ${result.id}`);
+                    await executeFinalRequestInsertion();
+                } else {
+                    alert("❌ فشلت عملية الدفع: " + (result.message || "تأكد من صحة أرقام بطاقة الاختبار والـ CVV"));
+                }
+            } catch (e) {
+                alert("❌ حدث خطأ غير متوقع أثناء الاتصال بـ بوابة ميسر.");
+            } finally {
+                submitBtn.innerText = "تأكيد ودفع الفاتورة حياً"; submitBtn.disabled = false;
+            }
         }
 
         async function submitRequest() {
@@ -461,7 +522,6 @@
                     }
                     else if (p.type && p.type.toString().trim() === 'service') {
                         let belongsTo = p.belongs_to_package;
-                        // تصحيح فحص التغطية: إذا كان الحقل فارغاً لا يتم ربطه تلقائياً بباقة المستخدم الافتراضية
                         let isMshmool = belongsTo && belongsTo.toString().trim() === currentPackage.toString().trim();
                         
                         if (isMshmool) {
