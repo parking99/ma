@@ -217,6 +217,7 @@
 
         window.onload = () => { silentBackgroundSync(); if(db.user) navigate('client'); else navigate('home'); };
 
+        // [سياسة الحذف الذاتي للملفات المنفصلة تمنع إظهار اللوحات الأخرى]
         function navigate(page) {
             document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
@@ -353,7 +354,6 @@
                 return;
             }
 
-            // تم تحديث حقل التاريخ هنا ليكون متوافقاً كـ Timestamp مع جدول complaints في Supabase
             let payload = { 
                 date: new Date().toISOString(), 
                 name: name, 
@@ -383,9 +383,10 @@
 
         function logout() { localStorage.clear(); location.reload(); }
 
+        // --- دالة التحديث الديناميكي الشاملة لجميع الجداول والخدمات ---
         function updateUI() {
             let regDateVal = db.regDate;
-            let currentUserRecord = db.users.find(u => u.phone.toString() === db.phone.toString());
+            let currentUserRecord = (db.users || []).find(u => u.phone && db.phone && u.phone.toString() === db.phone.toString());
             if (currentUserRecord) {
                 if (currentUserRecord.created_at) {
                     regDateVal = currentUserRecord.created_at;
@@ -399,19 +400,33 @@
             
             if(db.user && document.getElementById('welcome-msg')) document.getElementById('welcome-msg').innerText = "أهلاً بك يا " + db.user;
             
+            // سحب وعرض الباقات والخدمات بشكل آمن وديناميكي من الـ Database المضافة من لوحة التحكم الإدارية
             let h="", s="", c="";
             let completedCount = 0;
-            db.products.forEach(p => { h += `<div class="service-card"><h3>${p.name}</h3><div class="price">${p.price}</div></div>`; s += `<option value="${p.name}">${p.name}</option>`; });
-            db.requests.forEach(r => { 
-                if(r.phone == db.phone) {
-                    if(r.status === 'مكتمل') {
-                        completedCount++;
+
+            if (db.products && db.products.length > 0) {
+                db.products.forEach(p => { 
+                    h += `<div class="service-card"><h3>${p.name}</h3><div class="price">${p.price || ''}</div></div>`; 
+                    s += `<option value="${p.name}">${p.name}</option>`; 
+                });
+            } else {
+                h = `<p style="text-align:center; color:#6b7280; width:100%;">لا توجد خدمات معروضة حالياً. يمكنك إضافتها من لوحة الإدارة.</p>`;
+                s = `<option value="">-- لا توجد خدمات متاحة حالياً --</option>`;
+            }
+
+            // بناء وحقن سجل طلبات العميل
+            if (db.requests && db.requests.length > 0) {
+                db.requests.forEach(r => { 
+                    if(r.phone == db.phone) {
+                        if(r.status === 'مكتمل') {
+                            completedCount++;
+                        }
+                        let badge = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
+                        let imgHtml = r.image ? `<img src="${r.image}" style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; cursor: pointer;" onclick="openImageModal('${r.image}')">` : 'لا توجد';
+                        c += `<tr><td>${r.date}</td><td>${r.service}</td><td>${r.desc}</td><td>${imgHtml}</td><td>${r.tech||'بحث'}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`; 
                     }
-                    let badge = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
-                    let imgHtml = r.image ? `<img src="${r.image}" style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; cursor: pointer;" onclick="openImageModal('${r.image}')">` : 'لا توجد';
-                    c += `<tr><td>${r.date}</td><td>${r.service}</td><td>${r.desc}</td><td>${imgHtml}</td><td>${r.tech||'بحث'}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`; 
-                }
-            });
+                });
+            }
             
             if(document.getElementById('sub-req-count')) {
                 document.getElementById('sub-req-count').innerText = completedCount;
@@ -428,6 +443,7 @@
                 document.getElementById('client-detail-address').innerText = currentUserRecord.national_address || 'غير محدد';
             }
         }
+        
         function openImageModal(src) { document.getElementById('modal-viewer-img').src = src; document.getElementById('image-modal').style.display = 'flex'; }
         function closeImageModal() { document.getElementById('image-modal').style.display = 'none'; }
     </script>
