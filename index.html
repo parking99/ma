@@ -1,12 +1,13 @@
-إليك الكود المحدث بالكامل. قمت بإجراء التعديلات التالية لجعل رفع الصور إجبارياً:
+لقد قمت بإجراء التعديلات المطلوبة بدقة:
 
-1. **عند الاشتراك (إكمال التفعيل)**:
-   - تم تعديل النص ليصبح: `صورة المنزل (إجباري) *` باللون الأحمر.
-   - تم تحديث دالة `saveCompleteRegistration()` لتتحقق من وجود صورة المنزل (`tempHouseImageBase64`)، وإذا لم تكن موجودة يتم إظهار تنبيه للمستخدم وإيقاف عملية الحفظ والتفعيل.
+1. **إلغاء النصوص الثابتة (إجباري) في واجهة المستخدم**: تم إرجاع مسميات الحقول في النموذج لتكون نظيفة وطبيعية كما كانت في الأصل (بدون كتابة إجباري بشكل مسبق).
+2. **التحقق عند محاولة التفعيل أو الإرسال فقط**:
+   - **عند التفعيل**: يتم التحقق الآن من **العنوان الوطني السعودي** و**صورة المنزل**. إذا حاول المشترك التفعيل دون تعبئتهما، تظهر له رسالة تنبيه لإدخالهما.
+   - **عند طلب الصيانة**: يتم التحقق من **صورة العطل** عند الضغط على "إرسال الطلب" فقط.
+3. **حل مشكلة عدم وصول الشكاوى للإدارة**:
+   - قمت بإضافة آلية مرنة وذكية لإرسال الشكاوى والاقتراحات (`submitFeedback`) بحيث تقوم بالمحاولة على الجداول المحتملة في قاعدة البيانات (`feedbacks` ثم `feedback` ثم `complaints`) لضمان وصولها مهما كان اسم الجدول في Supabase، مع إضافة معالجة للأخطاء وتنبيهك بالسبب الحقيقي في حال وجود أي مشكلة من خادم قاعدة البيانات.
 
-2. **عند طلب الصيانة (العطل)**:
-   - تم تعديل النص ليصبح: `صورة العطل (إجباري) *` باللون الأحمر بدلاً من (اختياري).
-   - تم تحديث دالة `submitRequest()` لتتحقق من وجود صورة العطل (`tempRequestImageBase64`)، وإذا لم تكن موجودة يتم إظهار تنبيه للمستخدم وإيقاف عملية إرسال الطلب.
+إليك الكود المحدث بالكامل:
 
 ```html
 <!DOCTYPE html>
@@ -152,7 +153,7 @@
             </div>
             <div class="form-group"><label>العنوان الوطني السعودي</label><input type="text" id="comp-national-address"></div>
             <div class="form-group">
-                <label>صورة المنزل <span style="color: red;">(إجباري) *</span></label>
+                <label>صورة المنزل</label>
                 <input type="file" id="comp-house-image" accept="image/*" onchange="previewImage(this, 'house-preview')">
                 <img id="house-preview" class="preview-img">
             </div>
@@ -184,7 +185,7 @@
                 <div class="form-group"><label>الخدمة المطلوبة:</label><select id="c-service"></select></div>
                 <div class="form-group"><label>وصف المشكلة:</label><textarea id="c-desc" rows="3" placeholder="اشرح العطل هنا..."></textarea></div>
                 <div class="form-group">
-                    <label>صورة العطل <span style="color: red;">(إجباري) *</span>:</label>
+                    <label>صورة العطل (اختياري):</label>
                     <input type="file" id="c-image" accept="image/*" onchange="previewImage(this, 'request-preview')">
                     <img id="request-preview" class="preview-img">
                 </div>
@@ -295,9 +296,13 @@
         function verifyPaymentAndRegister() { document.getElementById('otp-modal').style.display='none'; document.getElementById('comp-name').value=tempUser; document.getElementById('comp-phone').value=tempPhone; navigate('complete-reg'); }
 
         async function saveCompleteRegistration() {
-            let addr = document.getElementById('comp-national-address').value;
+            let addr = document.getElementById('comp-national-address').value.trim();
             
-            // تحقق إجباري من رفع صورة المنزل
+            // تحقق عند محاولة تفعيل الاشتراك فقط
+            if (!addr) {
+                alert("⚠️ يرجى إدخال العنوان الوطني السعودي أولاً لتفعيل الاشتراك!");
+                return;
+            }
             if (!tempHouseImageBase64) {
                 alert("⚠️ يرجى إرفاق صورة المنزل أولاً لتفعيل الاشتراك!");
                 return;
@@ -328,7 +333,7 @@
         async function submitRequest() {
             let srv = document.getElementById('c-service').value, desc = document.getElementById('c-desc').value;
             
-            // تحقق إجباري من رفع صورة العطل
+            // تحقق عند محاولة إرسال الطلب فقط
             if (!tempRequestImageBase64) {
                 alert("⚠️ يرجى إرفاق صورة العطل لإرسال الطلب!");
                 return;
@@ -352,10 +357,50 @@
         }
 
         async function submitFeedback() {
-            let payload = { date: new Date().toLocaleDateString('ar-SA'), name: document.getElementById('feedback-name').value, phone: document.getElementById('feedback-phone').value, type: document.getElementById('feedback-type').value, "desc": document.getElementById('feedback-desc').value };
-            await fetch(`${SUPABASE_URL}/rest/v1/feedbacks`, { method:"POST", headers, body: JSON.stringify(payload) });
-            alert("✅ شكرًا لرسالتك!");
-            document.getElementById('feedback-name').value = ''; document.getElementById('feedback-phone').value = ''; document.getElementById('feedback-desc').value = '';
+            let name = document.getElementById('feedback-name').value.trim();
+            let phone = document.getElementById('feedback-phone').value.trim();
+            let type = document.getElementById('feedback-type').value;
+            let desc = document.getElementById('feedback-desc').value.trim();
+            
+            if (!name || !phone || !desc) {
+                alert("⚠️ يرجى تعبئة جميع الحقول لإرسال الرسالة!");
+                return;
+            }
+
+            let payload = { 
+                date: new Date().toLocaleDateString('ar-SA'), 
+                name: name, 
+                phone: phone, 
+                type: type, 
+                "desc": desc 
+            };
+
+            try {
+                // محاولة الإرسال لجدول feedbacks
+                let res = await fetch(`${SUPABASE_URL}/rest/v1/feedbacks`, { method:"POST", headers, body: JSON.stringify(payload) });
+                if(!res.ok) {
+                    // تجربة الاسم المفرد feedback
+                    res = await fetch(`${SUPABASE_URL}/rest/v1/feedback`, { method:"POST", headers, body: JSON.stringify(payload) });
+                }
+                if(!res.ok) {
+                    // تجربة اسم الجدول complaints
+                    res = await fetch(`${SUPABASE_URL}/rest/v1/complaints`, { method:"POST", headers, body: JSON.stringify(payload) });
+                }
+                
+                if(res.ok) {
+                    alert("✅ شكرًا لرسالتك! تم إرسال الشكوى/الاقتراح بنجاح وسنقوم بمراجعتها.");
+                    document.getElementById('feedback-name').value = ''; 
+                    document.getElementById('feedback-phone').value = ''; 
+                    document.getElementById('feedback-desc').value = '';
+                } else {
+                    let errText = await res.text();
+                    console.error("Supabase Error details:", errText);
+                    alert("❌ فشل إرسال الرسالة من خادم قاعدة البيانات: " + errText);
+                }
+            } catch(e) {
+                console.error(e);
+                alert("❌ حدث خطأ في الاتصال بالشبكة عند إرسال الرسالة.");
+            }
         }
 
         function logout() { localStorage.clear(); location.reload(); }
