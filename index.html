@@ -1,3 +1,14 @@
+إليك الكود المحدث بالكامل. قمت بإجراء التعديلات التالية لجعل رفع الصور إجبارياً:
+
+1. **عند الاشتراك (إكمال التفعيل)**:
+   - تم تعديل النص ليصبح: `صورة المنزل (إجباري) *` باللون الأحمر.
+   - تم تحديث دالة `saveCompleteRegistration()` لتتحقق من وجود صورة المنزل (`tempHouseImageBase64`)، وإذا لم تكن موجودة يتم إظهار تنبيه للمستخدم وإيقاف عملية الحفظ والتفعيل.
+
+2. **عند طلب الصيانة (العطل)**:
+   - تم تعديل النص ليصبح: `صورة العطل (إجباري) *` باللون الأحمر بدلاً من (اختياري).
+   - تم تحديث دالة `submitRequest()` لتتحقق من وجود صورة العطل (`tempRequestImageBase64`)، وإذا لم تكن موجودة يتم إظهار تنبيه للمستخدم وإيقاف عملية إرسال الطلب.
+
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -141,7 +152,7 @@
             </div>
             <div class="form-group"><label>العنوان الوطني السعودي</label><input type="text" id="comp-national-address"></div>
             <div class="form-group">
-                <label>صورة المنزل</label>
+                <label>صورة المنزل <span style="color: red;">(إجباري) *</span></label>
                 <input type="file" id="comp-house-image" accept="image/*" onchange="previewImage(this, 'house-preview')">
                 <img id="house-preview" class="preview-img">
             </div>
@@ -173,7 +184,7 @@
                 <div class="form-group"><label>الخدمة المطلوبة:</label><select id="c-service"></select></div>
                 <div class="form-group"><label>وصف المشكلة:</label><textarea id="c-desc" rows="3" placeholder="اشرح العطل هنا..."></textarea></div>
                 <div class="form-group">
-                    <label>صورة العطل (اختياري):</label>
+                    <label>صورة العطل <span style="color: red;">(إجباري) *</span>:</label>
                     <input type="file" id="c-image" accept="image/*" onchange="previewImage(this, 'request-preview')">
                     <img id="request-preview" class="preview-img">
                 </div>
@@ -285,6 +296,13 @@
 
         async function saveCompleteRegistration() {
             let addr = document.getElementById('comp-national-address').value;
+            
+            // تحقق إجباري من رفع صورة المنزل
+            if (!tempHouseImageBase64) {
+                alert("⚠️ يرجى إرفاق صورة المنزل أولاً لتفعيل الاشتراك!");
+                return;
+            }
+            
             let payload = { name: tempUser, phone: tempPhone, national_address: addr, house_image: tempHouseImageBase64, status: 'فعال', lat: marker.getLatLng().lat.toString(), lng: marker.getLatLng().lng.toString() };
             await fetch(`${SUPABASE_URL}/rest/v1/users`, { method: "POST", headers, body: JSON.stringify(payload) });
             db.user = tempUser; db.phone = tempPhone; db.regDate = new Date().toISOString();
@@ -298,7 +316,7 @@
             if(u) { 
                 db.user=u.name; 
                 db.phone=u.phone; 
-                db.regDate=u.created_at || ''; // حفظ تاريخ تفعيل الاشتراك في الذاكرة المحلية والـ db عند تسجيل الدخول
+                db.regDate=u.created_at || ''; 
                 localStorage.setItem('user',u.name); 
                 localStorage.setItem('phone',u.phone);
                 localStorage.setItem('regDate', db.regDate);
@@ -309,6 +327,13 @@
 
         async function submitRequest() {
             let srv = document.getElementById('c-service').value, desc = document.getElementById('c-desc').value;
+            
+            // تحقق إجباري من رفع صورة العطل
+            if (!tempRequestImageBase64) {
+                alert("⚠️ يرجى إرفاق صورة العطل لإرسال الطلب!");
+                return;
+            }
+            
             let payload = { date: new Date().toLocaleDateString('ar-SA'), "user": db.user, phone: db.phone, service: srv, "desc": desc, image: tempRequestImageBase64, status: 'قيد الانتظار' };
             await fetch(`${SUPABASE_URL}/rest/v1/requests`, { method:"POST", headers, body: JSON.stringify(payload) });
             alert("✅ تم إرسال طلب الصيانة!");
@@ -385,3 +410,4 @@
     </script>
 </body>
 </html>
+```
