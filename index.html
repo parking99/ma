@@ -377,11 +377,11 @@
 
         function logout() { localStorage.clear(); location.reload(); }
 
-        // --- المزامنة المتقدمة وفلترة الخدمات تَبَعاً لاشتراك العميل الحالي ---
+        // --- المزامنة المتقدمة وفلترة الخدمات تَبَعاً لاشتراك العميل الحالي مع حفظ التثبيت ---
         function updateUI() {
             let regDateVal = db.regDate;
             let currentUserRecord = (db.users || []).find(u => u.phone && db.phone && u.phone.toString() === db.phone.toString());
-            let currentPackage = 'باقة السباكة والكهرباء'; // الباقة الافتراضية
+            let currentPackage = 'باقة السباكة والكهرباء'; 
 
             if (currentUserRecord) {
                 if (currentUserRecord.created_at) regDateVal = currentUserRecord.created_at;
@@ -399,6 +399,10 @@
             
             if(db.user && document.getElementById('welcome-msg')) document.getElementById('welcome-msg').innerText = "أهلاً بك يا " + db.user;
             
+            // 🛡️ [تثبيت الاختيار الحالي]: حفظ القيمة التي اختارها المستخدم قبل إعادة بناء القائمة
+            let serviceSelectElement = document.getElementById('c-service');
+            let previouslySelectedValue = serviceSelectElement ? serviceSelectElement.value : "";
+
             let h="", s="", c="";
             let completedCount = 0;
 
@@ -442,7 +446,16 @@
             
             if(document.getElementById('sub-req-count')) document.getElementById('sub-req-count').innerText = completedCount;
             if(document.getElementById('home-products-grid')) document.getElementById('home-products-grid').innerHTML = h;
-            if(document.getElementById('c-service')) document.getElementById('c-service').innerHTML = s;
+            
+            // حقن الخيارات داخل القائمة مع تطبيق قفل التثبيت الذكي
+            if(serviceSelectElement) {
+                serviceSelectElement.innerHTML = s;
+                // إعادة تثبيت خيار المستخدم السابق إذا كان متوفراً لمنعه من القفز والعودة للخيار الأول
+                if (previouslySelectedValue && serviceSelectElement.querySelector(`option[value="${previouslySelectedValue}"]`)) {
+                    serviceSelectElement.value = previouslySelectedValue;
+                }
+            }
+            
             if(document.getElementById('client-list')) document.getElementById('client-list').innerHTML = c;
 
             if(currentUserRecord && document.getElementById('client-sub-details')) {
