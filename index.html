@@ -155,7 +155,7 @@
             <div class="card" style="background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; border: none;">
                 <h2 id="welcome-msg">أهلاً بك!</h2>
                 <div class="stats-grid">
-                    <div class="stat-box"><div class="stat-title">الباقة الحالية</div><div class="stat-val">مُفعلة ✅</div></div>
+                    <div class="stat-box"><div class="stat-title">الباقة الحالية</div><div class="stat-val" id="client-package-badge">مُفعلة ✅</div></div>
                     <div class="stat-box"><div class="stat-title">تاريخ الانتهاء</div><div class="stat-val" id="sub-end-date">-</div></div>
                     <div class="stat-box"><div class="stat-title">طلباتك السابقة</div><div class="stat-val"><span id="sub-req-count">0</span> طلب منفذ</div></div>
                 </div>
@@ -217,7 +217,6 @@
 
         window.onload = () => { silentBackgroundSync(); if(db.user) navigate('client'); else navigate('home'); };
 
-        // [سياسة الحذف الذاتي للملفات المنفصلة تمنع إظهار اللوحات الأخرى]
         function navigate(page) {
             document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
@@ -296,7 +295,7 @@
                 return;
             }
             
-            let payload = { name: tempUser, phone: tempPhone, national_address: addr, house_image: tempHouseImageBase64, status: 'فعال', lat: marker.getLatLng().lat.toString(), lng: marker.getLatLng().lng.toString() };
+            let payload = { name: tempUser, phone: tempPhone, national_address: addr, house_image: tempHouseImageBase64, package_name: 'باقة السباكة والكهرباء', status: 'فعال', lat: marker.getLatLng().lat.toString(), lng: marker.getLatLng().lng.toString() };
             await fetch(`${SUPABASE_URL}/rest/v1/users`, { method: "POST", headers, body: JSON.stringify(payload) });
             db.user = tempUser; db.phone = tempPhone; db.regDate = new Date().toISOString();
             localStorage.setItem('user', db.user); localStorage.setItem('phone', db.phone); localStorage.setItem('regDate', db.regDate);
@@ -321,6 +320,10 @@
         async function submitRequest() {
             let srv = document.getElementById('c-service').value, desc = document.getElementById('c-desc').value;
             
+            if (!srv) {
+                alert("⚠️ يرجى تحديد الخدمة المطلوبة!");
+                return;
+            }
             if (!tempRequestImageBase64) {
                 alert("⚠️ يرجى إرفاق صورة العطل لإرسال الطلب!");
                 return;
@@ -354,17 +357,10 @@
                 return;
             }
 
-            let payload = { 
-                date: new Date().toISOString(), 
-                name: name, 
-                phone: phone, 
-                type: type, 
-                "desc": desc 
-            };
+            let payload = { date: new Date().toISOString(), name: name, phone: phone, type: type, "desc": desc };
 
             try {
                 let res = await fetch(`${SUPABASE_URL}/rest/v1/complaints`, { method:"POST", headers, body: JSON.stringify(payload) });
-                
                 if(res.ok) {
                     alert("✅ شكرًا لرسالتك! تم إرسال الشكوى/الاقتراح بنجاح وسنقوم بمراجعتها.");
                     document.getElementById('feedback-name').value = ''; 
@@ -372,25 +368,28 @@
                     document.getElementById('feedback-desc').value = '';
                 } else {
                     let errText = await res.text();
-                    console.error("Supabase Error details:", errText);
                     alert("❌ فشل إرسال الرسالة من خادم قاعدة البيانات: " + errText);
                 }
             } catch(e) {
-                console.error(e);
                 alert("❌ حدث خطأ في الاتصال بالشبكة عند إرسال الرسالة.");
             }
         }
 
         function logout() { localStorage.clear(); location.reload(); }
 
-        // --- دالة التحديث الديناميكي الشاملة لجميع الجداول والخدمات ---
+        // --- المزامنة المتقدمة وفلترة الخدمات تَبَعاً لاشتراك العميل الحالي ---
         function updateUI() {
             let regDateVal = db.regDate;
             let currentUserRecord = (db.users || []).find(u => u.phone && db.phone && u.phone.toString() === db.phone.toString());
+            let currentPackage = 'باقة السباكة والكهرباء'; // الباقة الافتراضية
+
             if (currentUserRecord) {
-                if (currentUserRecord.created_at) {
-                    regDateVal = currentUserRecord.created_at;
-                }
+                if (currentUserRecord.created_at) regDateVal = currentUserRecord.created_at;
+                if (currentUserRecord.package_name) currentPackage = currentUserRecord.package_name;
+            }
+
+            if(document.getElementById('client-package-badge')) {
+                document.getElementById('client-package-badge').innerText = currentPackage + " ✅";
             }
 
             if(regDateVal && document.getElementById('sub-end-date')) {
@@ -400,27 +399,40 @@
             
             if(db.user && document.getElementById('welcome-msg')) document.getElementById('welcome-msg').innerText = "أهلاً بك يا " + db.user;
             
-            // سحب وعرض الباقات والخدمات بشكل آمن وديناميكي من الـ Database المضافة من لوحة التحكم الإدارية
             let h="", s="", c="";
             let completedCount = 0;
 
             if (db.products && db.products.length > 0) {
+                let packagesExist = false;
+                let servicesExist = false;
+
                 db.products.forEach(p => { 
-                    h += `<div class="service-card"><h3>${p.name}</h3><div class="price">${p.price || ''}</div></div>`; 
-                    s += `<option value="${p.name}">${p.name}</option>`; 
+                    // 1. عرض الباقات في الكروت الخارجية للزوار (بشرط أن يكون النوع package صراحةً وبشكل قطعي)
+                    if (p.type && p.type.toString().trim() === 'package') {
+                        h += `<div class="service-card"><h3>${p.name}</h3><div class="price">${p.price || ''}</div></div>`; 
+                        packagesExist = true;
+                    }
+                    // 2. فلترة الخدمات الداخلية: تظهر للعميل فقط إذا كانت تابعة لنفس باقته الحالية
+                    else if (p.type && p.type.toString().trim() === 'service') {
+                        let belongsTo = p.belongs_to_package || 'باقة السباكة والكهرباء';
+                        if (belongsTo.toString().trim() === currentPackage.toString().trim()) {
+                            s += `<option value="${p.name}">${p.name}</option>`; 
+                            servicesExist = true;
+                        }
+                    }
                 });
+
+                if(!packagesExist) h = `<p style="text-align:center; color:#6b7280; width:100%;">لا توجد باقات معروضة حالياً.</p>`;
+                if(!servicesExist) s = `<option value="">-- لا توجد خدمات مشمولة في باقتك الحالية --</option>`;
             } else {
-                h = `<p style="text-align:center; color:#6b7280; width:100%;">لا توجد خدمات معروضة حالياً. يمكنك إضافتها من لوحة الإدارة.</p>`;
-                s = `<option value="">-- لا توجد خدمات متاحة حالياً --</option>`;
+                h = `<p style="text-align:center; color:#6b7280; width:100%;">لا توجد باقات معروضة حالياً.</p>`;
+                s = `<option value="">-- لا توجد خدمات صيانة فرعية حالياً --</option>`;
             }
 
-            // بناء وحقن سجل طلبات العميل
             if (db.requests && db.requests.length > 0) {
                 db.requests.forEach(r => { 
                     if(r.phone == db.phone) {
-                        if(r.status === 'مكتمل') {
-                            completedCount++;
-                        }
+                        if(r.status === 'مكتمل') completedCount++;
                         let badge = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
                         let imgHtml = r.image ? `<img src="${r.image}" style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; cursor: pointer;" onclick="openImageModal('${r.image}')">` : 'لا توجد';
                         c += `<tr><td>${r.date}</td><td>${r.service}</td><td>${r.desc}</td><td>${imgHtml}</td><td>${r.tech||'بحث'}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`; 
@@ -428,10 +440,7 @@
                 });
             }
             
-            if(document.getElementById('sub-req-count')) {
-                document.getElementById('sub-req-count').innerText = completedCount;
-            }
-            
+            if(document.getElementById('sub-req-count')) document.getElementById('sub-req-count').innerText = completedCount;
             if(document.getElementById('home-products-grid')) document.getElementById('home-products-grid').innerHTML = h;
             if(document.getElementById('c-service')) document.getElementById('c-service').innerHTML = s;
             if(document.getElementById('client-list')) document.getElementById('client-list').innerHTML = c;
@@ -443,7 +452,6 @@
                 document.getElementById('client-detail-address').innerText = currentUserRecord.national_address || 'غير محدد';
             }
         }
-        
         function openImageModal(src) { document.getElementById('modal-viewer-img').src = src; document.getElementById('image-modal').style.display = 'flex'; }
         function closeImageModal() { document.getElementById('image-modal').style.display = 'none'; }
     </script>
