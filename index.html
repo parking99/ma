@@ -48,28 +48,27 @@
         .stat-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; flex: 1; min-width: 200px; border: 1px solid rgba(255,255,255,0.2);}
         .stat-title { font-size: 14px; opacity: 0.9; margin-bottom: 5px;}
         .stat-val { font-size: 20px; font-weight: bold; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
     </style>
 </head>
 <body>
 
-    <!-- نافذة تكبير الصور -->
-    <div id="image-modal" class="modal-overlay" onclick="closeImageModal()">
+    <div id="image-modal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;" onclick="closeImageModal()">
         <div class="modal-content" style="background: var(--white); padding: 30px; border-radius: 16px; max-width: 600px; text-align: center; position: relative;" onclick="event.stopPropagation()">
             <span style="position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: var(--primary);" onclick="closeImageModal()">&times;</span>
             <img id="modal-viewer-img" src="" alt="صورة مكبرة" style="max-width: 100%; max-height: 450px; border-radius: 8px;">
         </div>
     </div>
 
-    <!-- نافذة التحقق من الجوال الحقيقية عبر Twilio Verify -->
-    <div id="otp-modal" class="modal-overlay">
+    <div id="otp-modal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;">
         <div class="modal-content" style="background: var(--white); padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; text-align: center;">
-            <h3>التحقق من رقم الجوال حياً 🔒</h3>
-            <p style="font-size:13px; color:#6b7280; margin-top:5px;">أدخل رمز التحقق المكون من 4 أو 6 أرقام المرسل إلى جوالك</p>
-            <div class="otp-inputs" style="margin: 20px 0;">
-                <input type="text" id="twilio-otp-code" placeholder="XXXXXX" style="width: 100%; text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold; border: 2px solid var(--border); border-radius: 8px; padding: 10px;">
+            <h3>التحقق من الدفع 🔒</h3>
+            <div class="otp-inputs" style="display: flex; gap: 10px; justify-content: center; margin: 20px 0; direction: ltr;">
+                <input type="text" maxlength="1" onkeyup="moveToNext(this, 'otp2')" style="width: 50px; height: 50px; text-align: center; font-size: 24px; border: 2px solid var(--border); border-radius: 8px;">
+                <input type="text" maxlength="1" id="otp2" onkeyup="moveToNext(this, 'otp3')" style="width: 50px; height: 50px; text-align: center; font-size: 24px; border: 2px solid var(--border); border-radius: 8px;">
+                <input type="text" maxlength="1" id="otp3" onkeyup="moveToNext(this, 'otp4')" style="width: 50px; height: 50px; text-align: center; font-size: 24px; border: 2px solid var(--border); border-radius: 8px;">
+                <input type="text" maxlength="1" id="otp4" style="width: 50px; height: 50px; text-align: center; font-size: 24px; border: 2px solid var(--border); border-radius: 8px;">
             </div>
-            <button class="btn btn-primary" style="width: 100%;" id="btn-verify-otp" onclick="verifyTwilioOTPCode()">تأكيد الرمز والمتابعة للدفع</button>
+            <button class="btn btn-primary" style="width: 100%;" onclick="verifyPaymentAndRegister()">تأكيد الدفع والتفعيل</button>
         </div>
     </div>
 
@@ -108,7 +107,7 @@
             <h2>تسجيل المشترك الجديد</h2>
             <div class="form-group"><label>الاسم الكامل <span style="color: red;">*</span></label><input type="text" id="reg-name" required></div>
             <div class="form-group"><label>رقم الجوال <span style="color: red;">*</span></label><input type="tel" id="reg-phone" required placeholder="05XXXXXXXX"></div>
-            <button class="btn btn-primary" style="width: 100%;" id="btn-reg-submit" onclick="proceedToOTPVerification()">المتابعة والتحقق من الجوال</button>
+            <button class="btn btn-primary" style="width: 100%;" onclick="proceedToPayment()">المتابعة للدفع</button>
         </div>
     </div>
 
@@ -124,9 +123,9 @@
     <!-- 4. الدفع -->
     <div id="page-payment" class="page-view">
         <div class="auth-container">
-            <h2>إتمام الدفع (500 ر.س / 12 شهر)</h2>
+            <h2>إتمام الدفع (500 ر.س / 12 month)</h2>
             <div class="form-group"><label>رقم البطاقة</label><input type="text" placeholder="XXXX XXXX XXXX XXXX"></div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="navigate('complete-reg')">ادفع الآن</button>
+            <button class="btn btn-primary" style="width: 100%;" onclick="showOTP()">ادفع الآن</button>
         </div>
     </div>
 
@@ -192,18 +191,12 @@
     </div>
 
     <script>
-        // دمج ومطابقة مفاتيح Twilio المستخرجة حياً للاختبار والمزامنة الفورية
-        const TWILIO_ACCOUNT_SID = "AC949ef4f9ff7faa4626f154f7dd6bff96";
-        const TWILIO_AUTH_TOKEN = "b3033bea0c3b4ead6b8e9964e1a41abb";
-        const TWILIO_SERVICE_SID = "VA325ccdda90dc70118ff772570110d935"; 
-
         const SUPABASE_URL = "https://jgknbvifcgajutbxccsc.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable__poVHB0UNhHJfqxUiXHB4g_EiVA_bD3"; 
         const headers = { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json" };
 
         let db = { user: localStorage.getItem('user')||'', phone: localStorage.getItem('phone')||'', regDate: localStorage.getItem('regDate')||'', products: [], requests: [], users: [] };
         let tempHouseImageBase64 = "", tempRequestImageBase64 = "";
-        let tempUser = "", tempPhone = "";
 
         setInterval(silentBackgroundSync, 4000);
 
@@ -230,11 +223,7 @@
             let nav = document.getElementById('nav-links-container');
             if(page === 'client') nav.innerHTML = `<button class="btn btn-outline" style="color:red; border-color:red;" onclick="logout()">تسجيل خروج</button>`;
             else nav.innerHTML = `<button class="btn btn-outline" onclick="navigate('login')">تسجيل الدخول</button>`;
-            if(page === 'complete-reg') {
-                document.getElementById('comp-name').value = tempUser;
-                document.getElementById('comp-phone').value = tempPhone;
-                initMap();
-            }
+            if(page === 'complete-reg') initMap();
             updateUI();
         }
 
@@ -289,86 +278,27 @@
             }
         }
 
-        // 🚖 [تحقّق Twilio الحقيقي والتزام البيانات]: إرسال طلب رمز الـ OTP دولياً لهواتف المملكة الموثقة
-        async function proceedToOTPVerification() { 
+        // 🛡️ [تعديل التحقق الصارم]: جعل حقول الاسم والجوال إلزامية عند التسجيل
+        function proceedToPayment() { 
             let nameInput = document.getElementById('reg-name').value.trim();
             let phoneInput = document.getElementById('reg-phone').value.trim();
             
-            if (!nameInput || !phoneInput) {
-                return alert("⚠️ يرجى تعبئة كافة الحقول الإلزامية للمشترك أولاً!");
+            if (!nameInput) {
+                alert("⚠️ يرجى إدخال الاسم الكامل لإكمال عملية التسجيل!");
+                return;
             }
-
-            // تحويل وتنسيق رقم الجوال المحلي إلى الصيغة الدولية الصحيحة المعتمدة لـ Twilio
-            let formattedPhone = phoneInput;
-            if(formattedPhone.startsWith('0')) formattedPhone = '+966' + formattedPhone.substring(1);
-            if(!formattedPhone.startsWith('+')) formattedPhone = '+966' + formattedPhone;
-
-            tempUser = nameInput;
-            tempPhone = phoneInput;
-
-            let btn = document.getElementById('btn-reg-submit');
-            btn.innerText = "جاري إرسال الرمز لبلدك... ⏳"; btn.disabled = true;
-
-            try {
-                let twilioUrl = `https://verify.twilio.com/v2/Services/${TWILIO_SERVICE_SID}/Verifications`;
-                let authHeader = "Basic " + btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-                
-                let response = await fetch(twilioUrl, {
-                    method: "POST",
-                    headers: { "Authorization": authHeader, "Content-Type": "application/x-www-form-urlencoded" },
-                    body: new URLSearchParams({ "To": formattedPhone, "Channel": "sms" })
-                });
-
-                if(response.ok) {
-                    alert(`📱 تم إرسال رمز التحقق بنجاح إلى الرقم: ${phoneInput}`);
-                    document.getElementById('otp-modal').style.display = 'flex';
-                } else {
-                    let errData = await response.json();
-                    alert("❌ خطأ في إرسال الرمز من Twilio: " + (errData.message || "يرجى التحقق من لوحة التحكم والتأكد من تفعيل صلاحيات الـ Geo-Permissions للمملكة"));
-                }
-            } catch(e) {
-                alert("❌ حدث خطأ في الشبكة أثناء إرسال الرمز.");
-            } finally {
-                btn.innerText = "المتابعة والتحقق من الجوال"; btn.disabled = false;
+            if (!phoneInput) {
+                alert("⚠️ يرجى إدخل رقم الجوال لإكمال عملية التسجيل!");
+                return;
             }
+            
+            tempUser = nameInput; 
+            tempPhone = phoneInput; 
+            navigate('payment'); 
         }
-
-        // 🏁 [فحص رمز الـ OTP]: فحص وتوثيق الكود المدخل مع خوادم Twilio قبل السماح بصفحة الدفع والتسجيل
-        async function verifyTwilioOTPCode() {
-            let code = document.getElementById('twilio-otp-code').value.trim();
-            if(!code) return alert("الرجاء إدخال رمز التحقق المستلم");
-
-            let formattedPhone = tempPhone;
-            if(formattedPhone.startsWith('0')) formattedPhone = '+966' + formattedPhone.substring(1);
-            if(!formattedPhone.startsWith('+')) formattedPhone = '+966' + formattedPhone;
-
-            let btn = document.getElementById('btn-verify-otp');
-            btn.innerText = "جاري فحص وتوثيق الرمز... 🔒"; btn.disabled = true;
-
-            try {
-                let twilioCheckUrl = `https://verify.twilio.com/v2/Services/${TWILIO_SERVICE_SID}/VerificationCheck`;
-                let authHeader = "Basic " + btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-
-                let response = await fetch(twilioCheckUrl, {
-                    method: "POST",
-                    headers: { "Authorization": authHeader, "Content-Type": "application/x-www-form-urlencoded" },
-                    body: new URLSearchParams({ "To": formattedPhone, "Code": code })
-                });
-
-                let result = await response.json();
-                if(response.ok && result.status === "approved") {
-                    alert("✅ تم التحقق من رقم الجوال بنجاح ومطابقة الهوية الميدانية!");
-                    document.getElementById('otp-modal').style.display = 'none';
-                    navigate('payment'); 
-                } else {
-                    alert("⚠️ رمز التحقق غير صحيح أو انتهت صلاحيته، أعد المحاولة.");
-                }
-            } catch(e) {
-                alert("❌ حدث خطأ في الاتصال بالشبكة أثناء مطابقة الرمز.");
-            } finally {
-                btn.innerText = "تأكيد الرمز والمتابعة للدفع"; btn.disabled = false;
-            }
-        }
+        
+        function showOTP() { document.getElementById('otp-modal').style.display='flex'; }
+        function verifyPaymentAndRegister() { document.getElementById('otp-modal').style.display='none'; document.getElementById('comp-name').value=tempUser; document.getElementById('comp-phone').value=tempPhone; navigate('complete-reg'); }
 
         async function saveCompleteRegistration() {
             let addr = document.getElementById('comp-national-address').value.trim();
@@ -464,6 +394,7 @@
 
         function logout() { localStorage.clear(); location.reload(); }
 
+        // --- المزامنة المتقدمة وفلترة الخدمات تَبَعاً لاشتراك العميل الحالي مع حفظ التثبيت ---
         function updateUI() {
             let regDateVal = db.regDate;
             let currentUserRecord = (db.users || []).find(u => u.phone && db.phone && u.phone.toString() === db.phone.toString());
@@ -485,6 +416,7 @@
             
             if(db.user && document.getElementById('welcome-msg')) document.getElementById('welcome-msg').innerText = "أهلاً بك يا " + db.user;
             
+            // 🛡️ [تثبيت الاختيار الحالي]: حفظ القيمة التي اختارها المستخدم قبل إعادة بناء القائمة
             let serviceSelectElement = document.getElementById('c-service');
             let previouslySelectedValue = serviceSelectElement ? serviceSelectElement.value : "";
 
@@ -496,10 +428,12 @@
                 let servicesExist = false;
 
                 db.products.forEach(p => { 
+                    // 1. عرض الباقات في الكروت الخارجية للزوار (بشرط أن يكون النوع package صراحةً وبشكل قطعي)
                     if (p.type && p.type.toString().trim() === 'package') {
                         h += `<div class="service-card"><h3>${p.name}</h3><div class="price">${p.price || ''}</div></div>`; 
                         packagesExist = true;
                     }
+                    // 2. فلترة الخدمات الداخلية: تظهر للعميل فقط إذا كانت تابعة لنفس باقته الحالية
                     else if (p.type && p.type.toString().trim() === 'service') {
                         let belongsTo = p.belongs_to_package || 'باقة السباكة والكهرباء';
                         if (belongsTo.toString().trim() === currentPackage.toString().trim()) {
@@ -530,8 +464,10 @@
             if(document.getElementById('sub-req-count')) document.getElementById('sub-req-count').innerText = completedCount;
             if(document.getElementById('home-products-grid')) document.getElementById('home-products-grid').innerHTML = h;
             
+            // حقن الخيارات داخل القائمة مع تطبيق قفل التثبيت الذكي
             if(serviceSelectElement) {
                 serviceSelectElement.innerHTML = s;
+                // إعادة تثبيت خيار المستخدم السابق إذا كان متوفراً لمنعه من القفز والعودة للخيار الأول
                 if (previouslySelectedValue && serviceSelectElement.querySelector(`option[value="${previouslySelectedValue}"]`)) {
                     serviceSelectElement.value = previouslySelectedValue;
                 }
