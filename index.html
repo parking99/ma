@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>صيانة+ | المنصة الشاملة</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght=400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -73,10 +73,10 @@
         </div>
     </div>
 
-    <!-- نافذة بوابة دفع حية مدمجة ومحاكية بالكامل لميسر (Moyasar Sandbox) لضمان العمل تحت أي بيئة متصفح -->
+    <!-- نافذة بوابة الدفع المحمية ميسر لخدمات الصيانة الإضافية المدفوعة -->
     <div id="service-payment-modal" class="modal-overlay" style="z-index: 1100;">
-        <div class="modal-content" style="background: var(--white); padding: 35px; border-radius: 16px; width: 90%; max-width: 420px; text-align: right;">
-            <h3 style="color: var(--primary); text-align: center; margin-bottom: 5px;">بوابة الدفع الفوري ميسر 💳</h3>
+        <div class="modal-content" style="background: var(--white); padding: 35px; border-radius: 16px; width: 90%; max-width: 420px; text-align: right;" onclick="event.stopPropagation()">
+            <h3 style="text-align: center; margin-bottom: 5px; color: var(--primary);">بوابة الدفع الفوري ميسر 💳</h3>
             <div style="display:flex; justify-content:center; gap:10px; margin-bottom:15px;"><small style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:4px; font-weight:bold;">مدى</small> <small style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:4px; font-weight:bold;">فيزا</small> <small style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:4px; font-weight:bold;">Apple Pay</small></div>
             <p style="font-size: 14px; margin-bottom: 20px; text-align: center; color: var(--text-main);">
                 أنت بصدد طلب خدمة إضافية غير مشمولة في باقتك الحالية.<br>
@@ -317,7 +317,7 @@
         function proceedToPayment() { 
             let nameInput = document.getElementById('reg-name').value.trim();
             let phoneInput = document.getElementById('reg-phone').value.trim();
-            if (!nameInput) { alert("⚠️ يرجى إدخال الاسم الكامل لإكمال عملية التسجيل!"); return; }
+            if (!nameInput) { alert("⚠️ يرجى إدخل الاسم الكامل لإكمال عملية التسجيل!"); return; }
             if (!phoneInput) { alert("⚠️ يرجى إدخل رقم الجوال لإكمال عملية التسجيل!"); return; }
             tempUser = nameInput; tempPhone = phoneInput; navigate('payment'); 
         }
@@ -352,7 +352,7 @@
             let noticeBox = document.getElementById('additional-service-cost-notice');
             let submitBtn = document.getElementById('btn-submit');
 
-            if (!isFree && price && price !== "0") {
+            if (!isFree) {
                 noticeBox.style.display = 'block';
                 document.getElementById('calculated-service-price').innerText = price + " ر.س";
                 submitBtn.innerText = "دفع رسوم الخدمة وإرسال الطلب 💳";
@@ -368,7 +368,7 @@
             document.getElementById('service-payment-modal').style.display = 'none';
         }
 
-        // 💳 محاكي معالجة الدفع السريع والآمن المتوافق مع بيئة الاختبار لبطاقات مدى وفيزا وميسر
+        // دالة إتمام سداد الفواتير واختبار بطاقات ميسر
         async function executeMockMoyasarPayment() {
             let cardName = document.getElementById('moyasar-card-name').value.trim();
             let cardNumber = document.getElementById('moyasar-card-number').value.replace(/\s+/g, '');
@@ -377,10 +377,9 @@
             let cardCvv = document.getElementById('moyasar-card-cvv').value.trim();
 
             if(!cardName || !cardNumber || !cardMonth || !cardYear || !cardCvv) {
-                return alert("⚠️ يرجى إدخال بيانات بطاقة الدفع المفتوحة للاختبار!");
+                return alert("⚠️ يرجى إدخال بيانات بطاقة الدفع كاملة!");
             }
 
-            // فحص بطاقة اختبار ميسر العالمية (4111111111111111) المعتمدة لـ مدى وفيزا
             if(cardNumber === "4111111111111111" || cardNumber === "4000000000000000") {
                 let submitBtn = document.getElementById('btn-moyasar-submit');
                 submitBtn.innerText = "جاري الاتصال والخصم الفوري من ميسر... 🔒"; submitBtn.disabled = true;
@@ -390,12 +389,13 @@
                     alert("✅ تم سداد الفاتورة بنجاح عبر بوابة ميسر التجريبية! جاري تسجيل الطلب الفني...");
                     await executeFinalRequestInsertion();
                     submitBtn.innerText = "تأكيد السداد والخصم الفوري"; submitBtn.disabled = false;
-                }, 1500);
+                }, 1200);
             } else {
                 alert("❌ العملية مرفوضة. يرجى استخدام بطاقة الاختبار الموحدة لـ ميسر: 4111111111111111");
             }
         }
 
+        // 🛡️ [تحديث جذري وصارم للتحكم بالدفع]: منع التخطي التلقائي للخدمات المدفوعة بشكل قطعي
         async function submitRequest() {
             let srv = document.getElementById('c-service').value;
             if (!srv) { alert("⚠️ يرجى تحديد الخدمة المطلوبة!"); return; }
@@ -403,13 +403,17 @@
 
             let selectElement = document.getElementById('c-service');
             let selectedOption = selectElement.options[selectElement.selectedIndex];
+            
+            // فحص صارم ومباشر لعلامة ومؤشر الـ attribute الخاص بالمشمولية
             let isFree = selectedOption.getAttribute('data-mshmool') === "true";
-            let price = selectedOption.getAttribute('data-price') || "";
+            let price = selectedOption.getAttribute('data-price') || "0";
 
-            if (!isFree && price && price !== "0") {
+            if (isFree === false) { 
+                // إجبار العميل على قفل الدفع، ولن يتم تفعيل دالة الإرسال وحفظ البيانات إلا بعد إتمام وظيفة السداد الفوري بنجاح
                 document.getElementById('service-payment-amount-display').innerText = price + " ر.س";
                 document.getElementById('service-payment-modal').style.display = 'flex';
             } else {
+                // الخدمة مجانية تابعة للباقة، تنفذ وتمر مباشرة للـ Supabase
                 await executeFinalRequestInsertion();
             }
         }
