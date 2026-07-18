@@ -105,8 +105,8 @@
     <div id="page-register" class="page-view">
         <div class="auth-container">
             <h2>تسجيل المشترك الجديد</h2>
-            <div class="form-group"><label>الاسم الكامل</label><input type="text" id="reg-name"></div>
-            <div class="form-group"><label>رقم الجوال</label><input type="tel" id="reg-phone"></div>
+            <div class="form-group"><label>الاسم الكامل <span style="color: red;">*</span></label><input type="text" id="reg-name" required></div>
+            <div class="form-group"><label>رقم الجوال <span style="color: red;">*</span></label><input type="tel" id="reg-phone" required placeholder="05XXXXXXXX"></div>
             <button class="btn btn-primary" style="width: 100%;" onclick="proceedToPayment()">المتابعة للدفع</button>
         </div>
     </div>
@@ -123,7 +123,7 @@
     <!-- 4. الدفع -->
     <div id="page-payment" class="page-view">
         <div class="auth-container">
-            <h2>إتمام الدفع (500 ر.س / 12 شهر)</h2>
+            <h2>إتمام الدفع (500 ر.س / 12 month)</h2>
             <div class="form-group"><label>رقم البطاقة</label><input type="text" placeholder="XXXX XXXX XXXX XXXX"></div>
             <button class="btn btn-primary" style="width: 100%;" onclick="showOTP()">ادفع الآن</button>
         </div>
@@ -278,8 +278,25 @@
             }
         }
 
-        let tempUser="", tempPhone="";
-        function proceedToPayment() { tempUser=document.getElementById('reg-name').value; tempPhone=document.getElementById('reg-phone').value; navigate('payment'); }
+        // 🛡️ [تعديل التحقق الصارم]: جعل حقول الاسم والجوال إلزامية عند التسجيل
+        function proceedToPayment() { 
+            let nameInput = document.getElementById('reg-name').value.trim();
+            let phoneInput = document.getElementById('reg-phone').value.trim();
+            
+            if (!nameInput) {
+                alert("⚠️ يرجى إدخال الاسم الكامل لإكمال عملية التسجيل!");
+                return;
+            }
+            if (!phoneInput) {
+                alert("⚠️ يرجى إدخل رقم الجوال لإكمال عملية التسجيل!");
+                return;
+            }
+            
+            tempUser = nameInput; 
+            tempPhone = phoneInput; 
+            navigate('payment'); 
+        }
+        
         function showOTP() { document.getElementById('otp-modal').style.display='flex'; }
         function verifyPaymentAndRegister() { document.getElementById('otp-modal').style.display='none'; document.getElementById('comp-name').value=tempUser; document.getElementById('comp-phone').value=tempPhone; navigate('complete-reg'); }
 
