@@ -48,18 +48,19 @@
         .stat-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; flex: 1; min-width: 200px; border: 1px solid rgba(255,255,255,0.2);}
         .stat-title { font-size: 14px; opacity: 0.9; margin-bottom: 5px;}
         .stat-val { font-size: 20px; font-weight: bold; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
     </style>
 </head>
 <body>
 
-    <div id="image-modal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;" onclick="closeImageModal()">
+    <div id="image-modal" class="modal-overlay" onclick="closeImageModal()">
         <div class="modal-content" style="background: var(--white); padding: 30px; border-radius: 16px; max-width: 600px; text-align: center; position: relative;" onclick="event.stopPropagation()">
             <span style="position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: var(--primary);" onclick="closeImageModal()">&times;</span>
             <img id="modal-viewer-img" src="" alt="صورة مكبرة" style="max-width: 100%; max-height: 450px; border-radius: 8px;">
         </div>
     </div>
 
-    <div id="otp-modal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;">
+    <div id="otp-modal" class="modal-overlay">
         <div class="modal-content" style="background: var(--white); padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; text-align: center;">
             <h3>التحقق من الدفع 🔒</h3>
             <div class="otp-inputs" style="display: flex; gap: 10px; justify-content: center; margin: 20px 0; direction: ltr;">
@@ -69,6 +70,24 @@
                 <input type="text" maxlength="1" id="otp4" style="width: 50px; height: 50px; text-align: center; font-size: 24px; border: 2px solid var(--border); border-radius: 8px;">
             </div>
             <button class="btn btn-primary" style="width: 100%;" onclick="verifyPaymentAndRegister()">تأكيد الدفع والتفعيل</button>
+        </div>
+    </div>
+
+    <!-- نافذة منبثقة إضافية مخصصة لعمليات الدفع الفوري عند طلب الخدمات غير المشمولة -->
+    <div id="service-payment-modal" class="modal-overlay" style="z-index: 1100;">
+        <div class="modal-content" style="background: var(--white); padding: 35px; border-radius: 16px; width: 90%; max-width: 420px; text-align: right;">
+            <h3 style="color: var(--primary); text-align: center; margin-bottom: 15px;">بوابة الدفع الفوري للخدمات 💳</h3>
+            <p style="font-size: 14px; margin-bottom: 20px; text-align: center; color: var(--text-main);">
+                أنت بصدد طلب خدمة إضافية غير مشمولة في باقتك الحالية.<br>
+                <strong style="color: var(--secondary); font-size: 18px;" id="service-payment-amount-display">0 ر.س</strong>
+            </p>
+            <div class="form-group"><label>رقم بطاقة الدفع (مدى / فيزا)</label><input type="text" placeholder="XXXX XXXX XXXX XXXX"></div>
+            <div style="display:flex; gap:10px;">
+                <div class="form-group" style="flex:1;"><label>تاريخ الانتهاء</label><input type="text" placeholder="MM/YY"></div>
+                <div class="form-group" style="flex:1;"><label>الرمز السري CVV</label><input type="password" placeholder="***"></div>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="processServiceInstantOTP()">تأكيد الدفع الآمن</button>
+            <button class="btn" style="width: 100%; margin-top: 10px; background:#e2e8f0; color: #475569;" onclick="closeServicePaymentModal()">إلغاء الطلب</button>
         </div>
     </div>
 
@@ -170,7 +189,21 @@
 
             <div class="card">
                 <div class="card-header">طلب صيانة جديد 🛠️ <span id="sync-status" style="font-size:12px; color:var(--success); display:none;">● متصل</span></div>
-                <div class="form-group"><label>الخدمة المطلوبة:</label><select id="c-service"></select></div>
+                <div class="form-group">
+                    <label>الخدمة المطلوبة:</label>
+                    <select id="c-service" onchange="checkSelectedServiceCost()"></select>
+                </div>
+                
+                <!-- صندوق تفاصيل التكلفة والدفع المباشر للخدمات غير المشمولة -->
+                <div id="additional-service-cost-notice" style="display:none; padding:15px; background:#fff7ed; border:1px solid #ffedd5; border-radius:8px; margin-bottom:20px;">
+                    <p style="color:#c2410c; font-weight:bold; font-size:14px;">
+                        ⚠️ تنبيه: هذه الخدمة خارج نطاق باقة اشتراكك الحالية وتتطلب دفعاً إضافياً.
+                    </p>
+                    <p style="font-size:15px; margin-top:5px;">
+                        تكلفة الخدمة: <strong style="color:var(--primary);" id="calculated-service-price">-</strong>
+                    </p>
+                </div>
+
                 <div class="form-group"><label>وصف المشكلة:</label><textarea id="c-desc" rows="3" placeholder="اشرح العطل هنا..."></textarea></div>
                 <div class="form-group">
                     <label>صورة العطل (اختياري):</label>
@@ -278,40 +311,21 @@
             }
         }
 
-        // 🛡️ [تعديل التحقق الصارم]: جعل حقول الاسم والجوال إلزامية عند التسجيل
+        let tempUser="", tempPhone="";
         function proceedToPayment() { 
             let nameInput = document.getElementById('reg-name').value.trim();
             let phoneInput = document.getElementById('reg-phone').value.trim();
-            
-            if (!nameInput) {
-                alert("⚠️ يرجى إدخال الاسم الكامل لإكمال عملية التسجيل!");
-                return;
-            }
-            if (!phoneInput) {
-                alert("⚠️ يرجى إدخل رقم الجوال لإكمال عملية التسجيل!");
-                return;
-            }
-            
-            tempUser = nameInput; 
-            tempPhone = phoneInput; 
-            navigate('payment'); 
+            if (!nameInput) { alert("⚠️ يرجى إدخال الاسم الكامل لإكمال عملية التسجيل!"); return; }
+            if (!phoneInput) { alert("⚠️ يرجى إدخل رقم الجوال لإكمال عملية التسجيل!"); return; }
+            tempUser = nameInput; tempPhone = phoneInput; navigate('payment'); 
         }
-        
         function showOTP() { document.getElementById('otp-modal').style.display='flex'; }
         function verifyPaymentAndRegister() { document.getElementById('otp-modal').style.display='none'; document.getElementById('comp-name').value=tempUser; document.getElementById('comp-phone').value=tempPhone; navigate('complete-reg'); }
 
         async function saveCompleteRegistration() {
             let addr = document.getElementById('comp-national-address').value.trim();
-            
-            if (!addr) {
-                alert("⚠️ يرجى إدخال العنوان الوطني السعودي أولاً لتفعيل الاشتراك!");
-                return;
-            }
-            if (!tempHouseImageBase64) {
-                alert("⚠️ يرجى إرفاق صورة المنزل أولاً لتفعيل الاشتراك!");
-                return;
-            }
-            
+            if (!addr) { alert("⚠️ يرجى إدخال العنوان الوطني السعودي أولاً لتفعيل الاشتراك!"); return; }
+            if (!tempHouseImageBase64) { alert("⚠️ يرجى إرفاق صورة المنزل أولاً لتفعيل الاشتراك!"); return; }
             let payload = { name: tempUser, phone: tempPhone, national_address: addr, house_image: tempHouseImageBase64, package_name: 'باقة السباكة والكهرباء', status: 'فعال', lat: marker.getLatLng().lat.toString(), lng: marker.getLatLng().lng.toString() };
             await fetch(`${SUPABASE_URL}/rest/v1/users`, { method: "POST", headers, body: JSON.stringify(payload) });
             db.user = tempUser; db.phone = tempPhone; db.regDate = new Date().toISOString();
@@ -322,44 +336,77 @@
         function loginUser() {
             let p = document.getElementById('login-phone').value.trim();
             let u = db.users.find(x => x.phone == p);
-            if(u) { 
-                db.user=u.name; 
-                db.phone=u.phone; 
-                db.regDate=u.created_at || ''; 
-                localStorage.setItem('user',u.name); 
-                localStorage.setItem('phone',u.phone);
-                localStorage.setItem('regDate', db.regDate);
-                navigate('client'); 
-            }
+            if(u) { db.user=u.name; db.phone=u.phone; db.regDate=u.created_at || ''; localStorage.setItem('user',u.name); localStorage.setItem('phone',u.phone); localStorage.setItem('regDate', db.regDate); navigate('client'); }
             else alert("الجوال غير مسجل");
         }
 
+        // دالة الفحص اللحظي لنوع الخدمة المختارة وتحديد ما إذا كانت مشمولة أو إضافية مدفوعة الثمن
+        function checkSelectedServiceCost() {
+            let selectElement = document.getElementById('c-service');
+            let selectedOption = selectElement.options[selectElement.selectedIndex];
+            if(!selectedOption) return;
+
+            let isFree = selectedOption.getAttribute('data-mshmool') === "true";
+            let price = selectedOption.getAttribute('data-price') || "";
+            let noticeBox = document.getElementById('additional-service-cost-notice');
+            let submitBtn = document.getElementById('btn-submit');
+
+            if (!isFree && price && price !== "0") {
+                noticeBox.style.display = 'block';
+                document.getElementById('calculated-service-price').innerText = price + " ر.س";
+                submitBtn.innerText = "دفع رسوم الخدمة وإرسال الطلب 💳";
+                submitBtn.className = "btn btn-secondary";
+            } else {
+                noticeBox.style.display = 'none';
+                submitBtn.innerText = "إرسال الطلب";
+                submitBtn.className = "btn btn-primary";
+            }
+        }
+
+        function closeServicePaymentModal() {
+            document.getElementById('service-payment-modal').style.display = 'none';
+        }
+
+        // معالجة تأكيد عملية الدفع الفوري للخدمات الإضافية المدفوعة وحفظها للعميل
+        async function processServiceInstantOTP() {
+            document.getElementById('service-payment-modal').style.display = 'none';
+            alert("✅ تم قبول عملية الدفع بنجاح! جاري إرسال البلاغ الفني...");
+            await executeFinalRequestInsertion();
+        }
+
         async function submitRequest() {
+            let srv = document.getElementById('c-service').value;
+            if (!srv) { alert("⚠️ يرجى تحديد الخدمة المطلوبة!"); return; }
+            if (!tempRequestImageBase64) { alert("⚠️ يرجى إرفاق صورة العطل لإرسال الطلب!"); return; }
+
+            let selectElement = document.getElementById('c-service');
+            let selectedOption = selectElement.options[selectElement.selectedIndex];
+            let isFree = selectedOption.getAttribute('data-mshmool') === "true";
+            let price = selectedOption.getAttribute('data-price') || "";
+
+            // إذا كانت الخدمة إضافية وغير مشمولة، نوجهه أولاً لبوابة الدفع قبل الحفظ
+            if (!isFree && price && price !== "0") {
+                document.getElementById('service-payment-amount-display').innerText = price + " ر.س";
+                document.getElementById('service-payment-modal').style.display = 'flex';
+            } else {
+                await executeFinalRequestInsertion();
+            }
+        }
+
+        // دالة الحفظ الفعلي للبلاغ داخل قاعدة بيانات Supabase
+        async function executeFinalRequestInsertion() {
             let srv = document.getElementById('c-service').value, desc = document.getElementById('c-desc').value;
-            
-            if (!srv) {
-                alert("⚠️ يرجى تحديد الخدمة المطلوبة!");
-                return;
-            }
-            if (!tempRequestImageBase64) {
-                alert("⚠️ يرجى إرفاق صورة العطل لإرسال الطلب!");
-                return;
-            }
-            
             let payload = { date: new Date().toLocaleDateString('ar-SA'), "user": db.user, phone: db.phone, service: srv, "desc": desc, image: tempRequestImageBase64, status: 'قيد الانتظار' };
             await fetch(`${SUPABASE_URL}/rest/v1/requests`, { method:"POST", headers, body: JSON.stringify(payload) });
-            alert("✅ تم إرسال طلب الصيانة!");
+            alert("✅ تم إرسال طلب الصيانة بنجاح!");
             
             document.getElementById('c-desc').value = '';
-            document.getElementById('c-image').value = '';
+            let fileInput = document.getElementById('c-image');
+            if(fileInput) fileInput.value = '';
             
             let preview = document.getElementById('request-preview');
-            if (preview) {
-                preview.src = '';
-                preview.style.display = 'none';
-            }
+            if (preview) { preview.src = ''; preview.style.display = 'none'; }
             tempRequestImageBase64 = "";
-
             silentBackgroundSync();
         }
 
@@ -368,33 +415,20 @@
             let phone = document.getElementById('feedback-phone').value.trim();
             let type = document.getElementById('feedback-type').value;
             let desc = document.getElementById('feedback-desc').value.trim();
-            
-            if (!name || !phone || !desc) {
-                alert("⚠️ يرجى تعبئة جميع الحقول لإرسال الرسالة!");
-                return;
-            }
-
+            if (!name || !phone || !desc) { alert("⚠️ يرجى تعبئة جميع الحقول لإرسال الرسالة!"); return; }
             let payload = { date: new Date().toISOString(), name: name, phone: phone, type: type, "desc": desc };
-
             try {
                 let res = await fetch(`${SUPABASE_URL}/rest/v1/complaints`, { method:"POST", headers, body: JSON.stringify(payload) });
                 if(res.ok) {
                     alert("✅ شكرًا لرسالتك! تم إرسال الشكوى/الاقتراح بنجاح وسنقوم بمراجعتها.");
-                    document.getElementById('feedback-name').value = ''; 
-                    document.getElementById('feedback-phone').value = ''; 
-                    document.getElementById('feedback-desc').value = '';
-                } else {
-                    let errText = await res.text();
-                    alert("❌ فشل إرسال الرسالة من خادم قاعدة البيانات: " + errText);
-                }
-            } catch(e) {
-                alert("❌ حدث خطأ في الاتصال بالشبكة عند إرسال الرسالة.");
-            }
+                    document.getElementById('feedback-name').value = ''; document.getElementById('feedback-phone').value = ''; document.getElementById('feedback-desc').value = '';
+                } else { alert("❌ فشل إرسال الرسالة من خادم قاعدة البيانات: " + await res.text()); }
+            } catch(e) { alert("❌ حدث خطأ في الاتصال بالشبكة عند إرسال الرسالة."); }
         }
 
         function logout() { localStorage.clear(); location.reload(); }
 
-        // --- المزامنة المتقدمة وفلترة الخدمات تَبَعاً لاشتراك العميل الحالي مع حفظ التثبيت ---
+        // --- المزامنة المتقدمة وفلترة وتوضيح الخدمات مشمولة/إضافية تَبَعاً لاشتراك العميل الحالي ---
         function updateUI() {
             let regDateVal = db.regDate;
             let currentUserRecord = (db.users || []).find(u => u.phone && db.phone && u.phone.toString() === db.phone.toString());
@@ -416,7 +450,6 @@
             
             if(db.user && document.getElementById('welcome-msg')) document.getElementById('welcome-msg').innerText = "أهلاً بك يا " + db.user;
             
-            // 🛡️ [تثبيت الاختيار الحالي]: حفظ القيمة التي اختارها المستخدم قبل إعادة بناء القائمة
             let serviceSelectElement = document.getElementById('c-service');
             let previouslySelectedValue = serviceSelectElement ? serviceSelectElement.value : "";
 
@@ -428,23 +461,26 @@
                 let servicesExist = false;
 
                 db.products.forEach(p => { 
-                    // 1. عرض الباقات في الكروت الخارجية للزوار (بشرط أن يكون النوع package صراحةً وبشكل قطعي)
                     if (p.type && p.type.toString().trim() === 'package') {
                         h += `<div class="service-card"><h3>${p.name}</h3><div class="price">${p.price || ''}</div></div>`; 
                         packagesExist = true;
                     }
-                    // 2. فلترة الخدمات الداخلية: تظهر للعميل فقط إذا كانت تابعة لنفس باقته الحالية
+                    // بناء القائمة الموحدة وتوضيح المشمول والخدمة الإضافية المدفوعة للعميل فوراً
                     else if (p.type && p.type.toString().trim() === 'service') {
                         let belongsTo = p.belongs_to_package || 'باقة السباكة والكهرباء';
-                        if (belongsTo.toString().trim() === currentPackage.toString().trim()) {
-                            s += `<option value="${p.name}">${p.name}</option>`; 
-                            servicesExist = true;
+                        let isMshmool = belongsTo.toString().trim() === currentPackage.toString().trim();
+                        
+                        if (isMshmool) {
+                            s += `<option value="${p.name}" data-mshmool="true" data-price="0">${p.name} (مشمول في الاشتراك) ✅</option>`;
+                        } else {
+                            s += `<option value="${p.name}" data-mshmool="false" data-price="${p.price || '150'}">${p.name} (خدمة إضافية - ${p.price || '150'} ر.س) 💳</option>`;
                         }
+                        servicesExist = true;
                     }
                 });
 
                 if(!packagesExist) h = `<p style="text-align:center; color:#6b7280; width:100%;">لا توجد باقات معروضة حالياً.</p>`;
-                if(!servicesExist) s = `<option value="">-- لا توجد خدمات مشمولة في باقتك الحالية --</option>`;
+                if(!servicesExist) s = `<option value="">-- لا توجد خدمات متاحة حالياً --</option>`;
             } else {
                 h = `<p style="text-align:center; color:#6b7280; width:100%;">لا توجد باقات معروضة حالياً.</p>`;
                 s = `<option value="">-- لا توجد خدمات صيانة فرعية حالياً --</option>`;
@@ -464,13 +500,13 @@
             if(document.getElementById('sub-req-count')) document.getElementById('sub-req-count').innerText = completedCount;
             if(document.getElementById('home-products-grid')) document.getElementById('home-products-grid').innerHTML = h;
             
-            // حقن الخيارات داخل القائمة مع تطبيق قفل التثبيت الذكي
             if(serviceSelectElement) {
                 serviceSelectElement.innerHTML = s;
-                // إعادة تثبيت خيار المستخدم السابق إذا كان متوفراً لمنعه من القفز والعودة للخيار الأول
                 if (previouslySelectedValue && serviceSelectElement.querySelector(`option[value="${previouslySelectedValue}"]`)) {
                     serviceSelectElement.value = previouslySelectedValue;
                 }
+                // تفعيل الفحص التلقائي بعد بناء الخيارات لأول مرة لضبط حالة الأزرار والتنبيهات السعرية
+                checkSelectedServiceCost();
             }
             
             if(document.getElementById('client-list')) document.getElementById('client-list').innerHTML = c;
