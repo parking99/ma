@@ -295,7 +295,15 @@
         function loginUser() {
             let p = document.getElementById('login-phone').value.trim();
             let u = db.users.find(x => x.phone == p);
-            if(u) { db.user=u.name; db.phone=u.phone; localStorage.setItem('user',u.name); localStorage.setItem('phone',u.phone); navigate('client'); }
+            if(u) { 
+                db.user=u.name; 
+                db.phone=u.phone; 
+                db.regDate=u.created_at || ''; // حفظ تاريخ تفعيل الاشتراك في الذاكرة المحلية والـ db عند تسجيل الدخول
+                localStorage.setItem('user',u.name); 
+                localStorage.setItem('phone',u.phone);
+                localStorage.setItem('regDate', db.regDate);
+                navigate('client'); 
+            }
             else alert("الجوال غير مسجل");
         }
 
@@ -305,20 +313,14 @@
             await fetch(`${SUPABASE_URL}/rest/v1/requests`, { method:"POST", headers, body: JSON.stringify(payload) });
             alert("✅ تم إرسال طلب الصيانة!");
             
-            // 1. تفريغ حقل النص
             document.getElementById('c-desc').value = '';
-            
-            // 2. تفريغ حقل اختيار الملف (الصورة)
             document.getElementById('c-image').value = '';
             
-            // 3. إخفاء وتصفير صورة المعاينة المعروضة
             let preview = document.getElementById('request-preview');
             if (preview) {
                 preview.src = '';
                 preview.style.display = 'none';
             }
-            
-            // 4. تصفير متغير الصورة المؤقت حتى لا يتم رفعه بالخطأ في طلب جديد
             tempRequestImageBase64 = "";
 
             silentBackgroundSync();
@@ -334,10 +336,19 @@
         function logout() { localStorage.clear(); location.reload(); }
 
         function updateUI() {
-            if(db.regDate && document.getElementById('sub-end-date')) {
-                let end = new Date(db.regDate); end.setFullYear(end.getFullYear()+1);
+            let regDateVal = db.regDate;
+            let currentUserRecord = db.users.find(u => u.phone.toString() === db.phone.toString());
+            if (currentUserRecord) {
+                if (currentUserRecord.created_at) {
+                    regDateVal = currentUserRecord.created_at;
+                }
+            }
+
+            if(regDateVal && document.getElementById('sub-end-date')) {
+                let end = new Date(regDateVal); end.setFullYear(end.getFullYear()+1);
                 document.getElementById('sub-end-date').innerText = end.toLocaleDateString('ar-SA');
             }
+            
             if(db.user && document.getElementById('welcome-msg')) document.getElementById('welcome-msg').innerText = "أهلاً بك يا " + db.user;
             
             let h="", s="", c="";
@@ -362,7 +373,6 @@
             if(document.getElementById('c-service')) document.getElementById('c-service').innerHTML = s;
             if(document.getElementById('client-list')) document.getElementById('client-list').innerHTML = c;
 
-            let currentUserRecord = db.users.find(u => u.phone.toString() === db.phone.toString());
             if(currentUserRecord && document.getElementById('client-sub-details')) {
                 document.getElementById('client-sub-details').style.display = 'block';
                 document.getElementById('client-detail-name').innerText = currentUserRecord.name;
