@@ -39,6 +39,12 @@
         th, td { padding: 15px 10px; text-align: right; border-bottom: 1px solid var(--border); }
         th { background: var(--bg); color: #6b7280; }
         .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        
+        /* ألوان حالات الطلبات */
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+        .badge-working { background-color: #fef3c7; color: #92400e; }
+        .badge-pending { background-color: #fee2e2; color: #991b1b; }
+
         .stats-grid { display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;}
         .stat-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; flex: 1; min-width: 200px; border: 1px solid rgba(255,255,255,0.2);}
         .stat-title { font-size: 14px; opacity: 0.9; margin-bottom: 5px;}
@@ -318,14 +324,24 @@
             if(db.user && document.getElementById('welcome-msg')) document.getElementById('welcome-msg').innerText = "أهلاً بك يا " + db.user;
             
             let h="", s="", c="";
+            let completedCount = 0; // متغير لحساب عدد الطلبات المكتملة
+            
             db.products.forEach(p => { h += `<div class="service-card"><h3>${p.name}</h3><div class="price">${p.price}</div></div>`; s += `<option value="${p.name}">${p.name}</option>`; });
             db.requests.forEach(r => { 
                 if(r.phone == db.phone) {
+                    if(r.status === 'مكتمل') {
+                        completedCount++; // زيادة العداد إذا كانت حالة الطلب مكتمل
+                    }
                     let badge = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
                     let imgHtml = r.image ? `<img src="${r.image}" style="width: 35px; height: 35px; border-radius: 4px; object-fit: cover; cursor: pointer;" onclick="openImageModal('${r.image}')">` : 'لا توجد';
                     c += `<tr><td>${r.date}</td><td>${r.service}</td><td>${r.desc}</td><td>${imgHtml}</td><td>${r.tech||'بحث'}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`; 
                 }
             });
+            
+            // تحديث عدد الطلبات المنفذة في الإحصائيات
+            if(document.getElementById('sub-req-count')) {
+                document.getElementById('sub-req-count').innerText = completedCount;
+            }
             
             if(document.getElementById('home-products-grid')) document.getElementById('home-products-grid').innerHTML = h;
             if(document.getElementById('c-service')) document.getElementById('c-service').innerHTML = s;
