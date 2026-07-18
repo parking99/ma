@@ -40,7 +40,6 @@
         th { background: var(--bg); color: #6b7280; }
         .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
         
-        /* ألوان حالات الطلبات */
         .badge-success { background-color: #d1fae5; color: #065f46; }
         .badge-working { background-color: #fef3c7; color: #92400e; }
         .badge-pending { background-color: #fee2e2; color: #991b1b; }
@@ -304,7 +303,25 @@
             let srv = document.getElementById('c-service').value, desc = document.getElementById('c-desc').value;
             let payload = { date: new Date().toLocaleDateString('ar-SA'), "user": db.user, phone: db.phone, service: srv, "desc": desc, image: tempRequestImageBase64, status: 'قيد الانتظار' };
             await fetch(`${SUPABASE_URL}/rest/v1/requests`, { method:"POST", headers, body: JSON.stringify(payload) });
-            alert("✅ تم إرسال طلب الصيانة!"); document.getElementById('c-desc').value=''; silentBackgroundSync();
+            alert("✅ تم إرسال طلب الصيانة!");
+            
+            // 1. تفريغ حقل النص
+            document.getElementById('c-desc').value = '';
+            
+            // 2. تفريغ حقل اختيار الملف (الصورة)
+            document.getElementById('c-image').value = '';
+            
+            // 3. إخفاء وتصفير صورة المعاينة المعروضة
+            let preview = document.getElementById('request-preview');
+            if (preview) {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
+            
+            // 4. تصفير متغير الصورة المؤقت حتى لا يتم رفعه بالخطأ في طلب جديد
+            tempRequestImageBase64 = "";
+
+            silentBackgroundSync();
         }
 
         async function submitFeedback() {
@@ -324,13 +341,12 @@
             if(db.user && document.getElementById('welcome-msg')) document.getElementById('welcome-msg').innerText = "أهلاً بك يا " + db.user;
             
             let h="", s="", c="";
-            let completedCount = 0; // متغير لحساب عدد الطلبات المكتملة
-            
+            let completedCount = 0;
             db.products.forEach(p => { h += `<div class="service-card"><h3>${p.name}</h3><div class="price">${p.price}</div></div>`; s += `<option value="${p.name}">${p.name}</option>`; });
             db.requests.forEach(r => { 
                 if(r.phone == db.phone) {
                     if(r.status === 'مكتمل') {
-                        completedCount++; // زيادة العداد إذا كانت حالة الطلب مكتمل
+                        completedCount++;
                     }
                     let badge = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
                     let imgHtml = r.image ? `<img src="${r.image}" style="width: 35px; height: 35px; border-radius: 4px; object-fit: cover; cursor: pointer;" onclick="openImageModal('${r.image}')">` : 'لا توجد';
@@ -338,7 +354,6 @@
                 }
             });
             
-            // تحديث عدد الطلبات المنفذة في الإحصائيات
             if(document.getElementById('sub-req-count')) {
                 document.getElementById('sub-req-count').innerText = completedCount;
             }
