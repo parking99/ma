@@ -1,569 +1,516 @@
+// إدارة حالة التطبيق (State Management)
+let state = {
+    employees: [],
+    filteredEmployees: [],
+    selectedEmployeeId: null,
+    searchQuery: '',
+    isMuted: false,
+    apiUrl: 'https://script.google.com/macros/s/AKfycbznf_WNaBMMbHnR1ZiP8QLG2BX80rU__OjlYs3_kWFirLfGVGo2toe0wKOOGAZxYUNthA/exec',
+    autoRefresh: true,
+    refreshIntervalId: null,
+    audioContext: null,
+    sirenIntervalId: null
+};
 
+// حاوية معرّفات الدبابيس على الخريطة لمنع إعادة إنشائها وتفادي الوميض
+const mapMarkers = {};
+let map = null;
 
-```html
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صيانة+ | المنصة الشاملة</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        :root { --primary: #1e3a8a; --secondary: #f59e0b; --bg: #f8fafc; --white: #ffffff; --text-main: #1f2937; --border: #e2e8f0; --success: #10b981; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { background-color: var(--bg); color: var(--text-main); line-height: 1.6; }
-        nav { background-color: var(--white); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 28px; font-weight: 800; color: var(--primary); cursor: pointer;}
-        .logo span { color: var(--secondary); }
-        .btn { padding: 10px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 16px; transition: 0.3s; }
-        .btn-primary { background: var(--primary); color: var(--white); }
-        .btn-secondary { background: var(--secondary); color: var(--white); }
-        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-        .page-view { display: none; animation: fadeIn 0.4s ease-in-out; }
-        .page-view.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .hero { background: linear-gradient(to left, rgba(30, 58, 138, 0.9), rgba(30, 58, 138, 0.7)), url('https://images.unsplash.com/photo-1581094288338-2314dddb7ece?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover; color: var(--white); text-align: center; padding: 80px 20px; }
-        .hero h1 { font-size: 3.5rem; margin-bottom: 20px; }
-        .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 30px; padding: 20px 5%; max-width: 1200px; margin: auto;}
-        .service-card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border); text-align: center;}
-        .service-card h3 { color: var(--primary); margin-bottom: 10px;}
-        .service-card .price { color: var(--secondary); font-weight: 800; font-size: 18px; }
-        .auth-container { max-width: 450px; margin: 40px auto; background: var(--white); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .form-group { margin-bottom: 20px; text-align: right;}
-        label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 14px; }
-        input, select, textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; outline: none;}
-        .preview-img { max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--border); display: none; }
-        .dashboard-container { padding: 40px 5%; max-width: 1200px; margin: auto; }
-        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid var(--border); overflow-x: auto;}
-        .card-header { font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; min-width: 800px;}
-        th, td { padding: 15px 10px; text-align: right; border-bottom: 1px solid var(--border); }
-        th { background: var(--bg); color: #6b7280; }
-        .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+// تهيئة التطبيق عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    initEventListeners();
+    lucide.createIcons();
+    
+    // جلب أول دفعة بيانات
+    fetchTelemetryData();
+    
+    // بدء التحديث التلقائي
+    toggleAutoRefresh(true);
+});
+
+// تهيئة خريطة Leaflet
+function initMap() {
+    // الرياض كإحداثيات افتراضية للمركز
+    map = L.map('map', {
+        zoomControl: false // سنضيفه لاحقاً في مكان مخصص
+    }).setView([24.7136, 46.6753], 12);
+
+    // إضافة أزرار التحكم بالتقريب في موقع مناسب
+    L.control.zoom({
+        position: 'topleft'
+    }).addTo(map);
+
+    // استخدام طبقة خريطة داكنة احترافية مناسبة لغرف العمليات الأمنية (CartoDB Dark Matter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+}
+
+// تهيئة مستمعي الأحداث (Event Listeners)
+function initEventListeners() {
+    // البحث
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value.trim().toLowerCase();
+        filterEmployees();
+    });
+
+    // تبديل التحديث التلقائي
+    const autoRefreshToggle = document.getElementById('autoRefreshToggle');
+    autoRefreshToggle.addEventListener('change', (e) => {
+        toggleAutoRefresh(e.target.checked);
+    });
+
+    // كتم/تفعيل صوت الإنذار
+    const muteAlarmBtn = document.getElementById('muteAlarmBtn');
+    muteAlarmBtn.addEventListener('click', toggleMute);
+
+    // إغلاق لوحة التفاصيل
+    const closeDetailBtn = document.getElementById('closeDetailBtn');
+    closeDetailBtn.addEventListener('click', deselectEmployee);
+
+    // تحديث رابط الـ API يدوياً
+    const apiUrlInput = document.getElementById('apiUrlInput');
+    apiUrlInput.addEventListener('change', (e) => {
+        const val = e.target.value.trim();
+        if (val) {
+            state.apiUrl = val;
+            fetchTelemetryData();
+        }
+    });
+}
+
+// جلب البيانات الحية من Google Apps Script Web App
+async function fetchTelemetryData() {
+    const indicator = document.getElementById('refreshIndicator');
+    indicator.classList.add('refreshing');
+    
+    try {
+        const response = await fetch(state.apiUrl);
+        if (!response.ok) {
+            throw new Error(`خطأ في خادم البيانات: ${response.status}`);
+        }
         
-        .badge-success { background-color: #d1fae5; color: #065f46; }
-        .badge-working { background-color: #fef3c7; color: #92400e; }
-        .badge-pending { background-color: #fee2e2; color: #991b1b; }
-
-        .stats-grid { display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;}
-        .stat-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; flex: 1; min-width: 200px; border: 1px solid rgba(255,255,255,0.2);}
-        .stat-title { font-size: 14px; opacity: 0.9; margin-bottom: 5px;}
-        .stat-val { font-size: 20px; font-weight: bold; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
-    </style>
-</head>
-<body>
-
-    <div id="image-modal" class="modal-overlay" onclick="closeImageModal()">
-        <div class="modal-content" style="background: var(--white); padding: 30px; border-radius: 16px; max-width: 600px; text-align: center; position: relative;" onclick="event.stopPropagation()">
-            <span style="position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: var(--primary);" onclick="closeImageModal()">&times;</span>
-            <img id="modal-viewer-img" src="" alt="صورة مكبرة" style="max-width: 100%; max-height: 450px; border-radius: 8px;">
-        </div>
-    </div>
-
-    <!-- نافذة بوابة الدفع المحمية ميسر المشتركة (تخدم كلاً من الاشتراك والخدمات الفرعية) -->
-    <div id="service-payment-modal" class="modal-overlay" style="z-index: 1100;">
-        <div class="modal-content" style="background: var(--white); padding: 35px; border-radius: 16px; width: 90%; max-width: 420px; text-align: right;" onclick="event.stopPropagation()">
-            <h3 style="text-align: center; margin-bottom: 5px; color: var(--primary);" id="moyasar-payment-title">بوابة الدفع الفوري ميسر 💳</h3>
-            <div style="display:flex; justify-content:center; gap:10px; margin-bottom:15px;"><small style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:4px; font-weight:bold;">مدى</small> <small style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:4px; font-weight:bold;">فيزا</small> <small style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:4px; font-weight:bold;">Apple Pay</small></div>
-            <p style="font-size: 14px; margin-bottom: 20px; text-align: center; color: var(--text-main);">
-                <span id="moyasar-payment-desc-text">جاري معالجة السداد الفوري للفاتورة الحالية</span><br>
-                <strong style="color: var(--secondary); font-size: 18px;" id="service-payment-amount-display">0 ر.س</strong>
-            </p>
-            <div class="form-group"><label>اسم حامل البطاقة</label><input type="text" id="moyasar-card-name" placeholder="الاسم الكامل"></div>
-            <div class="form-group"><label>رقم بطاقة الدفع (مدى / فيزا)</label><input type="text" id="moyasar-card-number" placeholder="4111 1111 1111 1111"></div>
-            <div style="display:flex; gap:10px;">
-                <div class="form-group" style="flex:1;"><label>شهر الانتهاء (MM)</label><input type="text" id="moyasar-card-month" placeholder="12"></div>
-                <div class="form-group" style="flex:1;"><label>سنة الانتهاء (YY)</label><input type="text" id="moyasar-card-year" placeholder="28"></div>
-                <div class="form-group" style="flex:1;"><label>الرمز السري CVV</label><input type="password" id="moyasar-card-cvv" placeholder="123"></div>
-            </div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="btn-moyasar-submit" onclick="dispatchMoyasarPaymentRouter()">تأكيد السداد والخصم الفوري</button>
-            <button class="btn" style="width: 100%; margin-top: 10px; background:#e2e8f0; color: #475569;" onclick="closeServicePaymentModal()">إلغاء الطلب</button>
-        </div>
-    </div>
-
-    <nav>
-        <div class="logo" onclick="navigate('home')">صيانة<span>+</span></div>
-        <div class="nav-links" id="nav-links-container"></div>
-    </nav>
-
-    <!-- 1. الرئيسية -->
-    <div id="page-home" class="page-view active">
-        <section class="hero">
-            <h1>راحة بالك.. طوال العام</h1>
-            <p style="font-size: 1.3rem; margin-bottom: 30px;">اشترك الآن في باقة السباكة والكهرباء وتمتع بالصيانة الفورية.</p>
-            <button class="btn btn-secondary" style="padding: 15px 40px; font-size: 1.5rem;" onclick="navigate('register')">اشترك بـ 500 ريال سنوياً</button>
-        </section>
-        <div class="services-grid" id="home-products-grid"></div>
+        const rawData = await response.json();
         
-        <section style="max-width: 800px; margin: 40px auto; padding: 25px; background: var(--white); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border);">
-            <h3 style="color: var(--primary); text-align: center; margin-bottom: 15px;">الشكاوى والاقتراحات ✉️</h3>
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <div class="form-group" style="flex: 1;"><label>الاسم الكامل</label><input type="text" id="feedback-name"></div>
-                <div class="form-group" style="flex: 1;"><label>رقم الجوال</label><input type="tel" id="feedback-phone"></div>
-            </div>
-            <div class="form-group">
-                <label>نوع الرسالة</label>
-                <select id="feedback-type"><option value="اقتراح">اقتراح</option><option value="شكوى">شكوى</option></select>
-            </div>
-            <div class="form-group"><label>تفاصيل الرسالة</label><textarea id="feedback-desc" rows="4"></textarea></div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="submitFeedback()">إرسال الرسالة</button>
-        </section>
-    </div>
+        // تصفية السجلات الفارغة والتأكد من وجود اسم للموظف ومعرّف، ومنع البيانات التالفة
+        state.employees = rawData.filter(emp => {
+            const id = (emp.emp_id || '').toString().trim();
+            const name = (emp.emp_name || '').toString().trim();
+            
+            // يجب أن يحتوي السجل على معرف أو اسم
+            if (!id && !name) return false;
+            
+            // استبعاد السجلات التي تحتوي على أكواد برمجية لتفادي إفساد التخطيط
+            if (id.startsWith('//') || name.startsWith('//') || 
+                id.startsWith('/*') || name.startsWith('/*') || 
+                id.includes('package ') || name.includes('package ') ||
+                id.includes('import ') || name.includes('import ') ||
+                id.includes('<' + '!DOCTYPE') || name.includes('<' + '!DOCTYPE') ||
+                id.includes('class ') || name.includes('class ')) {
+                return false;
+            }
+            
+            // استبعاد السجلات ذات النصوص الطويلة جداً التي تشير لبيانات تالفة أو نصوص محادثات
+            if (name.length > 50 || id.length > 30) {
+                return false;
+            }
+            
+            return true;
+        }).map(emp => {
+            // معالجة القيم الافتراضية
+            return {
+                timestamp: emp.timestamp || new Date().toISOString(),
+                emp_id: emp.emp_id || 'N/A',
+                emp_name: emp.emp_name || 'موظف غير معروف',
+                lat: parseFloat(emp.lat) || 24.7136,
+                lng: parseFloat(emp.lng) || 46.6753,
+                speed: emp.speed !== '' ? parseFloat(emp.speed).toFixed(1) : '0.0',
+                heart_rate: emp.heart_rate !== '' ? parseInt(emp.heart_rate) : 0,
+                steps: emp.steps !== '' ? parseInt(emp.steps) : 0,
+                battery: emp.battery ? emp.battery.toString().replace('%', '') + '%' : '100%',
+                is_worn: emp.is_worn === 'YES' || emp.is_worn === true ? 'نعم' : 'لا',
+                status: (emp.status || 'NORMAL').toUpperCase(),
+                nearest_responder: emp.nearest_responder || 'لا يوجد'
+            };
+        });
 
-    <!-- 2. التسجيل -->
-    <div id="page-register" class="page-view">
-        <div class="auth-container">
-            <h2>تسجيل المشترك الجديد</h2>
-            <div class="form-group"><label>الاسم الكامل <span style="color: red;">*</span></label><input type="text" id="reg-name" required></div>
-            <div class="form-group"><label>رقم الجوال <span style="color: red;">*</span></label><input type="tel" id="reg-phone" required placeholder="05XXXXXXXX"></div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="proceedToPayment()">المتابعة وتفعيل الدفع للباقة</button>
-        </div>
-    </div>
+        // تحديث الفلترة
+        filterEmployees();
+        
+        // تحديث الإحصائيات
+        updateStats();
+        
+        // تحديث الدبابيس على الخريطة
+        updateMapMarkers();
+        
+        // التحقق من بلاغات الـ SOS النشطة وتفعيل الإنذار
+        checkSosAlerts();
 
-    <!-- 3. تسجيل الدخول -->
-    <div id="page-login" class="page-view">
-        <div class="auth-container">
-            <h2>تسجيل الدخول للمشتركين</h2>
-            <div class="form-group"><label>رقم الجوال المسجل</label><input type="tel" id="login-phone"></div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="loginUser()">دخول</button>
-        </div>
-    </div>
+        // تحديث لوحة التفاصيل إذا كان هناك موظف محدد مفتوح حالياً
+        if (state.selectedEmployeeId) {
+            const currentEmp = state.employees.find(e => e.emp_id === state.selectedEmployeeId);
+            if (currentEmp) {
+                showEmployeeDetails(currentEmp);
+            }
+        }
 
-    <!-- 4. صفحة الدفع (تم تحويلها لتعمل بذكاء عبر نافذة ميسر الموحدة) -->
-    <div id="page-payment" class="page-view">
-        <div class="auth-container" style="text-align:center;">
-            <h2>بوابة الدفع السنوية لميسر</h2>
-            <p style="margin:15px 0; color:#4b5563;">الرجاء الضغط على الزر أدناه لفتح بوابة الدفع واستقطاع رسوم الباقة السنوية.</p>
-            <button class="btn btn-primary" style="width: 100%;" onclick="triggerMoyasarForAnnualPackage()">افتح استمارة الدفع الآن 💳</button>
-        </div>
-    </div>
+    } catch (error) {
+        console.error('حدث خطأ أثناء جلب البيانات:', error);
+        const listContainer = document.getElementById('employeeList');
+        listContainer.innerHTML = `<div class="list-placeholder" style="color:var(--color-danger)">
+            <i data-lucide="alert-triangle" style="margin-bottom:8px"></i><br>
+            فشل الاتصال بالسيرفر. تأكد من إعدادات الرابط والإنترنت.
+        </div>`;
+        lucide.createIcons();
+    } finally {
+        setTimeout(() => {
+            indicator.classList.remove('refreshing');
+        }, 600);
+    }
+}
 
-    <!-- 4.1 إكمال بيانات التفعيل -->
-    <div id="page-complete-reg" class="page-view">
-        <div class="auth-container">
-            <h2>إكمال تفعيل الاشتراك 🏡</h2>
-            <div class="form-group"><label>الاسم الكامل</label><input type="text" id="comp-name" readonly style="background: #eff6ff;"></div>
-            <div class="form-group"><label>رقم الجوال</label><input type="tel" id="comp-phone" readonly style="background: #eff6ff;"></div>
-            <div class="form-group">
-                <button type="button" class="btn btn-secondary" style="width: 100%; margin-bottom:10px;" onclick="locateUser()">📍 حدد موقعي الحالي تلقائياً</button>
-                <div id="map" style="width: 100%; height: 220px; border-radius: 8px; border: 1px solid var(--border);"></div>
-            </div>
-            <div class="form-group"><label>العنوان الوطني السعودي</label><input type="text" id="comp-national-address"></div>
-            <div class="form-group">
-                <label>صورة المنزل</label>
-                <input type="file" id="comp-house-image" accept="image/*" onchange="previewImage(this, 'house-preview')">
-                <img id="house-preview" class="preview-img">
-            </div>
-            <button class="btn btn-primary" style="width: 100%;" id="btn-save-complete-reg" onclick="saveCompleteRegistration()">حفظ وتفعيل الاشتراك</button>
-        </div>
-    </div>
+// تصفية قائمة الموظفين بناءً على البحث
+function filterEmployees() {
+    if (!state.searchQuery) {
+        state.filteredEmployees = [...state.employees];
+    } else {
+        state.filteredEmployees = state.employees.filter(emp => {
+            return emp.emp_name.toLowerCase().includes(state.searchQuery) ||
+                   emp.emp_id.toLowerCase().includes(state.searchQuery);
+        });
+    }
+    
+    // إعادة ترتيب القائمة بحيث تظهر حالات SOS في البداية ثم WARNING ثم NORMAL
+    state.filteredEmployees.sort((a, b) => {
+        const priority = { 'SOS': 3, 'WARNING': 2, 'NORMAL': 1 };
+        return (priority[b.status] || 0) - (priority[a.status] || 0);
+    });
 
-    <!-- 5. لوحة العميل -->
-    <div id="page-client" class="page-view">
-        <div class="dashboard-container">
-            <div class="card" style="background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; border: none;">
-                <h2 id="welcome-msg">أهلاً بك!</h2>
-                <div class="stats-grid">
-                    <div class="stat-box"><div class="stat-title">الباقة الحالية</div><div class="stat-val" id="client-package-badge">مُفعلة ✅</div></div>
-                    <div class="stat-box"><div class="stat-title">تاريخ الانتهاء</div><div class="stat-val" id="sub-end-date">-</div></div>
-                    <div class="stat-box"><div class="stat-title">طلباتك السابقة</div><div class="stat-val"><span id="sub-req-count">0</span> طلب منفذ</div></div>
+    renderEmployeeList();
+}
+
+// بناء وتحديث قائمة الموظفين الجانبية (UI)
+function renderEmployeeList() {
+    const listContainer = document.getElementById('employeeList');
+    
+    if (state.filteredEmployees.length === 0) {
+        listContainer.innerHTML = '<div class="list-placeholder">لا يوجد نتائج تطابق البحث.</div>';
+        return;
+    }
+
+    listContainer.innerHTML = '';
+    
+    state.filteredEmployees.forEach(emp => {
+        const card = document.createElement('div');
+        card.className = `employee-card ${state.selectedEmployeeId === emp.emp_id ? 'active-focus' : ''}`;
+        card.setAttribute('data-id', emp.emp_id);
+        
+        // تحديد فئة حالة النبض
+        const isHrCritical = emp.heart_rate > 120 || (emp.heart_rate < 50 && emp.heart_rate > 0);
+        
+        let statusClass = 'status-normal';
+        if (emp.status === 'WARNING') statusClass = 'status-warning';
+        if (emp.status === 'SOS') statusClass = 'status-sos';
+
+        card.innerHTML = `
+            <div class="card-main-info">
+                <span class="card-status-indicator ${statusClass}"></span>
+                <div class="employee-details">
+                    <span class="employee-name">${escapeHTML(emp.emp_name)}</span>
+                    <span class="employee-sub">رقم: ${escapeHTML(emp.emp_id)} | ${escapeHTML(emp.status)}</span>
                 </div>
             </div>
-
-            <div class="card" id="client-sub-details" style="display:none;">
-                <div class="card-header">بيانات اشتراكك المفعلة 🏡</div>
-                <p style="margin-bottom: 5px;"><strong>الاسم المشترك:</strong> <span id="client-detail-name">-</span></p>
-                <p style="margin-bottom: 5px;"><strong>رقم الجوال:</strong> <span id="client-detail-phone">-</span></p>
-                <p style="margin-bottom: 5px;"><strong>العنوان الوطني السعودي:</strong> <span id="client-detail-address">-</span></p>
-            </div>
-
-            <div class="card">
-                <div class="card-header">طلب صيانة جديد 🛠️ <span id="sync-status" style="font-size:12px; color:var(--success); display:none;">● متصل</span></div>
-                <div class="form-group">
-                    <label>الخدمة المطلوبة:</label>
-                    <select id="c-service" onchange="checkSelectedServiceCost()"></select>
+            <div class="card-stats">
+                <div class="card-stat-item ${isHrCritical ? 'hr-danger' : ''}">
+                    <i data-lucide="heart"></i>
+                    <span>${emp.heart_rate}</span>
                 </div>
+                <div class="card-stat-item">
+                    <i data-lucide="battery"></i>
+                    <span>${escapeHTML(emp.battery)}</span>
+                </div>
+            </div>
+        `;
+        
+        // حدث النقر على الكارت لتحديد وتوسيط الخريطة
+        card.addEventListener('click', () => {
+            focusOnEmployee(emp);
+        });
+
+        listContainer.appendChild(card);
+    });
+    
+    lucide.createIcons();
+}
+
+// تحديث لوحة الإحصائيات (Stats Cards)
+function updateStats() {
+    const total = state.employees.length;
+    const normal = state.employees.filter(e => e.status === 'NORMAL').length;
+    const warning = state.employees.filter(e => e.status === 'WARNING').length;
+    const sos = state.employees.filter(e => e.status === 'SOS').length;
+
+    document.getElementById('statTotal').innerText = total;
+    document.getElementById('statNormal').innerText = normal;
+    document.getElementById('statWarning').innerText = warning;
+    document.getElementById('statSos').innerText = sos;
+}
+
+// تحديث الدبابيس والمؤشرات على الخريطة
+function updateMapMarkers() {
+    const activeIds = new Set(state.employees.map(e => e.emp_id));
+
+    // 1. إزالة الدبابيس للموظفين الذين لم يعودوا في قائمة المراقبة الحالية
+    for (const empId in mapMarkers) {
+        if (!activeIds.has(empId)) {
+            map.removeLayer(mapMarkers[empId]);
+            delete mapMarkers[empId];
+        }
+    }
+
+    // 2. تحديث أو إضافة الدبابيس
+    state.employees.forEach(emp => {
+        const latLng = [emp.lat, emp.lng];
+        
+        // تصميم الأيقونة المخصصة
+        const customIcon = L.divIcon({
+            className: `custom-gps-marker ${emp.status.toLowerCase()}`,
+            html: `<div class="marker-pulse-ring"></div><div class="marker-pin"><div class="marker-inner-dot"></div></div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        });
+
+        if (mapMarkers[emp.emp_id]) {
+            // تحديث الموقع والأيقونة الحالية لتفادي إعادة الإنشاء
+            mapMarkers[emp.emp_id].setLatLng(latLng);
+            
+            // تحديث المحتوى التفاعلي (Popup)
+            mapMarkers[emp.emp_id].setIcon(customIcon);
+            mapMarkers[emp.emp_id].setPopupContent(buildPopupHTML(emp));
+        } else {
+            // إنشاء دبوس جديد بالكامل
+            const marker = L.marker(latLng, { icon: customIcon })
+                .bindPopup(buildPopupHTML(emp))
+                .addTo(map);
                 
-                <div id="additional-service-cost-notice" style="display:none; padding:15px; background:#fff7ed; border:1px solid #ffedd5; border-radius:8px; margin-bottom:20px;">
-                    <p style="color:#c2410c; font-weight:bold; font-size:14px;">
-                        ⚠️ تنبيه: هذه الخدمة خارج نطاق باقة اشتراكك الحالية وتتطلب دفعاً إضافياً.
-                    </p>
-                    <p style="font-size:15px; margin-top:5px;">
-                        تكلفة الخدمة: <strong style="color:var(--primary);" id="calculated-service-price">-</strong>
-                    </p>
-                </div>
-
-                <div class="form-group"><label>وصف المشكلة:</label><textarea id="c-desc" rows="3" placeholder="اشرح العطل هنا..."></textarea></div>
-                <div class="form-group">
-                    <label>صورة العطل (اختياري):</label>
-                    <input type="file" id="c-image" accept="image/*" onchange="previewImage(this, 'request-preview')">
-                    <img id="request-preview" class="preview-img">
-                </div>
-                <button class="btn btn-secondary" id="btn-submit" onclick="submitRequest()">إرسال الطلب</button>
-            </div>
-
-            <div class="card">
-                <div class="card-header">سجل طلباتي</div>
-                <table>
-                    <thead><tr><th>التاريخ</th><th>الخدمة</th><th>الوصف</th><th>الصورة</th><th>الفني</th><th>الحالة</th></tr></thead>
-                    <tbody id="client-list"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const SUPABASE_URL = "https://jgknbvifcgajutbxccsc.supabase.co"; 
-        const SUPABASE_ANON_KEY = "sb_publishable__poVHB0UNhHJfqxUiXHB4g_EiVA_bD3"; 
-        const headers = { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json" };
-
-        let db = { user: localStorage.getItem('user')||'', phone: localStorage.getItem('phone')||'', regDate: localStorage.getItem('regDate')||'', products: [], requests: [], users: [] };
-        let tempHouseImageBase64 = "", tempRequestImageBase64 = "";
-        let currentPaymentContext = ""; // متغير ذكي لتحديد السياق (annual لـ باقة الاشتراك السنوية، أو service لـ الخدمات الفرعية)
-
-        setInterval(silentBackgroundSync, 4000);
-
-        async function silentBackgroundSync() {
-            let syncIndicator = document.getElementById('sync-status');
-            if(syncIndicator) syncIndicator.style.display = 'inline';
-            try {
-                const [prods, reqs, usrs] = await Promise.all([
-                    fetch(`${SUPABASE_URL}/rest/v1/products`, { headers }).then(r=>r.json()),
-                    fetch(`${SUPABASE_URL}/rest/v1/requests`, { headers }).then(r=>r.json()),
-                    fetch(`${SUPABASE_URL}/rest/v1/users`, { headers }).then(r=>r.json())
-                ]);
-                db.products = prods; db.requests = reqs; db.users = usrs;
-                updateUI();
-                if(syncIndicator) setTimeout(() => syncIndicator.style.display = 'none', 800);
-            } catch(e) { console.error(e); }
-        }
-
-        window.onload = () => { silentBackgroundSync(); if(db.user) navigate('client'); else navigate('home'); };
-
-        function navigate(page) {
-            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + page).classList.add('active');
-            let nav = document.getElementById('nav-links-container');
-            if(page === 'client') nav.innerHTML = `<button class="btn btn-outline" style="color:red; border-color:red;" onclick="logout()">تسجيل خروج</button>`;
-            else nav.innerHTML = `<button class="btn btn-outline" onclick="navigate('login')">تسجيل الدخول</button>`;
-            if(page === 'complete-reg') {
-                document.getElementById('comp-name').value = tempUser;
-                document.getElementById('comp-phone').value = tempPhone;
-                initMap();
-            }
-            updateUI();
-        }
-
-        let map = null, marker = null;
-        function initMap() {
-            if(map) return;
-            map = L.map('map', { attributionControl: false }).setView([24.7136, 46.6753], 12);
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
-            marker = L.marker([24.7136, 46.6753], { draggable: true }).addTo(map);
-            map.on('click', (e) => { marker.setLatLng(e.latlng); reverseGeocode(e.latlng.lat, e.latlng.lng); });
-        }
-
-        function locateUser() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    let lat = pos.coords.latitude, lng = pos.coords.longitude;
-                    map.setView([lat, lng], 16); marker.setLatLng([lat, lng]);
-                    reverseGeocode(lat, lng);
-                });
-            }
-        }
-
-        function reverseGeocode(lat, lng) {
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=ar`)
-            .then(res => res.json()).then(data => {
-                if(data.address) {
-                    let addr = data.address;
-                    document.getElementById('comp-national-address').value = [addr.house_number, addr.road, addr.city].filter(Boolean).join(' - ');
-                }
+            // عند النقر على الدبوس، إظهار التفاصيل وتحديد العنصر
+            marker.on('click', () => {
+                selectEmployee(emp);
             });
-        }
-
-        function previewImage(input, previewId) {
-            let file = input.files[0];
-            if(file) {
-                let reader = new FileReader();
-                reader.onload = (e) => {
-                    let img = new Image();
-                    img.onload = () => {
-                        let canvas = document.createElement('canvas');
-                        canvas.width = 300; canvas.height = 300;
-                        canvas.getContext('2d').drawImage(img, 0, 0, 300, 300);
-                        let base64 = canvas.toDataURL('image/jpeg', 0.4);
-                        document.getElementById(previewId).src = base64;
-                        document.getElementById(previewId).style.display = 'block';
-                        if(previewId === 'house-preview') tempHouseImageBase64 = base64;
-                        else tempRequestImageBase64 = base64;
-                    }
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        let tempUser="", tempPhone="";
-        function proceedToPayment() { 
-            let nameInput = document.getElementById('reg-name').value.trim();
-            let phoneInput = document.getElementById('reg-phone').value.trim();
-            if (!nameInput) { alert("⚠️ يرجى إدخال الاسم الكامل لإكمال عملية التسجيل!"); return; }
-            if (!phoneInput) { alert("⚠️ يرجى إدخل رقم الجوال لإكمال عملية التسجيل!"); return; }
-            tempUser = nameInput; tempPhone = phoneInput; navigate('payment'); 
-        }
-
-        // 🟢 تفعيل فتح بوابة ميسر للاشتراك السنوي (500 ريال)
-        function triggerMoyasarForAnnualPackage() {
-            currentPaymentContext = "annual";
-            document.getElementById('moyasar-payment-title').innerText = "بوابة دفع الاشتراك السنوي 🏡";
-            document.getElementById('moyasar-payment-desc-text').innerText = "أنت بصدد سداد قيمة باقة الصيانة السنوية الشاملة لـ 12 شهراً";
-            document.getElementById('service-payment-amount-display').innerText = "500 ر.س";
             
-            // تصفير حقول بطاقة الدفع داخل النافذة قبل العرض
-            document.getElementById('moyasar-card-name').value = "";
-            document.getElementById('moyasar-card-number').value = "";
-            document.getElementById('moyasar-card-month').value = "";
-            document.getElementById('moyasar-card-year').value = "";
-            document.getElementById('moyasar-card-cvv').value = "";
-            
-            document.getElementById('service-payment-modal').style.display = 'flex';
+            mapMarkers[emp.emp_id] = marker;
         }
+    });
+}
 
-        // 🗺️ موجه ومقسم عمليات دفع ميسر التجريبية بناءً على السياق المستدعى
-        async function dispatchMoyasarPaymentRouter() {
-            let cardName = document.getElementById('moyasar-card-name').value.trim();
-            let cardNumber = document.getElementById('moyasar-card-number').value.replace(/\s+/g, '');
-            let cardMonth = document.getElementById('moyasar-card-month').value.trim();
-            let cardYear = document.getElementById('moyasar-card-year').value.trim();
-            let cardCvv = document.getElementById('moyasar-card-cvv').value.trim();
+// بناء كود HTML للـ Popup الخاص بالدبوس على الخريطة
+function buildPopupHTML(emp) {
+    let statusBadge = '<span style="color:var(--color-normal);font-weight:bold">مستقر</span>';
+    if (emp.status === 'WARNING') statusBadge = '<span style="color:var(--color-warning);font-weight:bold">تحذير حركة</span>';
+    if (emp.status === 'SOS') statusBadge = '<span style="color:var(--color-danger);font-weight:bold;animation:heart-beat 0.8s infinite">طوارئ SOS</span>';
 
-            if(!cardName || !cardNumber || !cardMonth || !cardYear || !cardCvv) {
-                return alert("⚠️ يرجى إدخال بيانات بطاقة الدفع كاملة!");
-            }
+    return `
+        <div style="font-family:'Cairo',sans-serif; direction:rtl; text-align:right;">
+            <strong style="font-size:1.05rem; display:block; margin-bottom:4px;">${escapeHTML(emp.emp_name)}</strong>
+            <span style="font-size:0.75rem; color:#94a3b8; display:block; margin-bottom:8px;">رقم: ${escapeHTML(emp.emp_id)}</span>
+            <div style="border-top:1px solid rgba(255,255,255,0.15); padding-top:6px; font-size:0.85rem;">
+                الحالة: ${statusBadge}<br>
+                النبض: <strong>${emp.heart_rate} BPM</strong><br>
+                البطارية: <strong>${escapeHTML(emp.battery)}</strong>
+            </div>
+        </div>
+    `;
+}
 
-            if(cardNumber === "4111111111111111" || cardNumber === "4000000000000000") {
-                let submitBtn = document.getElementById('btn-moyasar-submit');
-                submitBtn.innerText = "جاري التأكيد والخصم الآمن من ميسر... 🔒"; submitBtn.disabled = true;
-                
-                setTimeout(async () => {
-                    document.getElementById('service-payment-modal').style.display = 'none';
-                    
-                    if(currentPaymentContext === "annual") {
-                        // سياق الاشتراك السنوي: نفتح له صفحة إكمال البيانات اللوجستية وتحديد الموقع
-                        alert("✅ تم قبول سداد قيمة الاشتراك السنوي (500 ر.س) بنجاح عبر ميسر! يرجى إكمال رفع العنوان وصورة المنزل لتفعيل الحساب.");
-                        navigate('complete-reg');
-                    } else {
-                        // سياق بلاغ صيانة إضافي فرعي: يتم ترحيل الطلب للـ Supabase فوراً
-                        alert("✅ تم سداد الفاتورة بنجاح عبر بوابة ميسر التجريبية! جاري تسجيل الطلب الفني...");
-                        await executeFinalRequestInsertion();
-                    }
-                    
-                    submitBtn.innerText = "تأكيد السداد والخصم الفوري"; submitBtn.disabled = false;
-                }, 1300);
-            } else {
-                alert("❌ العملية مرفوضة. يرجى استخدام بطاقة الاختبار الموحدة لـ ميسر: 4111111111111111");
-            }
+// التركيز على موظف محدد وتوسيط الخريطة عليه
+function focusOnEmployee(emp) {
+    selectEmployee(emp);
+    
+    // نقل الخريطة إلى إحداثيات الموظف
+    map.setView([emp.lat, emp.lng], 16, {
+        animate: true,
+        duration: 1.2
+    });
+    
+    // فتح الـ Popup الخاص به
+    if (mapMarkers[emp.emp_id]) {
+        mapMarkers[emp.emp_id].openPopup();
+    }
+}
+
+// تحديد موظف وعرض بياناته في لوحة التفاصيل
+function selectEmployee(emp) {
+    state.selectedEmployeeId = emp.emp_id;
+    
+    // تفعيل التحديد البصري في القائمة الجانبية
+    document.querySelectorAll('.employee-card').forEach(card => {
+        if (card.getAttribute('data-id') === emp.emp_id) {
+            card.classList.add('active-focus');
+            // تمرير القائمة تلقائياً لعنصر الموظف المحدد
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            card.classList.remove('active-focus');
         }
+    });
 
-        async function saveCompleteRegistration() {
-            let addr = document.getElementById('comp-national-address').value.trim();
-            if (!addr) { alert("⚠️ يرجى إدخال العنوان الوطني السعودي أولاً لتفعيل الاشتراك!"); return; }
-            if (!tempHouseImageBase64) { alert("⚠️ يرجى إرفاق صورة المنزل أولاً لتفعيل الاشتراك!"); return; }
-            let payload = { name: tempUser, phone: tempPhone, national_address: addr, house_image: tempHouseImageBase64, package_name: 'باقة السباكة والكهرباء', status: 'فعال', lat: marker.getLatLng().lat.toString(), lng: marker.getLatLng().lng.toString() };
-            await fetch(`${SUPABASE_URL}/rest/v1/users`, { method: "POST", headers, body: JSON.stringify(payload) });
-            db.user = tempUser; db.phone = tempPhone; db.regDate = new Date().toISOString();
-            localStorage.setItem('user', db.user); localStorage.setItem('phone', db.phone); localStorage.setItem('regDate', db.regDate);
-            alert("✅ تم تفعيل باقة الاشتراك ونزول البيانات في قاعدة البيانات!"); navigate('client');
+    // إظهار لوحة التفاصيل العائمة وتحديث محتواها
+    showEmployeeDetails(emp);
+}
+
+// تحديث وعرض لوحة التفاصيل العائمة (UI)
+function showEmployeeDetails(emp) {
+    const panel = document.getElementById('detailPanel');
+    panel.classList.remove('hidden');
+
+    // تحديث المحتوى النصي
+    document.getElementById('detailName').innerText = emp.emp_name;
+    document.getElementById('detailId').innerText = `#${emp.emp_id}`;
+    document.getElementById('detailHeartRate').innerText = `${emp.heart_rate} BPM`;
+    document.getElementById('detailSteps').innerText = `${emp.steps.toLocaleString()} خطوة`;
+    document.getElementById('detailBattery').innerText = emp.battery;
+    document.getElementById('detailSpeed').innerText = `${emp.speed} م/ث`;
+    document.getElementById('detailWorn').innerText = emp.is_worn;
+    
+    // معالجة تنسيق الوقت
+    let timeString = '--:--:--';
+    try {
+        const date = new Date(emp.timestamp);
+        timeString = date.toLocaleTimeString('ar-SA', { hour12: false });
+    } catch(e) {}
+    document.getElementById('detailTime').innerText = timeString;
+
+    // ضبط نقطة الحالة الملونة
+    const dot = document.getElementById('detailStatusDot');
+    dot.className = `status-dot ${emp.status.toLowerCase()}`;
+
+    // معالجة تفاصيل المستجيب (إذا كانت الحالة طوارئ SOS)
+    const responderBox = document.getElementById('responderBox');
+    if (emp.status === 'SOS') {
+        responderBox.classList.remove('hidden');
+        document.getElementById('detailResponder').innerText = emp.nearest_responder;
+    } else {
+        responderBox.classList.add('hidden');
+    }
+}
+
+// إلغاء تحديد الموظف وإغلاق لوحة التفاصيل
+function deselectEmployee() {
+    state.selectedEmployeeId = null;
+    document.getElementById('detailPanel').classList.add('hidden');
+    document.querySelectorAll('.employee-card').forEach(card => {
+        card.classList.remove('active-focus');
+    });
+}
+
+// التحكم في تشغيل التحديث التلقائي
+function toggleAutoRefresh(enable) {
+    state.autoRefresh = enable;
+    
+    if (enable) {
+        if (!state.refreshIntervalId) {
+            state.refreshIntervalId = setInterval(fetchTelemetryData, 3000);
         }
-
-        function loginUser() {
-            let p = document.getElementById('login-phone').value.trim();
-            let u = db.users.find(x => x.phone == p);
-            if(u) { db.user=u.name; db.phone=u.phone; db.regDate=u.created_at || ''; localStorage.setItem('user',u.name); localStorage.setItem('phone',u.phone); localStorage.setItem('regDate', db.regDate); navigate('client'); }
-            else alert("الجوال غير مسجل");
+    } else {
+        if (state.refreshIntervalId) {
+            clearInterval(state.refreshIntervalId);
+            state.refreshIntervalId = null;
         }
+    }
+}
 
-        function checkSelectedServiceCost() {
-            let selectElement = document.getElementById('c-service');
-            let selectedOption = selectElement.options[selectElement.selectedIndex];
-            if(!selectedOption) return;
+// التحقق من وجود حالات طوارئ نشطة وبدء الإنذار
+function checkSosAlerts() {
+    const sosEmployees = state.employees.filter(e => e.status === 'SOS');
+    const banner = document.getElementById('sosBanner');
+    
+    if (sosEmployees.length > 0) {
+        banner.classList.remove('hidden');
+        
+        // صياغة رسالة الإنذار بأسماء الموظفين في حالة الطوارئ وأقرب المستجيبين
+        const details = sosEmployees.map(e => `${e.emp_name} (أقرب مستجيب: ${e.nearest_responder})`).join(' | ');
+        document.getElementById('sosBannerMessage').innerText = `طوارئ نشطة لـ: ${details}`;
+        
+        // تشغيل صوت التنبيه
+        playAlarmSiren();
+    } else {
+        banner.classList.add('hidden');
+        stopAlarmSiren();
+    }
+}
 
-            let isFree = selectedOption.getAttribute('data-mshmool') === "true";
-            let price = selectedOption.getAttribute('data-price') || "";
-            let noticeBox = document.getElementById('additional-service-cost-notice');
-            let submitBtn = document.getElementById('btn-submit');
+// توليد صوت الإنذار عبر الـ Web Audio API لتجنب تحميل ملف خارجي
+function playAlarmSiren() {
+    if (state.isMuted) return;
 
-            if (!isFree) {
-                noticeBox.style.display = 'block';
-                document.getElementById('calculated-service-price').innerText = price + " ر.س";
-                submitBtn.innerText = "دفع رسوم الخدمة وإرسال الطلب 💳";
-                submitBtn.className = "btn btn-secondary";
-            } else {
-                noticeBox.style.display = 'none';
-                submitBtn.innerText = "إرسال الطلب";
-                submitBtn.className = "btn btn-primary";
-            }
+    if (!state.audioContext) {
+        state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    if (state.sirenIntervalId) return; // الإنذار يعمل بالفعل
+
+    state.sirenIntervalId = setInterval(() => {
+        if (state.audioContext.state === 'suspended') {
+            state.audioContext.resume();
         }
+        
+        const osc = state.audioContext.createOscillator();
+        const gain = state.audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(state.audioContext.destination);
 
-        async function submitRequest() {
-            let srv = document.getElementById('c-service').value;
-            if (!srv) { alert("⚠️ يرجى تحديد الخدمة المطلوبة!"); return; }
-            if (!tempRequestImageBase64) { alert("⚠️ يرجى إرفاق صورة العطل لإرسال الطلب!"); return; }
+        // نوع الصوت ليكون شبه سرينة الشرطة/الإسعاف (Sawtooth)
+        osc.type = 'sawtooth';
+        
+        const time = state.audioContext.currentTime;
+        // ترددات متناوبة للسرينة
+        osc.frequency.setValueAtTime(580, time);
+        osc.frequency.linearRampToValueAtTime(880, time + 0.35);
+        
+        gain.gain.setValueAtTime(0.12, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.35);
 
-            let selectElement = document.getElementById('c-service');
-            let selectedOption = selectElement.options[selectElement.selectedIndex];
-            let isFree = selectedOption.getAttribute('data-mshmool') === "true";
-            let price = selectedOption.getAttribute('data-price') || "0";
+        osc.start(time);
+        osc.stop(time + 0.38);
+    }, 450);
+}
 
-            if (isFree === false) { 
-                currentPaymentContext = "service";
-                document.getElementById('moyasar-payment-title').innerText = "بوابة الدفع الفوري ميسر 💳";
-                document.getElementById('moyasar-payment-desc-text').innerText = "أنت بصدد طلب خدمة إضافية غير مشمولة في باقتك الحالية.";
-                document.getElementById('service-payment-amount-display').innerText = price + " ر.س";
-                
-                // تصفير الحقول قبل العرض
-                document.getElementById('moyasar-card-name').value = "";
-                document.getElementById('moyasar-card-number').value = "";
-                document.getElementById('moyasar-card-month').value = "";
-                document.getElementById('moyasar-card-year').value = "";
-                document.getElementById('moyasar-card-cvv').value = "";
-                
-                document.getElementById('service-payment-modal').style.display = 'flex';
-            } else {
-                await executeFinalRequestInsertion();
-            }
-        }
+// إيقاف صوت الإنذار
+function stopAlarmSiren() {
+    if (state.sirenIntervalId) {
+        clearInterval(state.sirenIntervalId);
+        state.sirenIntervalId = null;
+    }
+}
 
-        async function executeFinalRequestInsertion() {
-            let srv = document.getElementById('c-service').value, desc = document.getElementById('c-desc').value;
-            let payload = { date: new Date().toLocaleDateString('ar-SA'), "user": db.user, phone: db.phone, service: srv, "desc": desc, image: tempRequestImageBase64, status: 'قيد الانتظار' };
-            await fetch(`${SUPABASE_URL}/rest/v1/requests`, { method:"POST", headers, body: JSON.stringify(payload) });
-            alert("✅ تم إرسال بلاغ الصيانة بنجاح إلى الفنيين!");
-            
-            document.getElementById('c-desc').value = '';
-            let fileInput = document.getElementById('c-image');
-            if(fileInput) fileInput.value = '';
-            
-            let preview = document.getElementById('request-preview');
-            if (preview) { preview.src = ''; preview.style.display = 'none'; }
-            tempRequestImageBase64 = "";
-            silentBackgroundSync();
-        }
+// كتم/تفعيل صوت الإنذار من زر لوحة الإنذار
+function toggleMute() {
+    state.isMuted = !state.isMuted;
+    const muteIcon = document.getElementById('muteIcon');
+    
+    if (state.isMuted) {
+        muteIcon.setAttribute('data-lucide', 'volume-x');
+        stopAlarmSiren();
+    } else {
+        muteIcon.setAttribute('data-lucide', 'volume-2');
+        checkSosAlerts();
+    }
+    
+    lucide.createIcons();
+}
 
-        async function submitFeedback() {
-            let name = document.getElementById('feedback-name').value.trim();
-            let phone = document.getElementById('feedback-phone').value.trim();
-            let type = document.getElementById('feedback-type').value;
-            let desc = document.getElementById('feedback-desc').value.trim();
-            if (!name || !phone || !desc) { alert("⚠️ يرجى تعبئة جميع الحقول لإرسال الرسالة!"); return; }
-            let payload = { date: new Date().toISOString(), name: name, phone: phone, type: type, "desc": desc };
-            try {
-                let res = await fetch(`${SUPABASE_URL}/rest/v1/complaints`, { method:"POST", headers, body: JSON.stringify(payload) });
-                if(res.ok) {
-                    alert("✅ شكرًا لرسالتك! تم إرسال الشكوى/الاقتراح بنجاح وسنقوم بمراجعتها.");
-                    document.getElementById('feedback-name').value = ''; document.getElementById('feedback-phone').value = ''; document.getElementById('feedback-desc').value = '';
-                } else { alert("❌ فشل إرسال الرسالة من خادم قاعدة البيانات: " + await res.text()); }
-            } catch(e) { alert("❌ حدث خطأ في الاتصال بالشبكة عند إرسال الرسالة."); }
-        }
-
-        function logout() { localStorage.clear(); location.reload(); }
-
-        function updateUI() {
-            let regDateVal = db.regDate;
-            let currentUserRecord = (db.users || []).find(u => u.phone && db.phone && u.phone.toString() === db.phone.toString());
-            let currentPackage = 'باقة السباكة والكهرباء'; 
-
-            if (currentUserRecord) {
-                if (currentUserRecord.created_at) regDateVal = currentUserRecord.created_at;
-                if (currentUserRecord.package_name) currentPackage = currentUserRecord.package_name;
-            }
-
-            if(document.getElementById('client-package-badge')) {
-                document.getElementById('client-package-badge').innerText = currentPackage + " ✅";
-            }
-
-            if(regDateVal && document.getElementById('sub-end-date')) {
-                let end = new Date(regDateVal); end.setFullYear(end.getFullYear()+1);
-                document.getElementById('sub-end-date').innerText = end.toLocaleDateString('ar-SA');
-            }
-            
-            if(db.user && document.getElementById('welcome-msg')) document.getElementById('welcome-msg').innerText = "أهلاً بك يا " + db.user;
-            
-            let serviceSelectElement = document.getElementById('c-service');
-            let previouslySelectedValue = serviceSelectElement ? serviceSelectElement.value : "";
-
-            let h="", s="", c="";
-            let completedCount = 0;
-
-            if (db.products && db.products.length > 0) {
-                let packagesExist = false;
-                let servicesExist = false;
-
-                db.products.forEach(p => { 
-                    if (p.type && p.type.toString().trim() === 'package') {
-                        h += `<div class="service-card"><h3>${p.name}</h3><div class="price">${p.price || ''}</div></div>`; 
-                        packagesExist = true;
-                    }
-                    else if (p.type && p.type.toString().trim() === 'service') {
-                        let belongsTo = p.belongs_to_package;
-                        let isMshmool = belongsTo && belongsTo.toString().trim() === currentPackage.toString().trim();
-                        
-                        if (isMshmool) {
-                            s += `<option value="${p.name}" data-mshmool="true" data-price="0">${p.name} (مشمول في الاشتراك) ✅</option>`;
-                        } else {
-                            s += `<option value="${p.name}" data-mshmool="false" data-price="${p.price || '150'}">${p.name} (خدمة إضافية - ${p.price || '150'} ر.س) 💳</option>`;
-                        }
-                        servicesExist = true;
-                    }
-                });
-
-                if(!packagesExist) h = `<p style="text-align:center; color:#6b7280; width:100%;">لا توجد باقات معروضة حالياً.</p>`;
-                if(!servicesExist) s = `<option value="">-- لا توجد خدمات متاحة حالياً --</option>`;
-            } else {
-                h = `<p style="text-align:center; color:#6b7280; width:100%;">لا توجد باقات معروضة حالياً.</p>`;
-                s = `<option value="">-- لا توجد خدمات صيانة فرعية حالياً --</option>`;
-            }
-
-            if (db.requests && db.requests.length > 0) {
-                db.requests.forEach(r => { 
-                    if(r.phone == db.phone) {
-                        if(r.status === 'مكتمل') completedCount++;
-                        let badge = r.status === 'مكتمل' ? 'badge-success' : (r.status === 'جاري العمل' ? 'badge-working' : 'badge-pending');
-                        let imgHtml = r.image ? `<img src="${r.image}" style="width: 45px; height: 45px; border-radius: 4px; object-fit: cover; cursor: pointer;" onclick="openImageModal('${r.image}')">` : 'لا توجد';
-                        c += `<tr><td>${r.date}</td><td>${r.service}</td><td>${r.desc}</td><td>${imgHtml}</td><td>${r.tech||'بحث'}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`; 
-                    }
-                });
-            }
-            
-            if(document.getElementById('sub-req-count')) document.getElementById('sub-req-count').innerText = completedCount;
-            if(document.getElementById('home-products-grid')) document.getElementById('home-products-grid').innerHTML = h;
-            
-            if(serviceSelectElement) {
-                serviceSelectElement.innerHTML = s;
-                if (previouslySelectedValue && serviceSelectElement.querySelector(`option[value="${previouslySelectedValue}"]`)) {
-                    serviceSelectElement.value = previouslySelectedValue;
-                }
-                checkSelectedServiceCost();
-            }
-            
-            if(document.getElementById('client-list')) document.getElementById('client-list').innerHTML = c;
-
-            if(currentUserRecord && document.getElementById('client-sub-details')) {
-                document.getElementById('client-sub-details').style.display = 'block';
-                document.getElementById('client-detail-name').innerText = currentUserRecord.name;
-                document.getElementById('client-detail-phone').innerText = currentUserRecord.phone;
-                document.getElementById('client-detail-address').innerText = currentUserRecord.national_address || 'غير محدد';
-            }
-        }
-        function openImageModal(src) { document.getElementById('modal-viewer-img').src = src; document.getElementById('image-modal').style.display = 'flex'; }
-        function closeImageModal() { document.getElementById('image-modal').style.display = 'none'; }
-    </script>
-</body>
-</html>
-
-```
+// دالة لتطهير نصوص HTML لمنع اختراق تخطيط الصفحة (XSS / Layout Spillage Protection)
+function escapeHTML(str) {
+    if (!str) return '';
+    const map = {
+        '&': '&' + 'amp;',
+        '<': '&' + 'lt;',
+        '>': '&' + 'gt;',
+        '"': '&' + 'quot;',
+        "'": '&' + '#039;'
+    };
+    return str.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+}
